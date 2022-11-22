@@ -1,5 +1,8 @@
 """Listen-related events."""
+from datetime import timedelta
 from typing import Any, Callable
+
+from pydantic.main import BaseModel
 
 from chronicle.event.core import Event, Language, Objects, Object
 
@@ -25,6 +28,22 @@ class Text:
         if text is not None:
             self.text += delimiter + load(text)
         return self
+
+
+class Interval(BaseModel):
+    """Time interval in seconds."""
+
+    from_: timedelta | None
+    to_: timedelta | None
+
+    def __str__(self) -> str:
+        return (
+            Text()
+            .add(self.from_, load=format_delta)
+            .add("..")
+            .add(self.to_, load=format_delta)
+            .text
+        )
 
 
 class ListenPodcastEvent(Event):
