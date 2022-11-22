@@ -126,3 +126,33 @@ class Duration:
     @classmethod
     def __get_validators__(cls):
         yield cls
+
+
+def parse_delta(string_delta) -> timedelta:
+    """Parse time delta from a string representation."""
+
+    if isinstance(string_delta, int):
+        hour, minute, second = 0, 0, string_delta
+    elif string_delta.count(":") == 2:
+        hour, minute, second = map(int, string_delta.split(":"))
+    else:
+        hour = 0
+        minute, second = map(int, string_delta.split(":"))
+    return timedelta(seconds=hour * 3600 + minute * 60 + second)
+
+
+def format_delta(delta: timedelta) -> str:
+    """
+    Get string representation of a time delta.
+
+    Format is `MM:SS` if number of hours is zero, otherwise `HH:MM:SS`. Hours
+    are not zero-prefixed.
+    """
+
+    seconds: float = delta.total_seconds()
+    minutes, seconds = int(seconds // 60), int(seconds % 60)
+    hours, minutes = int(minutes // 60), int(minutes % 60)
+
+    if hours:
+        return f"{hours}:{minutes:02}:{seconds:02}"
+    return f"{minutes:02}:{seconds:02}"
