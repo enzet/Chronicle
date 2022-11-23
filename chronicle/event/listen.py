@@ -18,18 +18,20 @@ def to_string(object_: Object) -> str:
 
 
 class Text:
-    def __init__(self, text: Any):
+    """Chainable text builder."""
+
+    def __init__(self, text: Any = ""):
         self.text: str = str(text)
 
     def add(
         self,
         text: Any | None,
         delimiter: str = " ",
-        load: Callable[[Any], str] = str,
+        loader: Callable[[Any], str] = str,
     ) -> "Text":
 
         if text is not None:
-            self.text += delimiter + load(text)
+            self.text += delimiter + loader(text)
         return self
 
 
@@ -42,9 +44,9 @@ class Interval(BaseModel):
     def __str__(self) -> str:
         return (
             Text()
-            .add(self.from_, load=format_delta)
+            .add(self.from_, loader=format_delta)
             .add("..")
-            .add(self.to_, load=format_delta)
+            .add(self.to_, loader=format_delta)
             .text
         )
 
