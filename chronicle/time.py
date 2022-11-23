@@ -95,17 +95,29 @@ class Moment:
 class Time(str):
     """Point in time or time span."""
 
-    def __init__(self, code: str):
+    def __init__(self, start: Moment | None, end: Moment | None):
+        self.start: Moment | None = start
+        self.end: Moment | None = end
 
-        self.start: Moment | None
-        self.end: Moment | None
+    @classmethod
+    def from_code(cls, code: str, delimiter: str):
 
-        if "/" in code:
-            start, end = code.split("/")
-            self.start = Moment(start)
-            self.end = Moment(end)
+        if delimiter in code:
+            start_, end_ = code.split(delimiter)
+            start = Moment(start_)
+            end = Moment(end_)
         else:
-            self.start = self.end = Moment(code)
+            start = end = Moment(code)
+
+        return cls(start, end)
+
+    @classmethod
+    def from_pseudo_edtf(cls, code: str):
+        return cls.from_code(code, "/")
+
+    @classmethod
+    def from_short(cls, code: str):
+        return cls.from_code(code, "-")
 
     @classmethod
     def __get_validators__(cls):
