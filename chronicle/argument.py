@@ -7,9 +7,18 @@ from typing import Any, Callable
 class Argument:
     name: str
     description: str | None = None
-    prefix: str | None = None
-    pattern: re.Pattern | None = None
+
     loader: Callable[[Any], Any] = lambda x: x
+    """Value loader."""
+
+    prefix: str | None = None
+    """Prefix word that starts argument value."""
+
+    pattern: re.Pattern | None = None
+    """Value pattern."""
+
+    extractor: Callable | None = None
+    """Function that extracts values from a pattern matcher."""
 
 
 class ArgumentParser:
@@ -64,6 +73,7 @@ class ArgumentParser:
         prefix: str | None = None,
         pattern: re.Pattern | None = None,
         loader: Callable = lambda x: x,
+        extractor: Callable | None = None,
     ) -> "ArgumentParser":
 
         argument: Argument = Argument(
@@ -72,6 +82,7 @@ class ArgumentParser:
             prefix=prefix,
             pattern=pattern,
             loader=loader,
+            extractor=extractor,
         )
         self.arguments.append(argument)
         return self
