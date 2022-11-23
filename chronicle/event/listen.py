@@ -1,10 +1,13 @@
 """Listen-related events."""
+import re
 from datetime import timedelta
 from typing import Any, Callable
 
 from pydantic.main import BaseModel
 
+from chronicle.argument import ArgumentParser
 from chronicle.event.core import Event, Language, Objects, Object
+from chronicle.time import format_delta, parse_delta
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
@@ -88,13 +91,29 @@ class ListenMusicEvent(Event):
 class ListenAudiobookEvent(Event):
     """Listening audiobook event."""
 
-    book_id: str
-    reader: str | None = None
+    audiobook_id: str
+    interval: Interval = Interval()
+    speed: float | None = None
+
+    @staticmethod
+    def get_parser() -> ArgumentParser:
+        return (
+            ArgumentParser({"audiobook"})
+            .add_argument("audiobook_id")
+            .add_argument(
+                "interval",
+                pattern=re.compile(r"(\d\d:\d\d)-(\d\d:\d\d)"),
+                extractor=lambda x: Interval(
+                    from_=parse_delta(x[0]), to_=parse_delta(x[1])
+                ),
+            )
+            .add_argument("speed", pattern=re.compile(r"x(\d*\.\d*)"))
+        )
 
     def to_string(self, objects: Objects) -> str:
         return (
             Text(self.time)
             .add("listen audiobook")
-            .add(objects.get_book(self.book_id), load=to_string)
+            .add(objects.get_audiobook(self.audiobook_id), loader=to_string)
             .text
         )

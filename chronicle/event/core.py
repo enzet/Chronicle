@@ -88,17 +88,29 @@ class Book(Object):
         return self.title
 
 
+class Audiobook(Object):
+    """Audio version of the book."""
+
+    book_id: str
+    duration: timedelta
+    reader: str
+
+
 class Objects(BaseModel):
     """Collection of event-related object collections."""
 
     podcasts: dict[str, Podcast] = []
     books: dict[str, Book] = []
+    audiobooks: dict[str, Audiobook] = []
 
     def get_podcast(self, podcast_id: str) -> Podcast | None:
         return self.podcasts.get(podcast_id)
 
     def get_book(self, book_id: str) -> Book | None:
         return self.books.get(book_id)
+
+    def get_audiobook(self, audiobook_id: str) -> Audiobook | None:
+        return self.audiobooks.get(audiobook_id)
 
 
 class Event(BaseModel):
