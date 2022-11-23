@@ -22,8 +22,8 @@ class Argument:
 
 
 class ArgumentParser:
-    def __init__(self, prefixes: list[str]) -> None:
-        self.prefixes: list[str] = prefixes
+    def __init__(self, prefixes: set[str]) -> None:
+        self.prefixes: set[str] = prefixes
         self.arguments: list[Argument] = []
 
     def parse(self, text: str) -> dict[str, str] | None:
@@ -32,37 +32,44 @@ class ArgumentParser:
         result: dict[str, str] = {}
         words = text.split(" ")
 
+        current_key: str | None = main.name
         current: str = ""
-        closed: bool = False
 
         for index in range(len(words)):
 
             word = words[index]
+            detected: bool = False
+
             for argument in self.arguments:
 
                 if word == argument.prefix:
-                    result[argument.name] = argument.loader(words[index + 1])
-                    index += 1
-                    closed = True
-                    continue
+                    if current:
+                        result[current_key] = current
+                        current = ""
+                    current_key = argument.name
+                    detected = True
+                    break
 
                 if argument.pattern and (
                     matcher := argument.pattern.match(word)
                 ):
-                    group_dict = matcher.groupdict()
-                    if argument.loader is not None:
-                        result[argument.name] = argument.loader(group_dict)
+                    if current:
+                        result[current_key] = current
+                        current_key = None
+                        current = ""
+                    groups = matcher.groups()
+                    if argument.extractor is not None:
+                        result[argument.name] = argument.extractor(groups)
                     else:
-                        for group_name, group_value in group_dict.items():
-                            result[group_name] = group_value
-                    closed = True
+                        result[argument.name] = argument.loader(groups[0])
+                    detected = True
                     break
 
-            if not closed:
-                if not result[main.name]:
-                    result[main.name] = main.loader(word)
-                else:
-                    result[main.name] += " " + word
+            if not detected:
+                current += (" " if current else "") + word
+
+        if current:
+            result[current_key] = current
 
         return result
 
