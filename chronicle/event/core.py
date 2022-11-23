@@ -60,7 +60,7 @@ class Podcast(Object):
 
 
 class Book(Object):
-    """Book or some of its translations."""
+    """A book, a paper, or any other text or some of its translations."""
 
     title: str
     """Title in language of the text."""
@@ -70,19 +70,19 @@ class Book(Object):
 
     volume: float | None = None
     """
-    Number of pages. Since number of pages may vary from one printed book to
-    another, this value is an approximated one. If there is no printed version
-    of the book, number of pages may be approximated as number of symbols
-    divided by 200.
+    Number of pages.
+
+    Since number of pages may vary from one printed book to another, this is an
+    approximation. If there is no printed version of the book, number of pages
+    may be approximated as number of symbols divided by 2000 (40 lines × 50
+    symbols per line).
     """
 
     author: str | None = None
     """Original book author name (not translator)."""
 
     year: int | None = None
-    """
-    Year of the first publication of the original book (not its translation).
-    """
+    """Year of the first publication of the book (not its translation)."""
 
     def to_string(self) -> str:
         return self.title
@@ -136,4 +136,5 @@ class Event(BaseModel):
 
 
 def to_camel(text: str) -> str:
+    """Make the first letter capital."""
     return text[0].upper() + text[1:]

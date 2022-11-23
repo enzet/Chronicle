@@ -67,6 +67,8 @@ class ListenMusicEvent(Event):
     """Listening music event."""
 
     title: str
+    """Title of the song or music description."""
+
     artist: str | None = None
     album: str | None = None
     language: Language | None = None
