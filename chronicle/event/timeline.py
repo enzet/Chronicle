@@ -1,8 +1,7 @@
-import sys
 from dataclasses import dataclass, field
 
-from chronicle.event.core import to_camel
 from chronicle.event.listen import *
+from chronicle.time import Time
 
 
 @dataclass
@@ -21,24 +20,20 @@ class Timeline:
     def __len__(self) -> int:
         return len(self.events)
 
-    def process_command(self, command: str) -> None:
+    def parse_command(self, command: str) -> None:
 
         words: list[str] = command.split(" ")
 
-        types: list[tuple[str, int]] = [(to_camel(words[0]), 1)]
-        if len(words) >= 2:
-            types += [(to_camel(words[0]) + to_camel(words[1]), 2)]
+        time = words[0]
+        prefix = words[1]
 
-        class_ = None
-        arguments: list[str] = []
+        classes = Event.__subclasses__()
 
-        for type_, size in types:
-            try:
-                class_ = getattr(sys.modules[__name__], type_ + "Event")
-                arguments = words[size:]
-            except AttributeError:
-                pass
-
-        if class_:
-            event: Event = class_.process_command(arguments)
-            self.events.append(event)
+        for class_ in classes:
+            parser = class_.get_parser()
+            if prefix in parser.prefixes:
+                event: Event = class_.parse_command(
+                    Time(time), " ".join(words[2:])
+                )
+                self.events.append(event)
+                break

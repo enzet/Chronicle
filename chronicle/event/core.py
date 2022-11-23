@@ -3,9 +3,11 @@ Event and global event parameters.
 
 This file describes events and some common attributes that events may have.
 """
+from datetime import timedelta
 
 from pydantic.main import BaseModel
 
+from chronicle.argument import ArgumentParser
 from chronicle.time import Time
 
 __author__ = "Sergey Vartanov"
@@ -113,6 +115,15 @@ class Event(BaseModel):
 
     def process_command(self, arguments: list[str]) -> None:
         pass
+
+    @staticmethod
+    def get_parser() -> ArgumentParser:
+        return ArgumentParser(set())
+
+    @classmethod
+    def parse_command(cls, time: Time, command: str) -> "Event":
+        arguments = cls.get_parser().parse(command)
+        return cls(time=time, **arguments)
 
     def to_string(self, objects: Objects) -> str:
         """
