@@ -76,6 +76,16 @@ class ListenMusicEvent(Event):
     album: str | None = None
     language: Language | None = None
 
+    @staticmethod
+    def get_parser() -> ArgumentParser:
+        return (
+            ArgumentParser({"music", "song"})
+            .add_argument("title")
+            .add_argument("artist", prefix="by")
+            .add_argument("album", prefix="on")
+            .add_argument("language", pattern=re.compile("_(..)"))
+        )
+
     def to_string(self, objects: Objects) -> str:
         return (
             Text(self.time)
