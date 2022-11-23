@@ -55,13 +55,32 @@ class ListenPodcastEvent(Event):
     podcast_id: str
     episode: str
     speed: float = 1.0
+    interval: Interval = Interval()
+
+    @staticmethod
+    def get_parser():
+        return (
+            ArgumentParser({"podcast"})
+            .add_argument("podcast_id")
+            .add_argument(
+                "episode", prefix="episode", pattern=re.compile(r"[Ee](\d+)")
+            )
+            .add_argument(
+                "interval",
+                pattern=re.compile(r"(\d\d:\d\d)-(\d\d:\d\d)"),
+                extractor=lambda x: Interval(
+                    from_=parse_delta(x[0]), to_=parse_delta(x[1])
+                ),
+            )
+        )
 
     def to_string(self, objects: Objects) -> str:
         return (
             Text(self.time)
             .add("listen podcast")
-            .add(objects.get_podcast(self.podcast_id), load=to_string)
+            .add(objects.get_podcast(self.podcast_id), loader=to_string)
             .add(self.episode, " E ")
+            .add(self.interval)
             .text
         )
 
