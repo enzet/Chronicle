@@ -88,7 +88,7 @@ class Moment:
             + (f".{self.day:02d}" if self.day else "")
             + (f" {self.hour:02d}" if self.hour is not None else "")
             + (f":{self.minute:02d}" if self.minute is not None else "")
-            + (f":{self.second:02d}" if self.second is not None else "")
+            + (f":{self.second}" if self.second is not None else "")
         )
 
 
