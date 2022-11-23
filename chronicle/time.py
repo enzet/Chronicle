@@ -122,12 +122,6 @@ class Time(str):
         return f"{self.start or ''}/{self.end or ''}"
 
 
-class Duration:
-    @classmethod
-    def __get_validators__(cls):
-        yield cls
-
-
 def parse_delta(string_delta) -> timedelta:
     """Parse time delta from a string representation."""
 
