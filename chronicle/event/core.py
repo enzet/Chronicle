@@ -38,7 +38,7 @@ class Language(str):
 
 class Object(BaseModel):
     def to_string(self) -> str:
-        raise NotImplemented()
+        raise NotImplementedError()
 
 
 class Podcast(Object):
@@ -94,6 +94,9 @@ class Audiobook(Object):
     book_id: str
     duration: timedelta
     reader: str
+
+    def to_string(self) -> str:
+        return self.book_id
 
 
 class Objects(BaseModel):
