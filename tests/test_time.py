@@ -71,8 +71,11 @@ def test_second() -> None:
 
 
 def test_parse_delta():
-    delta: timedelta = parse_delta("00:00")
-    assert delta.seconds == 0
+    assert parse_delta("00:00").seconds == 0
+    assert parse_delta("0:00").seconds == 0
+    assert parse_delta("10:00").seconds == 10 * 60
 
-    delta: timedelta = parse_delta("10:00")
-    assert delta.seconds == 10 * 60
+
+def test_parse_delta_with_hours():
+    assert parse_delta("1:00:00").seconds == 60 * 60
+    assert parse_delta("10:00:00").seconds == 10 * 60 * 60
