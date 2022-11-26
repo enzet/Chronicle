@@ -1,5 +1,3 @@
-from datetime import timedelta
-
 from chronicle.time import Time, Moment, parse_delta
 
 
