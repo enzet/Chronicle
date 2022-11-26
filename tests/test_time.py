@@ -1,4 +1,6 @@
-from chronicle.time import Time, Moment
+from datetime import timedelta
+
+from chronicle.time import Time, Moment, parse_delta
 
 
 def check(
@@ -66,3 +68,11 @@ def test_second() -> None:
     check(time.start, 2000, 1, 1, 12, 10, 20)
     check(time.start.get_lower(), 2000, 1, 1, 12, 10, 20)
     check(time.start.get_upper(), 2000, 1, 1, 12, 10, 20)
+
+
+def test_parse_delta():
+    delta: timedelta = parse_delta("00:00")
+    assert delta.seconds == 0
+
+    delta: timedelta = parse_delta("10:00")
+    assert delta.seconds == 10 * 60
