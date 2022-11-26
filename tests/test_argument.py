@@ -2,6 +2,7 @@ import re
 from typing import Any
 
 from chronicle.argument import ArgumentParser
+from chronicle.event.core import Language
 
 
 def test_main_argument() -> None:
@@ -21,3 +22,19 @@ def test_argument_with_pattern() -> None:
 
     assert arguments["activity"] == "work"
     assert arguments["language"] == "en"
+
+
+def test_argument_with_pattern_and_loader() -> None:
+    parser: ArgumentParser = (
+        ArgumentParser({"do"})
+        .add_argument("activity")
+        .add_argument(
+            "language",
+            pattern=re.compile("_(..)"),
+            extractor=lambda x: Language(x[0]),
+        )
+    )
+    arguments: dict[str, Any] = parser.parse("work _en")
+
+    assert arguments["activity"] == "work"
+    assert arguments["language"] == Language("en")
