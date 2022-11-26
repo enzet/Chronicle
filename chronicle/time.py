@@ -1,4 +1,11 @@
+import re
 from datetime import datetime, timedelta
+
+
+DELTA_PATTERN: str = r"\d\d:\d\d"
+INTERVAL_PATTERN: re.Pattern = re.compile(
+    rf"({DELTA_PATTERN})-({DELTA_PATTERN})"
+)
 
 
 class Moment:
@@ -121,16 +128,14 @@ class Time(str):
         return f"{self.start or ''}/{self.end or ''}"
 
 
-def parse_delta(string_delta) -> timedelta:
+def parse_delta(string_delta: str) -> timedelta:
     """Parse time delta from a string representation."""
 
-    if isinstance(string_delta, int):
-        hour, minute, second = 0, 0, string_delta
-    elif string_delta.count(":") == 2:
-        hour, minute, second = map(int, string_delta.split(":"))
+    if string_delta.count(":") == 2:
+        hour, minute, second = (int(x) for x in string_delta.split(":"))
     else:
         hour = 0
-        minute, second = map(int, string_delta.split(":"))
+        minute, second = (int(x) for x in string_delta.split(":"))
     return timedelta(seconds=hour * 3600 + minute * 60 + second)
 
 

@@ -7,7 +7,7 @@ from pydantic.main import BaseModel
 
 from chronicle.argument import ArgumentParser
 from chronicle.event.core import Event, Language, Objects, Object
-from chronicle.time import format_delta, parse_delta
+from chronicle.time import format_delta, parse_delta, INTERVAL_PATTERN
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
@@ -133,7 +133,7 @@ class ListenAudiobookEvent(Event):
             .add_argument("audiobook_id")
             .add_argument(
                 "interval",
-                pattern=re.compile(r"(\d\d:\d\d)-(\d\d:\d\d)"),
+                pattern=INTERVAL_PATTERN,
                 extractor=lambda x: Interval(
                     from_=parse_delta(x[0]), to_=parse_delta(x[1])
                 ),
