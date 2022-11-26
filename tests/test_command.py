@@ -60,3 +60,20 @@ def test_listen_audiobook() -> None:
     assert event.interval == Interval(
         from_=timedelta(), to_=timedelta(minutes=10)
     )
+
+
+def test_listen_audiobook_hour_interval() -> None:
+    """Test listening song command with title, artist, and album."""
+
+    timeline: Timeline = Timeline()
+    timeline.parse_command(
+        "2022-01-01T13:00:00/2022-01-01T14:00:00 audiobook idiot "
+        "1:10:10-2:20:20"
+    )
+    assert len(timeline) == 1
+    event: Event = timeline.events[0]
+    assert isinstance(event, ListenAudiobookEvent)
+    assert event.interval == Interval(
+        from_=timedelta(hours=1, minutes=10, seconds=10),
+        to_=timedelta(hours=2, minutes=20, seconds=20),
+    )
