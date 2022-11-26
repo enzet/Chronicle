@@ -41,6 +41,11 @@ class Interval(BaseModel):
     from_: timedelta | None
     to_: timedelta | None
 
+    @classmethod
+    def from_string(cls, string: str):
+        from_, to_ = string.split("-")
+        return cls(from_=parse_delta(from_), to_=parse_delta(to_))
+
     def __str__(self) -> str:
         return (
             Text()
@@ -69,10 +74,8 @@ class ListenPodcastEvent(Event):
             )
             .add_argument(
                 "interval",
-                pattern=re.compile(r"(\d\d:\d\d)-(\d\d:\d\d)"),
-                extractor=lambda x: Interval(
-                    from_=parse_delta(x[0]), to_=parse_delta(x[1])
-                ),
+                pattern=re.compile(r"\d\d:\d\d-\d\d:\d\d"),
+                extractor=lambda x: Interval.from_string(x(0)),
             )
         )
 
@@ -134,9 +137,7 @@ class ListenAudiobookEvent(Event):
             .add_argument(
                 "interval",
                 pattern=INTERVAL_PATTERN,
-                extractor=lambda x: Interval(
-                    from_=parse_delta(x[0]), to_=parse_delta(x[1])
-                ),
+                extractor=lambda x: Interval.from_string(x(0)),
             )
             .add_argument("speed", pattern=re.compile(r"x(\d*\.\d*)"))
         )

@@ -31,7 +31,7 @@ def test_argument_with_pattern_and_loader() -> None:
         .add_argument(
             "language",
             pattern=re.compile("_(..)"),
-            extractor=lambda x: Language(x[0]),
+            extractor=lambda x: Language(x(1)),
         )
     )
     arguments: dict[str, Any] = parser.parse("work _en")

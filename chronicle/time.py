@@ -2,9 +2,9 @@ import re
 from datetime import datetime, timedelta
 
 
-DELTA_PATTERN: str = r"\d\d:\d\d"
+DELTA_PATTERN: str = r"(\d+:)?\d\d:\d\d"
 INTERVAL_PATTERN: re.Pattern = re.compile(
-    rf"({DELTA_PATTERN})-({DELTA_PATTERN})"
+    rf"{DELTA_PATTERN}-{DELTA_PATTERN}"
 )
 
 

@@ -57,11 +57,10 @@ class ArgumentParser:
                         result[current_key] = current
                         current_key = None
                         current = ""
-                    groups = matcher.groups()
                     if argument.extractor is not None:
-                        result[argument.name] = argument.extractor(groups)
+                        result[argument.name] = argument.extractor(matcher.group)
                     else:
-                        result[argument.name] = argument.loader(groups[0])
+                        result[argument.name] = argument.loader(matcher.group(1))
                     detected = True
                     break
 

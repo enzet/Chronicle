@@ -18,7 +18,6 @@ def test_listen_podcast() -> None:
         "2022-01-01T13:00:00/2022-01-01T14:00:00 podcast inner_french e5 "
         "10:00-20:00"
     )
-
     assert len(timeline) == 1
     event: Event = timeline.events[0]
     assert isinstance(event, ListenPodcastEvent)
@@ -37,7 +36,6 @@ def test_listen_music() -> None:
         "2022-01-01T13:00:00/2022-01-01T14:00:00 song "
         "Strawberry Fields Forever by The Beatles on Magic Mystery Tour"
     )
-
     assert len(timeline) == 1
     event: Event = timeline.events[0]
     assert isinstance(event, ListenMusicEvent)
@@ -54,7 +52,6 @@ def test_listen_audiobook() -> None:
         "2022-01-01T13:00:00/2022-01-01T14:00:00 audiobook idiot x1.25 "
         "00:00-10:00"
     )
-
     assert len(timeline) == 1
     event: Event = timeline.events[0]
     assert isinstance(event, ListenAudiobookEvent)
