@@ -17,7 +17,7 @@ class Argument:
     pattern: re.Pattern | None = None
     """Value pattern."""
 
-    extractor: Callable | None = None
+    extractor: Callable[[Any], Any] | None = None
     """Function that extracts values from a pattern matcher."""
 
 
@@ -82,8 +82,8 @@ class ArgumentParser:
         description: str | None = None,
         prefix: str | None = None,
         pattern: re.Pattern | None = None,
-        loader: Callable = lambda x: x,
-        extractor: Callable | None = None,
+        loader: Callable[[Any], Any] = lambda x: x,
+        extractor: Callable[[Any], Any] | None = None,
     ) -> "ArgumentParser":
 
         argument: Argument = Argument(
