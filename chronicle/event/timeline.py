@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 
 from chronicle.event.listen import *
-from chronicle.time import Time
+from chronicle.time import Time, Context
 
 
 @dataclass
@@ -20,11 +20,13 @@ class Timeline:
     def __len__(self) -> int:
         return len(self.events)
 
-    def parse_command(self, command: str) -> None:
+    def parse_command(
+        self, command: str, context: Context | None = None
+    ) -> None:
 
         words: list[str] = command.split(" ")
 
-        time = words[0]
+        time: Time = Time("").from_short(words[0], context)
         prefix = words[1]
 
         classes = Event.__subclasses__()
@@ -32,8 +34,6 @@ class Timeline:
         for class_ in classes:
             parser = class_.get_parser()
             if prefix in parser.prefixes:
-                event: Event = class_.parse_command(
-                    Time(time), " ".join(words[2:])
-                )
+                event: Event = class_.parse_command(time, " ".join(words[2:]))
                 self.events.append(event)
                 break

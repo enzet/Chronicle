@@ -62,7 +62,7 @@ class ListenPodcastEvent(Event):
     podcast_id: str
     episode: str
     speed: float = 1.0
-    interval: Interval = Interval()
+    interval: Interval | None = None
 
     @staticmethod
     def get_parser():

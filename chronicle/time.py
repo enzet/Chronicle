@@ -1,25 +1,34 @@
 import re
+from dataclasses import dataclass
 from datetime import datetime, timedelta
-
 
 DELTA_PATTERN: str = r"(\d+:)?\d\d:\d\d"
 INTERVAL_PATTERN: re.Pattern = re.compile(rf"{DELTA_PATTERN}-{DELTA_PATTERN}")
 
 
+class Context:
+    current_date: datetime | None = None
+
+
+@dataclass
 class Moment:
-    """Point in time with some certainty."""
+    """
+    Point in time with some certainty.
 
-    def __init__(self, code: str) -> None:
+    For example, 1912 means time period from 1 January 1912 to 1 January 1913.
+    """
 
-        self.year: int | None = None
-        self.month: int | None = None
-        self.day: int | None = None
-        self.hour: int | None = None
-        self.minute: int | None = None
-        self.second: float | None = None
+    year: int | None = None
+    month: int | None = None
+    day: int | None = None
+    hour: int | None = None
+    minute: int | None = None
+    second: float | None = None
 
-        if not code:
-            return
+    @classmethod
+    def from_pseudo_edtf(cls, code: str) -> "Moment":
+
+        moment: "Moment" = cls()
 
         date: str
         time: str
@@ -28,21 +37,30 @@ class Moment:
             date, time = code.split("T")
             time_parts: list[str] = time.split(":")
 
-            self.hour = int(time_parts[0])
+            moment.hour = int(time_parts[0])
             if len(time_parts) > 1:
-                self.minute = int(time_parts[1])
+                moment.minute = int(time_parts[1])
             if len(time_parts) > 2:
-                self.second = float(time_parts[2])
+                moment.second = float(time_parts[2])
         else:
             date = code
 
         date_parts: list[str] = date.split("-")
 
-        self.year = int(date_parts[0])
+        moment.year = int(date_parts[0])
         if len(date_parts) > 1:
-            self.month = int(date_parts[1])
+            moment.month = int(date_parts[1])
         if len(date_parts) > 2:
-            self.day = int(date_parts[2])
+            moment.day = int(date_parts[2])
+
+        return moment
+
+    @classmethod
+    def from_short(cls, code: str, context: Context) -> "Moment":
+
+        moment: "Moment" = cls()
+
+        return moment
 
     def get_lower(self) -> datetime | None:
         """Compute lower bound of the moment."""
@@ -102,14 +120,32 @@ class Time(str):
 
     def __init__(self, code: str) -> None:
 
-        for delimiter in "/":
-            if delimiter in code:
-                start_, end_ = code.split(delimiter)
-                self.start = Moment(start_)
-                self.end = Moment(end_)
-                return
+        if not code:
+            self.start = self.end = None
+            return
 
-        self.start = self.end = Moment(code)
+        if "/" in code:
+            start_, end_ = code.split("/")
+            self.start = Moment.from_pseudo_edtf(start_)
+            self.end = Moment.from_pseudo_edtf(end_)
+            return
+
+        self.start = self.end = Moment.from_pseudo_edtf(code)
+
+    @classmethod
+    def from_short(cls, code: str, context: Context):
+
+        time = cls("")
+
+        if "/" in code:
+            start_, end_ = code.split("/")
+            time.start = Moment.from_short(start_, context)
+            time.end = Moment.from_short(end_, context)
+            return time
+
+        time.start = time.end = Moment.from_short(code, context)
+
+        return time
 
     @classmethod
     def __get_validators__(cls):
