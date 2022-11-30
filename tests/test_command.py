@@ -7,8 +7,8 @@ from chronicle.event.listen import (
     ListenMusicEvent,
     ListenPodcastEvent,
 )
-from chronicle.event.timeline import Timeline
 from chronicle.time import Context
+from chronicle.timeline import Timeline
 
 
 def test_listen_podcast() -> None:
