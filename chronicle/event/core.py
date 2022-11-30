@@ -92,8 +92,8 @@ class Audiobook(Object):
     """Audio version of the book."""
 
     book_id: str
-    duration: timedelta
-    reader: str
+    duration: timedelta | None = None
+    reader: str | None = None
 
     def to_string(self) -> str:
         return self.book_id
