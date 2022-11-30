@@ -6,7 +6,9 @@ from typing import Any, Callable
 from pydantic.main import BaseModel
 
 from chronicle.argument import ArgumentParser
-from chronicle.event.core import Event, Language, Objects, Object
+from chronicle.event.core import Event
+from chronicle.event.value import Language
+from chronicle.objects import Object, Objects
 from chronicle.time import format_delta, parse_delta, INTERVAL_PATTERN
 
 __author__ = "Sergey Vartanov"

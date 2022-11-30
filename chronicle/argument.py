@@ -5,7 +5,7 @@ from typing import Any, Callable
 
 @dataclass
 class Argument:
-    name: str
+    key: str
     description: str | None = None
 
     loader: Callable[[Any], Any] = lambda x: x
@@ -32,7 +32,7 @@ class ArgumentParser:
         result: dict[str, str] = {}
         words = text.split(" ")
 
-        current_key: str | None = main.name
+        current_key: str | None = main.key
         current: str = ""
 
         for index in range(len(words)):
@@ -46,7 +46,7 @@ class ArgumentParser:
                     if current:
                         result[current_key] = current
                         current = ""
-                    current_key = argument.name
+                    current_key = argument.key
                     detected = True
                     break
 
@@ -58,11 +58,11 @@ class ArgumentParser:
                         current_key = None
                         current = ""
                     if argument.extractor is not None:
-                        result[argument.name] = argument.extractor(
+                        result[argument.key] = argument.extractor(
                             matcher.group
                         )
                     else:
-                        result[argument.name] = argument.loader(
+                        result[argument.key] = argument.loader(
                             matcher.group(1)
                         )
                     detected = True
@@ -78,7 +78,7 @@ class ArgumentParser:
 
     def add_argument(
         self,
-        name: str,
+        key: str,
         description: str | None = None,
         prefix: str | None = None,
         pattern: re.Pattern | None = None,
@@ -87,7 +87,7 @@ class ArgumentParser:
     ) -> "ArgumentParser":
 
         argument: Argument = Argument(
-            name,
+            key,
             description,
             prefix=prefix,
             pattern=pattern,
