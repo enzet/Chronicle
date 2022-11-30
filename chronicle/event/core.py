@@ -102,9 +102,9 @@ class Audiobook(Object):
 class Objects(BaseModel):
     """Collection of event-related object collections."""
 
-    podcasts: dict[str, Podcast] = []
-    books: dict[str, Book] = []
-    audiobooks: dict[str, Audiobook] = []
+    podcasts: dict[str, Podcast] = {}
+    books: dict[str, Book] = {}
+    audiobooks: dict[str, Audiobook] = {}
 
     def get_podcast(self, podcast_id: str) -> Podcast | None:
         return self.podcasts.get(podcast_id)
