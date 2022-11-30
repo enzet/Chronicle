@@ -1,6 +1,6 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 
-from chronicle.event.core import Event
+from chronicle.event.core import Event, Objects
 from chronicle.event.listen import (
     Interval,
     ListenAudiobookEvent,
@@ -8,6 +8,7 @@ from chronicle.event.listen import (
     ListenPodcastEvent,
 )
 from chronicle.event.timeline import Timeline
+from chronicle.time import Context
 
 
 def test_listen_podcast() -> None:
@@ -73,3 +74,21 @@ def test_listen_audiobook_hour_interval() -> None:
         from_=timedelta(hours=1, minutes=10, seconds=10),
         to_=timedelta(hours=2, minutes=20, seconds=20),
     )
+
+
+def test_short_time() -> None:
+    """Test listening song command with title, artist, and album."""
+
+    objects: Objects = Objects(
+        books={"idiot": {"title": "Idiot", "language": "ru"}},
+        audiobooks={"idiot": {"book_id": "idiot"}},
+    )
+    context: Context = Context()
+    context.current_date = datetime(2022, 1, 2)
+    (timeline := Timeline()).parse_command("13:00 audiobook idiot", context)
+    assert len(timeline) == 1
+    event: Event = timeline.events[0]
+    assert isinstance(event, ListenAudiobookEvent)
+    assert event.to_string(objects) == "2022-01-02T13:00 listen audiobook idiot"
+    assert event.time.start == event.time.end
+    assert event.time.start.hour == 13

@@ -60,6 +60,31 @@ class Moment:
 
         moment: "Moment" = cls()
 
+        if "T" in code:
+            date, time = code.split("T")
+            date_parts: list[str] = date.split("-")
+
+            moment.year = int(date_parts[0])
+            if len(date_parts) > 1:
+                moment.month = int(date_parts[1])
+            if len(date_parts) > 2:
+                moment.day = int(date_parts[2])
+        elif context:
+            time = code
+            moment.year = context.current_date.year
+            moment.month = context.current_date.month
+            moment.day = context.current_date.day
+        else:
+            return moment  # FIXME
+
+        time_parts: list[str] = time.split(":")
+
+        moment.hour = int(time_parts[0])
+        if len(time_parts) > 1:
+            moment.minute = int(time_parts[1])
+        if len(time_parts) > 2:
+            moment.second = float(time_parts[2])
+
         return moment
 
     def get_lower(self) -> datetime | None:
@@ -114,6 +139,16 @@ class Moment:
             + (f":{self.second}" if self.second is not None else "")
         )
 
+    def to_pseudo_edtf(self) -> str:
+        return (
+            f"{self.year}"
+            + (f"-{self.month:02d}" if self.month else "")
+            + (f"-{self.day:02d}" if self.day else "")
+            + (f"T{self.hour:02d}" if self.hour is not None else "")
+            + (f":{self.minute:02d}" if self.minute is not None else "")
+            + (f":{self.second}" if self.second is not None else "")
+        )
+
 
 class Time(str):
     """Point in time or time span."""
@@ -122,18 +157,15 @@ class Time(str):
 
         if not code:
             self.start = self.end = None
-            return
-
-        if "/" in code:
+        elif "/" in code:
             start_, end_ = code.split("/")
             self.start = Moment.from_pseudo_edtf(start_)
             self.end = Moment.from_pseudo_edtf(end_)
-            return
-
-        self.start = self.end = Moment.from_pseudo_edtf(code)
+        else:
+            self.start = self.end = Moment.from_pseudo_edtf(code)
 
     @classmethod
-    def from_short(cls, code: str, context: Context):
+    def from_short(cls, code: str, context: Context) -> "Time":
 
         time = cls("")
 
@@ -152,14 +184,16 @@ class Time(str):
         yield cls
 
     def __str__(self) -> str:
-        if self.start == self.end:
-            return str(self.start)
-        return f"{self.start or ''} - {self.end or ''}"
+        return self.to_pseudo_edtf()
 
-    def __repr__(self) -> str:
+    def to_pseudo_edtf(self) -> str:
         if self.start == self.end:
-            return str(self.start)
-        return f"{self.start or ''}/{self.end or ''}"
+            return self.start.to_pseudo_edtf()
+        return (
+            (self.start.to_pseudo_edtf() if self.start else "")
+            + "/"
+            + (self.end.to_pseudo_edtf() if self.end else "")
+        )
 
 
 def parse_delta(string_delta: str) -> timedelta:

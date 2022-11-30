@@ -26,7 +26,7 @@ class Timeline:
 
         words: list[str] = command.split(" ")
 
-        time: Time = Time("").from_short(words[0], context)
+        time: Time = Time.from_short(words[0], context)
         prefix = words[1]
 
         classes = Event.__subclasses__()

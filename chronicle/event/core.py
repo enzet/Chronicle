@@ -138,7 +138,7 @@ class Event(BaseModel):
     @classmethod
     def parse_command(cls, time: Time, command: str) -> "Event":
         arguments = cls.get_parser().parse(command)
-        return cls(time=time, **arguments)
+        return cls(time=str(time), **arguments)
 
     def to_string(self, objects: Objects) -> str:
         """
