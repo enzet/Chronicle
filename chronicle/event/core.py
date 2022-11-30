@@ -128,17 +128,13 @@ class Event(BaseModel):
     time: Time
     """Point in time or time span when event is occurred."""
 
-    def process_command(self, arguments: list[str]) -> None:
-        pass
-
     @staticmethod
     def get_parser() -> ArgumentParser:
         return ArgumentParser(set())
 
     @classmethod
-    def parse_command(cls, time: Time, command: str) -> "Event":
-        arguments = cls.get_parser().parse(command)
-        return cls(time=str(time), **arguments)
+    def parse_command(cls, time: str, command: str) -> "Event":
+        return cls(time=time, **cls.get_parser().parse(command))
 
     def to_string(self, objects: Objects) -> str:
         """

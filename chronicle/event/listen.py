@@ -20,8 +20,8 @@ def to_string(object_: Object) -> str:
 class Text:
     """Chainable text builder."""
 
-    def __init__(self, text: Any = ""):
-        self.text: str = str(text)
+    def __init__(self, text: Any = "", loader: Callable[[Any], str] = str):
+        self.text: str = loader(text)
 
     def add(
         self,
@@ -81,7 +81,7 @@ class ListenPodcastEvent(Event):
 
     def to_string(self, objects: Objects) -> str:
         return (
-            Text(self.time)
+            Text(self.time, loader=to_string)
             .add("listen podcast")
             .add(objects.get_podcast(self.podcast_id), loader=to_string)
             .add(self.episode, " E ")
@@ -112,7 +112,7 @@ class ListenMusicEvent(Event):
 
     def to_string(self, objects: Objects) -> str:
         return (
-            Text(self.time)
+            Text(self.time, loader=to_string)
             .add("listen music")
             .add(self.title)
             .add(self.artist, " by ")
@@ -144,7 +144,7 @@ class ListenAudiobookEvent(Event):
 
     def to_string(self, objects: Objects) -> str:
         return (
-            Text(self.time)
+            Text(self.time, loader=to_string)
             .add("listen audiobook")
             .add(objects.get_audiobook(self.audiobook_id), loader=to_string)
             .text

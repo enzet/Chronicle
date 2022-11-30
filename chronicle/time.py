@@ -56,7 +56,7 @@ class Moment:
         return moment
 
     @classmethod
-    def from_short(cls, code: str, context: Context) -> "Moment":
+    def from_string(cls, code: str, context: Context) -> "Moment":
 
         moment: "Moment" = cls()
 
@@ -129,22 +129,22 @@ class Moment:
 
         return lower
 
-    def __str__(self) -> str:
-        return (
-            f"{self.year}"
-            + (f".{self.month:02d}" if self.month else "")
-            + (f".{self.day:02d}" if self.day else "")
-            + (f" {self.hour:02d}" if self.hour is not None else "")
-            + (f":{self.minute:02d}" if self.minute is not None else "")
-            + (f":{self.second}" if self.second is not None else "")
-        )
-
     def to_pseudo_edtf(self) -> str:
         return (
             f"{self.year}"
             + (f"-{self.month:02d}" if self.month else "")
             + (f"-{self.day:02d}" if self.day else "")
             + (f"T{self.hour:02d}" if self.hour is not None else "")
+            + (f":{self.minute:02d}" if self.minute is not None else "")
+            + (f":{self.second}" if self.second is not None else "")
+        )
+
+    def to_string(self) -> str:
+        return (
+            f"{self.year}"
+            + (f".{self.month:02d}" if self.month else "")
+            + (f".{self.day:02d}" if self.day else "")
+            + (f" {self.hour:02d}" if self.hour is not None else "")
             + (f":{self.minute:02d}" if self.minute is not None else "")
             + (f":{self.second}" if self.second is not None else "")
         )
@@ -165,17 +165,17 @@ class Time(str):
             self.start = self.end = Moment.from_pseudo_edtf(code)
 
     @classmethod
-    def from_short(cls, code: str, context: Context) -> "Time":
+    def from_string(cls, code: str, context: Context) -> "Time":
 
         time = cls("")
 
         if "/" in code:
             start_, end_ = code.split("/")
-            time.start = Moment.from_short(start_, context)
-            time.end = Moment.from_short(end_, context)
+            time.start = Moment.from_string(start_, context)
+            time.end = Moment.from_string(end_, context)
             return time
 
-        time.start = time.end = Moment.from_short(code, context)
+        time.start = time.end = Moment.from_string(code, context)
 
         return time
 
@@ -193,6 +193,15 @@ class Time(str):
             (self.start.to_pseudo_edtf() if self.start else "")
             + "/"
             + (self.end.to_pseudo_edtf() if self.end else "")
+        )
+
+    def to_string(self) -> str:
+        if self.start == self.end:
+            return self.start.to_string()
+        return (
+            (self.start.to_string() if self.start else "")
+            + " - "
+            + (self.end.to_string() if self.end else "")
         )
 
 

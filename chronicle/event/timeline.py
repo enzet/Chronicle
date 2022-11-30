@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 
 from chronicle.event.listen import *
-from chronicle.time import Time, Context
+from chronicle.time import Context, Time
 
 
 @dataclass
@@ -26,8 +26,8 @@ class Timeline:
 
         words: list[str] = command.split(" ")
 
-        time: Time = Time.from_short(words[0], context)
-        prefix = words[1]
+        time: str = Time.from_string(words[0], context).to_pseudo_edtf()
+        prefix: str = words[1]
 
         classes = Event.__subclasses__()
 

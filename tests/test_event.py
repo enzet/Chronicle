@@ -34,5 +34,5 @@ def test_listen() -> None:
 
     assert (
         event.to_string(objects)
-        == "2022-01-01 listen podcast Intermediate French Podcast E 15"
+        == "2022.01.01 listen podcast Intermediate French Podcast E 15"
     )
