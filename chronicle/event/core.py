@@ -7,12 +7,11 @@ This file describes events and some common attributes that events may have.
 from pydantic.main import BaseModel
 
 from chronicle.argument import ArgumentParser
+from chronicle.objects import Objects
 from chronicle.time import Time
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
-
-from objects import Objects
 
 
 class Event(BaseModel):

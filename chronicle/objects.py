@@ -2,11 +2,11 @@ from datetime import timedelta
 
 from pydantic.main import BaseModel
 
-from event.value import Language
+from chronicle.event.value import Language
 
 
 class Object(BaseModel):
-    def to_string(self) -> str:
+    def to_string(self, objects: "Objects") -> str:
         raise NotImplementedError()
 
 
@@ -24,7 +24,7 @@ class Podcast(Object):
     is_adapted: bool = False
     """If the podcast used simplified language for educational purposes."""
 
-    def to_string(self) -> str:
+    def to_string(self, objects: "Objects") -> str:
         return self.title
 
 
@@ -53,7 +53,7 @@ class Book(Object):
     year: int | None = None
     """Year of the first publication of the book (not its translation)."""
 
-    def to_string(self) -> str:
+    def to_string(self, objects: "Objects") -> str:
         return self.title
 
 
@@ -64,8 +64,8 @@ class Audiobook(Object):
     duration: timedelta | None = None
     reader: str | None = None
 
-    def to_string(self) -> str:
-        return self.book_id
+    def to_string(self, objects: "Objects") -> str:
+        return objects.get_book(self.book_id).to_string(objects)
 
 
 class Objects(BaseModel):

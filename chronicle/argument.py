@@ -58,13 +58,9 @@ class ArgumentParser:
                         current_key = None
                         current = ""
                     if argument.extractor is not None:
-                        result[argument.key] = argument.extractor(
-                            matcher.group
-                        )
+                        result[argument.key] = argument.extractor(matcher.group)
                     else:
-                        result[argument.key] = argument.loader(
-                            matcher.group(1)
-                        )
+                        result[argument.key] = argument.loader(matcher.group(1))
                     detected = True
                     break
 

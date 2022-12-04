@@ -89,6 +89,6 @@ def test_short_time() -> None:
     assert len(timeline) == 1
     event: Event = timeline.events[0]
     assert isinstance(event, ListenAudiobookEvent)
-    assert event.to_string(objects) == "2022.01.02 13:00 listen audiobook idiot"
+    assert event.to_string(objects) == "2022.01.02 13:00 listen audiobook Idiot"
     assert event.time.start == event.time.end
     assert event.time.start.hour == 13

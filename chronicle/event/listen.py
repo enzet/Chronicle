@@ -8,14 +8,14 @@ from pydantic.main import BaseModel
 from chronicle.argument import ArgumentParser
 from chronicle.event.core import Event
 from chronicle.event.value import Language
-from chronicle.objects import Object, Objects
+from chronicle.objects import Objects
 from chronicle.time import format_delta, parse_delta, INTERVAL_PATTERN
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
 
 
-def to_string(object_: Object) -> str:
+def to_string(object_: Any) -> str:
     return object_.to_string()
 
 
@@ -85,7 +85,10 @@ class ListenPodcastEvent(Event):
         return (
             Text(self.time, loader=to_string)
             .add("listen podcast")
-            .add(objects.get_podcast(self.podcast_id), loader=to_string)
+            .add(
+                objects.get_podcast(self.podcast_id),
+                loader=lambda x: x.to_string(objects),
+            )
             .add(self.episode, " E ")
             .add(self.interval)
             .text
@@ -148,6 +151,9 @@ class ListenAudiobookEvent(Event):
         return (
             Text(self.time, loader=to_string)
             .add("listen audiobook")
-            .add(objects.get_audiobook(self.audiobook_id), loader=to_string)
+            .add(
+                objects.get_audiobook(self.audiobook_id),
+                loader=lambda x: x.to_string(objects),
+            )
             .text
         )

@@ -2,7 +2,7 @@ import re
 from typing import Any
 
 from chronicle.argument import ArgumentParser
-from event.value import Language
+from chronicle.event.value import Language
 
 
 def test_main_argument() -> None:
