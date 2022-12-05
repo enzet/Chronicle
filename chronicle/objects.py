@@ -7,10 +7,12 @@ from chronicle.event.value import Language
 
 class Object(BaseModel):
     def to_string(self, objects: "Objects") -> str:
+        """Get human-readable text representation of an object in English."""
         raise NotImplementedError()
 
 
 class Podcast(Object):
+    """Episodic series of digital audio."""
 
     title: str
     """Title of the podcast."""
@@ -22,14 +24,14 @@ class Podcast(Object):
     """The main speaker of the podcast."""
 
     is_adapted: bool = False
-    """If the podcast used simplified language for educational purposes."""
+    """Whether the podcast uses simplified language for educational purposes."""
 
     def to_string(self, objects: "Objects") -> str:
         return self.title
 
 
 class Book(Object):
-    """A book, a paper, or any other text or some of its translations."""
+    """A book, a paper, or any other text or one of its translations."""
 
     title: str
     """Title in language of the text."""
@@ -38,8 +40,7 @@ class Book(Object):
     """Language of the text."""
 
     volume: float | None = None
-    """
-    Number of pages.
+    """Number of pages.
 
     Since number of pages may vary from one printed book to another, this is an
     approximation. If there is no printed version of the book, number of pages
