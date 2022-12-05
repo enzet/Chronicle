@@ -3,7 +3,9 @@ Event and global event parameters.
 
 This file describes events and some common attributes that events may have.
 """
+from datetime import timedelta
 
+from pydantic.json import timedelta_isoformat
 from pydantic.main import BaseModel
 
 from chronicle.argument import ArgumentParser
@@ -25,6 +27,9 @@ class Event(BaseModel):
 
     time: Time
     """Point in time or time span when event is occurred."""
+
+    class Config:
+        json_encoders = {timedelta: timedelta_isoformat}
 
     @staticmethod
     def get_parser() -> ArgumentParser:
