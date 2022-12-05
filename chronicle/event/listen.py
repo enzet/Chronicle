@@ -8,11 +8,13 @@ from pydantic.main import BaseModel
 from chronicle.argument import ArgumentParser
 from chronicle.event.core import Event
 from chronicle.event.value import Language
-from chronicle.objects import Objects
+from chronicle.objects import Objects, Audiobook
 from chronicle.time import format_delta, parse_delta, INTERVAL_PATTERN
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
+
+from summary.core import Summary
 
 
 def to_string(object_: Any) -> str:
@@ -33,29 +35,35 @@ class Text:
     ) -> "Text":
 
         if text is not None:
-            self.text += delimiter + loader(text)
+            if loaded := loader(text):
+                if self.text:
+                    self.text += delimiter
+                self.text += loaded
         return self
 
 
 class Interval(BaseModel):
     """Time interval in seconds."""
 
-    from_: timedelta | None
-    to_: timedelta | None
+    start: timedelta | None
+    end: timedelta | None
 
     @classmethod
     def from_string(cls, string: str):
-        from_, to_ = string.split("-")
-        return cls(from_=parse_delta(from_), to_=parse_delta(to_))
+        start, end = string.split("-")
+        return cls(from_=parse_delta(start), to_=parse_delta(end))
 
-    def __str__(self) -> str:
+    def to_string(self) -> str:
         return (
-            Text()
-            .add(self.from_, loader=format_delta)
-            .add("..")
-            .add(self.to_, loader=format_delta)
-            .text
+            (format_delta(self.start) if self.start is not None else "")
+            + (".." if self.start is not None or self.end is not None else "")
+            + (format_delta(self.end) if self.end is not None else "")
         )
+
+    def get_duration(self) -> float:
+        if self.start is None and self.end is None:
+            return 0.0
+        return (self.end - self.start).total_seconds()
 
 
 class ListenPodcastEvent(Event):
@@ -83,15 +91,21 @@ class ListenPodcastEvent(Event):
 
     def to_string(self, objects: Objects) -> str:
         return (
-            Text(self.time, loader=to_string)
+            Text()
             .add("listen podcast")
             .add(
                 objects.get_podcast(self.podcast_id),
                 loader=lambda x: x.to_string(objects),
             )
             .add(self.episode, " E ")
-            .add(self.interval)
+            .add(self.interval, loader=to_string)
             .text
+        )
+
+    def register_summary(self, summary: Summary, objects: Objects):
+        summary.register_listen(
+            self.interval.get_duration(),
+            objects.get_podcast(self.podcast_id).language,
         )
 
 
@@ -101,6 +115,7 @@ class ListenMusicEvent(Event):
     title: str
     """Title of the song or music description."""
 
+    interval: Interval = Interval()
     artist: str | None = None
     album: str | None = None
     language: Language | None = None
@@ -117,12 +132,13 @@ class ListenMusicEvent(Event):
 
     def to_string(self, objects: Objects) -> str:
         return (
-            Text(self.time, loader=to_string)
+            Text()
             .add("listen music")
             .add(self.title)
             .add(self.artist, " by ")
             .add(self.album, " on ")
             .add(self.language, " in ")
+            .add(self.interval, loader=to_string)
             .text
         )
 
@@ -149,11 +165,24 @@ class ListenAudiobookEvent(Event):
 
     def to_string(self, objects: Objects) -> str:
         return (
-            Text(self.time, loader=to_string)
+            Text()
             .add("listen audiobook")
             .add(
                 objects.get_audiobook(self.audiobook_id),
                 loader=lambda x: x.to_string(objects),
             )
+            .add(self.interval, loader=to_string)
             .text
+        )
+
+    def get_audiobook(self, objects: Objects) -> Audiobook | None:
+        return objects.get_audiobook(self.audiobook_id)
+
+    def get_language(self, objects: Objects) -> Language | None:
+        audiobook: Audiobook | None = self.get_audiobook(objects)
+        return audiobook.get_language(objects) if audiobook else None
+
+    def register_summary(self, summary: Summary, objects: Objects):
+        summary.register_listen(
+            self.interval.get_duration(), self.get_language(objects)
         )

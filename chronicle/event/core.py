@@ -15,6 +15,8 @@ from chronicle.time import Time
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
 
+from summary.core import Summary
+
 
 class Event(BaseModel):
     """
@@ -38,6 +40,9 @@ class Event(BaseModel):
     @classmethod
     def parse_command(cls, time: str, command: str) -> "Event":
         return cls(time=time, **cls.get_parser().parse(command))
+
+    def register_summary(self, summary: Summary, objects: Objects):
+        """"""
 
     def to_string(self, objects: Objects) -> str:
         """

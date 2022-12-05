@@ -68,6 +68,13 @@ class Audiobook(Object):
     def to_string(self, objects: "Objects") -> str:
         return objects.get_book(self.book_id).to_string(objects)
 
+    def get_book(self, objects: "Objects") -> Book | None:
+        return objects.get_book(self.book_id)
+
+    def get_language(self, objects: "Objects") -> Language | None:
+        book: Book | None = objects.get_book(self.book_id)
+        return book.language if book else None
+
 
 class Objects(BaseModel):
     """Collection of event-related object collections."""

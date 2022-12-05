@@ -1,3 +1,4 @@
+import json
 from dataclasses import dataclass, field
 
 from chronicle.event.listen import *
@@ -13,8 +14,10 @@ class Timeline:
 
     def dict(self) -> dict[str, Any]:
         return {
-            "events": [x.dict() for x in self.events],
-            "objects": self.objects.dict(),
+            "events": [
+                json.loads(x.json(exclude_unset=True)) for x in self.events
+            ],
+            "objects": self.objects.dict(exclude_unset=True),
         }
 
     def __len__(self) -> int:
@@ -37,3 +40,9 @@ class Timeline:
                 event: Event = class_.parse_command(time, " ".join(words[2:]))
                 self.events.append(event)
                 break
+
+    def get_summary(self):
+        summary = Summary()
+        for event in self.events:
+            event.register_summary(summary, self.objects)
+        return summary
