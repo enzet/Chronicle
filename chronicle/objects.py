@@ -20,6 +20,9 @@ class Podcast(Object):
     language: Language
     """Language of the podcast."""
 
+    wikidata_id: int = 0
+    """Integer Wikidata entity identifier (0 if unspecified)."""
+
     author: str | None = None
     """The main speaker of the podcast."""
 
@@ -38,6 +41,9 @@ class Book(Object):
 
     language: Language
     """Language of the text."""
+
+    wikidata_id: int = 0
+    """Integer Wikidata entity identifier (0 if unspecified)."""
 
     volume: float | None = None
     """Number of pages.
@@ -62,6 +68,10 @@ class Audiobook(Object):
     """Audio version of the book."""
 
     book_id: str
+
+    wikidata_id: int = 0
+    """Integer Wikidata entity identifier (0 if unspecified)."""
+
     duration: timedelta | None = None
     reader: str | None = None
 
