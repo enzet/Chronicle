@@ -19,6 +19,7 @@ def check(
 
 
 def test_year() -> None:
+    """Test particular year parsing."""
     time: Time = Time("2000")
     assert time.start == time.end
     check(time.start.get_lower(), 2000, 1, 1, 0, 0, 0)
@@ -26,6 +27,7 @@ def test_year() -> None:
 
 
 def test_month() -> None:
+    """Test particular month parsing."""
     time: Time = Time("2000-01")
     assert time.start == time.end
     check(time.start.get_lower(), 2000, 1, 1, 0, 0, 0)
@@ -38,6 +40,7 @@ def test_month() -> None:
 
 
 def test_day() -> None:
+    """Test particular day parsing."""
     time: Time = Time("2000-01-01")
     assert time.start == time.end
     check(time.start.get_lower(), 2000, 1, 1, 0, 0, 0)
@@ -45,6 +48,7 @@ def test_day() -> None:
 
 
 def test_hour() -> None:
+    """Test particular minute parsing."""
     time: Time = Time("2000-01-01T12")
     assert time.start == time.end
     check(time.start.get_lower(), 2000, 1, 1, 12, 0, 0)
@@ -52,6 +56,7 @@ def test_hour() -> None:
 
 
 def test_minute() -> None:
+    """Test particular second parsing."""
     time: Time = Time("2000-01-01T12:10")
     assert time.start == time.end
     check(time.start.get_lower(), 2000, 1, 1, 12, 10, 0)
@@ -59,6 +64,7 @@ def test_minute() -> None:
 
 
 def test_second() -> None:
+    """Test particular second parsing."""
     time: Time = Time("2000-01-01T12:10:20")
 
     assert time.start == time.end
@@ -69,11 +75,13 @@ def test_second() -> None:
 
 
 def test_parse_delta():
+    """Test delta parsing with minutes and seconds."""
     assert parse_delta("00:00").seconds == 0
     assert parse_delta("0:00").seconds == 0
     assert parse_delta("10:00").seconds == 10 * 60
 
 
 def test_parse_delta_with_hours():
+    """Test delta parsing with hours, minutes, and seconds."""
     assert parse_delta("1:00:00").seconds == 60 * 60
     assert parse_delta("10:00:00").seconds == 10 * 60 * 60
