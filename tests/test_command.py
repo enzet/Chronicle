@@ -92,3 +92,43 @@ def test_short_time() -> None:
     assert event.to_string(objects) == "listen audiobook Idiot"
     assert event.time.start == event.time.end
     assert event.time.start.hour == 13
+
+
+class CommandParser:
+    def __init__(self):
+        self.context: Context = Context()
+        self.timeline: Timeline = Timeline()
+        self.objects: Objects = Objects()
+
+    def parse_command(self, command: str) -> None:
+        if self.objects.parse_command(command):
+            return
+
+        if command[4] == ".":
+            self.context.current_date = datetime.strptime(command, "%Y.%m.%d")
+            return
+
+        self.timeline.parse_command(command, self.context)
+
+    def parse_commands(self, commands: list[str]) -> None:
+        for command in commands:
+            self.parse_command(command)
+
+
+def test_file() -> None:
+    commands: list[str] = [
+        "book idiot Idiot _ru",
+        "audiobook idiot idiot",
+        "2000.01.01",
+        "13:00 audiobook idiot",
+    ]
+    parser: CommandParser = CommandParser()
+    parser.parse_commands(commands)
+
+    assert len(parser.timeline) == 1
+    event: Event = parser.timeline.events[0]
+    assert isinstance(event, ListenAudiobookEvent)
+    assert event.to_string(parser.objects) == "listen audiobook Idiot"
+    assert event.time.start == event.time.end
+    assert event.time.start.year == 2000
+    assert event.time.start.hour == 13
