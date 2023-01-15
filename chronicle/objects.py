@@ -128,3 +128,22 @@ class Objects(BaseModel):
 
     def get_audiobook(self, audiobook_id: str) -> Audiobook | None:
         return self.audiobooks.get(audiobook_id)
+
+    def parse_command(self, command: str) -> bool:
+
+        parts: list[str] = command.split(" ")
+        if len(parts) < 3:
+            return False
+        prefix: str = parts[0]
+        id_: str = parts[1]
+
+        classes: list = Object.__subclasses__()
+
+        for class_ in classes:
+            if prefix in class_.get_parser().prefixes:
+                self.__getattribute__(prefix + "s")[id_] = class_.parse_command(
+                    " ".join(parts[2:])
+                )
+                return True
+
+        return False
