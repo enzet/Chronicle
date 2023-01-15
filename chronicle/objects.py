@@ -1,7 +1,9 @@
+import re
 from datetime import timedelta
 
 from pydantic.main import BaseModel
 
+from argument import ArgumentParser
 from chronicle.event.value import Language
 
 
@@ -9,6 +11,14 @@ class Object(BaseModel):
     def to_string(self, objects: "Objects") -> str:
         """Get human-readable text representation of an object in English."""
         raise NotImplementedError()
+
+    @staticmethod
+    def get_parser() -> ArgumentParser:
+        raise NotImplementedError()
+
+    @classmethod
+    def parse_command(cls, command: str) -> "Object":
+        return cls(**cls.get_parser().parse(command))
 
 
 class Podcast(Object):
@@ -31,6 +41,10 @@ class Podcast(Object):
 
     def to_string(self, objects: "Objects") -> str:
         return self.title
+
+    @staticmethod
+    def get_parser() -> ArgumentParser:
+        return ArgumentParser({"podcast"}).add_argument("title")
 
 
 class Book(Object):
@@ -63,11 +77,20 @@ class Book(Object):
     def to_string(self, objects: "Objects") -> str:
         return self.title
 
+    @staticmethod
+    def get_parser() -> ArgumentParser:
+        return (
+            ArgumentParser({"book"})
+            .add_argument("title")
+            .add_argument("language", pattern=re.compile("_(..)"))
+        )
+
 
 class Audiobook(Object):
     """Audio version of the book."""
 
     book_id: str
+    """Unique string identifier."""
 
     wikidata_id: int = 0
     """Integer Wikidata entity identifier (0 if unspecified)."""
@@ -84,6 +107,10 @@ class Audiobook(Object):
     def get_language(self, objects: "Objects") -> Language | None:
         book: Book | None = objects.get_book(self.book_id)
         return book.language if book else None
+
+    @staticmethod
+    def get_parser() -> ArgumentParser:
+        return ArgumentParser({"audiobook"}).add_argument("book_id")
 
 
 class Objects(BaseModel):
