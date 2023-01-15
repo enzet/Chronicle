@@ -26,18 +26,18 @@ class ArgumentParser:
         self.prefixes: set[str] = prefixes
         self.arguments: list[Argument] = []
 
-    def parse(self, text: str) -> dict[str, str] | None:
+    def parse(self, text: str) -> dict[str, Any] | None:
 
         main: Argument = self.arguments[0]
         result: dict[str, str] = {}
-        words = text.split(" ")
+        words: list[str] = text.split(" ")
 
         current_key: str | None = main.key
         current: str = ""
 
         for index in range(len(words)):
 
-            word = words[index]
+            word: str = words[index]
             detected: bool = False
 
             for argument in self.arguments:

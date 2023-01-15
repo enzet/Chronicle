@@ -167,7 +167,7 @@ class Time(str):
     @classmethod
     def from_string(cls, code: str, context: Context) -> "Time":
 
-        time = cls("")
+        time: "Time" = cls("")
 
         if "/" in code:
             start_, end_ = code.split("/")

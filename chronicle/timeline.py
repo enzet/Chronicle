@@ -26,16 +26,17 @@ class Timeline:
     def parse_command(
         self, command: str, context: Context | None = None
     ) -> None:
+        """Parse string command describing an event."""
 
         words: list[str] = command.split(" ")
 
         time: str = Time.from_string(words[0], context).to_pseudo_edtf()
         prefix: str = words[1]
 
-        classes = Event.__subclasses__()
+        classes: list = Event.__subclasses__()
 
         for class_ in classes:
-            parser = class_.get_parser()
+            parser: ArgumentParser = class_.get_parser()
             if prefix in parser.prefixes:
                 event: Event = class_.parse_command(time, " ".join(words[2:]))
                 self.events.append(event)
