@@ -1,4 +1,15 @@
-from chronicle.time import Time, Moment, parse_delta
+import re
+
+from chronicle.time import (
+    Time,
+    Moment,
+    parse_delta,
+    INTERVAL_PATTERN,
+    DELTA_PATTERN,
+)
+
+__author__ = "Sergey Vartanov"
+__email__ = "me@enzet.ru"
 
 
 def check(
@@ -16,6 +27,14 @@ def check(
     assert moment.hour == hour
     assert moment.minute == minute
     assert moment.second == second
+
+
+def test_pattern() -> None:
+    assert re.match(DELTA_PATTERN, "00:00")
+    assert re.match(DELTA_PATTERN, "0:00:00")
+    assert re.match(DELTA_PATTERN, "12:34")
+    assert re.match(DELTA_PATTERN, "1:23:45")
+    assert INTERVAL_PATTERN.match("2:02:00/2:12:00")
 
 
 def test_year() -> None:
