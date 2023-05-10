@@ -162,13 +162,17 @@ class Time(str):
 
     def __init__(self, code: str) -> None:
 
-        if not code:
-            self.start = self.end = None
-        elif "/" in code:
-            start_, end_ = code.split("/")
-            self.start = Moment.from_pseudo_edtf(start_)
-            self.end = Moment.from_pseudo_edtf(end_)
-        else:
+        self.start: Moment | None
+        self.end: Moment | None
+
+        self.start = self.end = None
+        if "/" in code:
+            start, end = code.split("/")
+            if start:
+                self.start = Moment.from_pseudo_edtf(start)
+            if end:
+                self.end = Moment.from_pseudo_edtf(end)
+        elif code:
             self.start = self.end = Moment.from_pseudo_edtf(code)
 
     @classmethod
@@ -178,8 +182,10 @@ class Time(str):
 
         if "/" in code:
             start_, end_ = code.split("/")
-            time.start = Moment.from_string(start_, context)
-            time.end = Moment.from_string(end_, context)
+            if start_:
+                time.start = Moment.from_string(start_, context)
+            if end_:
+                time.end = Moment.from_string(end_, context)
             return time
 
         time.start = time.end = Moment.from_string(code, context)
@@ -205,6 +211,7 @@ class Time(str):
     def to_string(self) -> str:
         if self.start == self.end:
             return self.start.to_string()
+
         return (
             (self.start.to_string() if self.start else "")
             + " - "
