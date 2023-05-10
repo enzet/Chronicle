@@ -8,7 +8,10 @@ from chronicle.event.listen import (
     ListenPodcastEvent,
 )
 from chronicle.time import Context
-from chronicle.timeline import Timeline
+from chronicle.timeline import Timeline, CommandParser
+
+__author__ = "Sergey Vartanov"
+__email__ = "me@enzet.ru"
 
 
 def test_listen_podcast() -> None:
@@ -92,27 +95,6 @@ def test_short_time() -> None:
     assert event.to_string(objects) == "listen audiobook Idiot"
     assert event.time.start == event.time.end
     assert event.time.start.hour == 13
-
-
-class CommandParser:
-    def __init__(self):
-        self.context: Context = Context()
-        self.timeline: Timeline = Timeline()
-        self.objects: Objects = Objects()
-
-    def parse_command(self, command: str) -> None:
-        if self.objects.parse_command(command):
-            return
-
-        if command[4] == ".":
-            self.context.current_date = datetime.strptime(command, "%Y.%m.%d")
-            return
-
-        self.timeline.parse_command(command, self.context)
-
-    def parse_commands(self, commands: list[str]) -> None:
-        for command in commands:
-            self.parse_command(command)
 
 
 def test_file() -> None:

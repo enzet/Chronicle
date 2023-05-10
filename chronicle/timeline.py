@@ -47,3 +47,28 @@ class Timeline:
         for event in self.events:
             event.register_summary(summary, self.objects)
         return summary
+
+
+class CommandParser:
+    def __init__(self, timeline: Timeline = None):
+        if timeline is None:
+            timeline = Timeline()
+        self.timeline: Timeline = timeline
+        self.context: Context = Context()
+
+    def parse_command(self, command: str) -> None:
+        if not command:
+            return
+
+        if self.timeline.objects.parse_command(command):
+            return
+
+        if DATE_PATTERN.match(command):
+            self.context.current_date = datetime.strptime(command, "%Y-%m-%d")
+            return
+
+        self.timeline.parse_command(command, self.context)
+
+    def parse_commands(self, commands: list[str]) -> None:
+        for command in commands:
+            self.parse_command(command)
