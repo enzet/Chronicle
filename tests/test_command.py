@@ -27,7 +27,7 @@ def test_listen_podcast() -> None:
     assert event.podcast_id == "inner_french"
     assert event.episode == "5"
     assert event.interval == Interval(
-        from_=timedelta(minutes=10), to_=timedelta(minutes=20)
+        start=timedelta(minutes=10), end=timedelta(minutes=20)
     )
 
 
@@ -51,7 +51,7 @@ def test_listen_audiobook() -> None:
 
     (timeline := Timeline()).parse_command(
         "2022-01-01T13:00:00/2022-01-01T14:00:00 audiobook idiot x1.25 "
-        "00:00-10:00"
+        "00:00/10:00"
     )
     assert len(timeline) == 1
     event: Event = timeline.events[0]
@@ -59,7 +59,7 @@ def test_listen_audiobook() -> None:
     assert event.audiobook_id == "idiot"
     assert event.speed == 1.25
     assert event.interval == Interval(
-        from_=timedelta(), to_=timedelta(minutes=10)
+        start=timedelta(), end=timedelta(minutes=10)
     )
 
 
@@ -68,14 +68,14 @@ def test_listen_audiobook_hour_interval() -> None:
 
     (timeline := Timeline()).parse_command(
         "2022-01-01T13:00:00/2022-01-01T14:00:00 audiobook idiot "
-        "1:10:10-2:20:20"
+        "1:10:10/2:20:20"
     )
     assert len(timeline) == 1
     event: Event = timeline.events[0]
     assert isinstance(event, ListenAudiobookEvent)
     assert event.interval == Interval(
-        from_=timedelta(hours=1, minutes=10, seconds=10),
-        to_=timedelta(hours=2, minutes=20, seconds=20),
+        start=timedelta(hours=1, minutes=10, seconds=10),
+        end=timedelta(hours=2, minutes=20, seconds=20),
     )
 
 
