@@ -1,31 +1,34 @@
 import re
 
-from chronicle.argument import ArgumentParser
+from chronicle.argument import Arguments
 from chronicle.event.value import Language
+
+__author__ = "Sergey Vartanov"
+__email__ = "me@enzet.ru"
 
 
 def test_main_argument() -> None:
-    parser: ArgumentParser = ArgumentParser({"do"}).add_argument("argument")
+    parser: Arguments = Arguments(["do"], "do").add_argument("argument")
     assert parser.parse("work") == {"argument": "work"}
 
 
 def test_argument_with_pattern() -> None:
-    parser: ArgumentParser = (
-        ArgumentParser({"do"})
+    parser: Arguments = (
+        Arguments(["do"], "do")
         .add_argument("activity")
-        .add_argument("language", pattern=re.compile("_(..)"))
+        .add_argument("language", patterns=[re.compile("_(..)")])
     )
     assert parser.parse("work _en") == {"activity": "work", "language": "en"}
 
 
 def test_argument_with_pattern_and_loader() -> None:
-    parser: ArgumentParser = (
-        ArgumentParser({"do"})
+    parser: Arguments = (
+        Arguments(["do"], "do")
         .add_argument("activity")
         .add_argument(
             "language",
-            pattern=re.compile("_(..)"),
-            extractor=lambda x: Language(x(1)),
+            patterns=[re.compile("_(..)")],
+            extractors=[lambda x: Language(x(1))],
         )
     )
     assert parser.parse("work _en") == {

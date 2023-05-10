@@ -1,12 +1,13 @@
 from datetime import timedelta, datetime
 
 from chronicle.event.core import Event, Objects
-from chronicle.event.listen import (
-    Interval,
+from chronicle.event.common import SleepEvent
+from chronicle.event.art import (
     ListenAudiobookEvent,
     ListenMusicEvent,
     ListenPodcastEvent,
 )
+from chronicle.event.value import Interval
 from chronicle.time import Context
 from chronicle.timeline import Timeline, CommandParser
 
@@ -19,7 +20,7 @@ def test_listen_podcast() -> None:
 
     (timeline := Timeline()).parse_command(
         "2022-01-01T13:00:00/2022-01-01T14:00:00 podcast inner_french e5 "
-        "10:00-20:00"
+        "10:00/20:00"
     )
     assert len(timeline) == 1
     event: Event = timeline.events[0]
@@ -82,16 +83,17 @@ def test_listen_audiobook_hour_interval() -> None:
 def test_short_time() -> None:
     """Test listening song command with title, artist, and album."""
 
-    objects: Objects = Objects(
-        books={"idiot": {"title": "Idiot", "language": "ru"}},
-        audiobooks={"idiot": {"book_id": "idiot"}},
-    )
     context: Context = Context()
     context.current_date = datetime(2022, 1, 2)
     (timeline := Timeline()).parse_command("13:00 audiobook idiot", context)
     assert len(timeline) == 1
     event: Event = timeline.events[0]
     assert isinstance(event, ListenAudiobookEvent)
+
+    objects: Objects = Objects(
+        books={"idiot": {"title": "Idiot", "language": "ru"}},
+        audiobooks={"idiot": {"book_id": "idiot"}},
+    )
     assert event.to_string(objects) == "listen audiobook Idiot"
     assert event.time.start == event.time.end
     assert event.time.start.hour == 13
@@ -99,9 +101,9 @@ def test_short_time() -> None:
 
 def test_file() -> None:
     commands: list[str] = [
-        "book idiot Idiot _ru",
+        "book idiot Idiot .ru",
         "audiobook idiot idiot",
-        "2000.01.01",
+        "2000-01-01",
         "13:00 audiobook idiot",
     ]
     parser: CommandParser = CommandParser()
@@ -110,7 +112,7 @@ def test_file() -> None:
     assert len(parser.timeline) == 1
     event: Event = parser.timeline.events[0]
     assert isinstance(event, ListenAudiobookEvent)
-    assert event.to_string(parser.objects) == "listen audiobook Idiot"
+    assert event.to_string(parser.timeline.objects) == "listen audiobook Idiot"
     assert event.time.start == event.time.end
     assert event.time.start.year == 2000
     assert event.time.start.hour == 13

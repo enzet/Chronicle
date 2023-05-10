@@ -3,7 +3,7 @@
 from typing import Any
 
 from chronicle.event.core import Objects
-from chronicle.event.listen import ListenPodcastEvent
+from chronicle.event.art import ListenPodcastEvent
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"

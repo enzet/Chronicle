@@ -1,8 +1,21 @@
 import json
+import logging
 from dataclasses import dataclass, field
+from datetime import datetime
+from re import Pattern
+from typing import Any
 
-from chronicle.event.listen import *
+from chronicle.event.common import *
+from chronicle.event.art import *
+from chronicle.event.place import *
+from chronicle.event.transport import *
 from chronicle.time import Context, Time
+
+__author__ = "Sergey Vartanov"
+__email__ = "me@enzet.ru"
+
+
+DATE_PATTERN: Pattern = re.compile("\d\d\d\d-\d\d-\d\d")
 
 
 @dataclass
@@ -30,20 +43,41 @@ class Timeline:
 
         words: list[str] = command.split(" ")
 
-        time: str = Time.from_string(words[0], context).to_pseudo_edtf()
+        try:
+            time: str = Time.from_string(words[0], context).to_pseudo_edtf()
+        except AttributeError:
+            logging.error(f"Not an event: `{command}`.")
+            return None
+
         prefix: str = words[1]
 
         classes: list = Event.__subclasses__()
+        for class_ in classes:
+            classes += class_.__subclasses__()
 
         for class_ in classes:
-            parser: ArgumentParser = class_.get_parser()
+            parser: Arguments = class_.get_arguments()
             if prefix in parser.prefixes:
                 event: Event = class_.parse_command(time, " ".join(words[2:]))
                 self.events.append(event)
                 break
 
-    def get_summary(self):
-        summary = Summary()
+    def get_commands(self) -> list[str]:
+        commands: list[str] = []
+
+        commands += self.objects.get_commands()
+        last_date: str | None = None
+        for event in self.events:
+            date = event.time.get_moment().strftime("%Y-%m-%d")
+            if last_date != date:
+                commands += ["", date, ""]
+            commands.append(event.get_command())
+            last_date = date
+
+        return commands
+
+    def get_summary(self) -> Summary:
+        summary: Summary = Summary()
         for event in self.events:
             event.register_summary(summary, self.objects)
         return summary

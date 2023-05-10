@@ -3,19 +3,22 @@ Event and global event parameters.
 
 This file describes events and some common attributes that events may have.
 """
+import logging
+import sys
 from datetime import timedelta
+from typing import Optional
 
+import pydantic
 from pydantic.json import timedelta_isoformat
 from pydantic.main import BaseModel
 
-from chronicle.argument import ArgumentParser
+from chronicle.argument import Arguments
 from chronicle.objects import Objects
+from chronicle.summary.core import Summary
 from chronicle.time import Time
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
-
-from summary.core import Summary
 
 
 class Event(BaseModel):
@@ -33,13 +36,25 @@ class Event(BaseModel):
     class Config:
         json_encoders = {timedelta: timedelta_isoformat}
 
-    @staticmethod
-    def get_parser() -> ArgumentParser:
-        return ArgumentParser(set())
+    @classmethod
+    def get_arguments(cls) -> Arguments:
+        return Arguments([], "")
 
     @classmethod
-    def parse_command(cls, time: str, command: str) -> "Event":
-        return cls(time=time, **cls.get_parser().parse(command))
+    def parse_command(cls, time: str, command: str) -> Optional["Event"]:
+        parsed = cls.get_arguments().parse(command)
+        try:
+            return cls(time=time, **parsed)
+        except pydantic.error_wrappers.ValidationError as e:
+            print(
+                f"Cannot construct class {cls} from {parsed} and time {time}."
+            )
+            logging.error(parsed)
+            raise e
+        except TypeError as e:
+            print(f"Cannot construct class {cls} from {parsed}.")
+            logging.error(parsed)
+            raise e
 
     def register_summary(self, summary: Summary, objects: Objects):
         """"""
@@ -51,7 +66,10 @@ class Event(BaseModel):
         :param objects: object information needed to fill data, because some
             events depend on objects and know solely about object identifier
         """
-        return str(self.time)
+        return self.get_arguments().to_string(objects, self)
+
+    def get_command(self) -> str:
+        return self.get_arguments().get_command(self)
 
 
 def to_camel(text: str) -> str:

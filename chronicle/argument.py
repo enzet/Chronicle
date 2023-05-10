@@ -1,6 +1,10 @@
+import logging
 import re
 from dataclasses import dataclass
 from typing import Any, Callable
+
+__author__ = "Sergey Vartanov"
+__email__ = "me@enzet.ru"
 
 
 @dataclass
@@ -14,19 +18,28 @@ class Argument:
     prefix: str | None = None
     """Prefix word that starts argument value."""
 
-    pattern: re.Pattern | None = None
-    """Value pattern."""
+    patterns: list[re.Pattern] | None = None
+    """Value patterns."""
 
-    extractor: Callable[[Any], Any] | None = None
-    """Function that extracts values from a pattern matcher."""
+    extractors: list[Callable[[Any], Any]] | None = None
+    """Functions that extract values from a pattern matchers."""
+
+    pretty_printer: Callable = lambda x: x.to_string()
+
+    command_printer: Callable = lambda x: x.to_command()
 
 
-class ArgumentParser:
-    def __init__(self, prefixes: set[str]) -> None:
-        self.prefixes: set[str] = prefixes
+class Arguments:
+    def __init__(self, prefixes: list[str], command: str) -> None:
+        self.prefixes: list[str] = prefixes
+        self.command: str = command
         self.arguments: list[Argument] = []
 
-    def parse(self, text: str) -> dict[str, Any] | None:
+    def parse(self, text: str) -> dict[str, Any]:
+
+        # Event may have no arguments.
+        if not self.arguments:
+            return {}
 
         main: Argument = self.arguments[0]
         result: dict[str, str] = {}
@@ -50,24 +63,30 @@ class ArgumentParser:
                     detected = True
                     break
 
-                if argument.pattern and (
-                    matcher := argument.pattern.match(word)
-                ):
-                    if current:
-                        result[current_key] = current
-                        current_key = None
-                        current = ""
-                    if argument.extractor is not None:
-                        result[argument.key] = argument.extractor(matcher.group)
-                    else:
-                        result[argument.key] = argument.loader(matcher.group(1))
-                    detected = True
-                    break
+                if not argument.patterns:
+                    continue
+
+                for i, pattern in enumerate(argument.patterns):
+                    if matcher := pattern.match(word):
+                        if current:
+                            result[current_key] = current
+                            current_key = None
+                            current = ""
+                        if argument.extractors is not None:
+                            result[argument.key] = argument.extractors[i](
+                                matcher.group
+                            )
+                        else:
+                            result[argument.key] = argument.loader(
+                                matcher.group(1)
+                            )
+                        detected = True
+                        break
 
             if not detected:
                 current += (" " if current else "") + word
 
-        if current:
+        if current and current_key:
             result[current_key] = current
 
         return result
@@ -77,18 +96,79 @@ class ArgumentParser:
         key: str,
         description: str | None = None,
         prefix: str | None = None,
-        pattern: re.Pattern | None = None,
+        patterns: list[re.Pattern] | None = None,
         loader: Callable[[Any], Any] = lambda x: x,
-        extractor: Callable[[Any], Any] | None = None,
-    ) -> "ArgumentParser":
+        extractors: list[Callable[[Any], Any]] | None = None,
+        pretty_printer: Callable = lambda o, v: v.to_string(o),
+        command_printer: Callable = None,
+    ) -> "Arguments":
 
         argument: Argument = Argument(
             key,
             description,
             prefix=prefix,
-            pattern=pattern,
+            patterns=patterns,
             loader=loader,
-            extractor=extractor,
+            extractors=extractors,
+            pretty_printer=pretty_printer,
+            command_printer=command_printer,
         )
         self.arguments.append(argument)
         return self
+
+    def add(self, argument: Argument) -> "Arguments":
+        self.arguments.append(argument)
+        return self
+
+    def to_string(self, objects, value):
+        text = self.command
+        for argument in self.arguments:
+            if hasattr(value, argument.key) and getattr(value, argument.key):
+                string: str = argument.pretty_printer(
+                    objects, getattr(value, argument.key)
+                )
+                if string:
+                    text += " " + string
+        return text
+
+    def to_object_command(self, value):
+        text = ""
+        for argument in self.arguments:
+            if hasattr(value, argument.key) and getattr(value, argument.key):
+                try:
+                    v = getattr(value, argument.key)
+                    if argument.command_printer:
+                        string: str = argument.command_printer(v)
+                    elif getattr(v, "to_command", None):
+                        string: str = v.to_command()
+                    else:
+                        string: str = str(v)
+
+                    if string:
+                        if text:
+                            text += " " + string
+                        else:
+                            text += string
+                except AttributeError:
+                    logging.error(
+                        f"Cannot print command for {argument.key} of {value}."
+                    )
+        return text
+
+    def get_command(self, value):
+        text = value.time.to_pseudo_edtf_time() + " " + self.prefixes[0]
+        for argument in self.arguments:
+            if hasattr(value, argument.key):
+                if getattr(value, argument.key):
+                    v = getattr(value, argument.key)
+                    if argument.command_printer:
+                        string: str = argument.command_printer(v)
+                    elif getattr(v, "to_command", None):
+                        string: str = v.to_command()
+                    else:
+                        string: str = str(v)
+                    if string:
+                        text += " " + string
+            else:
+                logging.error(f"No {argument.key} of {value}.")
+        return text
