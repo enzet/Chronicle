@@ -139,6 +139,13 @@ class Moment:
             + (f":{self.second}" if self.second is not None else "")
         )
 
+    def to_pseudo_edtf_time(self) -> str:
+        return (
+            (f"{self.hour:02d}" if self.hour is not None else "")
+            + (f":{self.minute:02d}" if self.minute is not None else "")
+            + (f":{self.second}" if self.second is not None else "")
+        )
+
     def to_string(self) -> str:
         return (
             f"{self.year}"
