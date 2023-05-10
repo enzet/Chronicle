@@ -218,6 +218,33 @@ class Time(str):
             + (self.end.to_string() if self.end else "")
         )
 
+    def to_pseudo_edtf_time(self):
+        if self.start == self.end:
+            return self.start.to_pseudo_edtf_time()
+
+        return (
+            (self.start.to_pseudo_edtf_time() if self.start else "")
+            + "/"
+            + (self.end.to_pseudo_edtf_time() if self.end else "")
+        )
+
+    def get_duration(self) -> float | None:
+        if not self.start or not self.end:
+            return None
+
+        if self.start == self.end:
+            return 0
+
+        return (self.end.get_lower() - self.start.get_lower()).total_seconds()
+
+    def get_moment(self) -> datetime:
+        if self.start and self.end:
+            return self.start.get_lower() + (self.end.get_lower() - self.start.get_lower()) / 2
+        elif self.start:
+            return self.start.get_lower()
+        else:
+            return self.end.get_lower()
+
 
 def parse_delta(string_delta: str) -> timedelta:
     """Parse time delta from a string representation."""
