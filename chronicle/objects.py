@@ -231,6 +231,16 @@ class Objects(BaseModel):
     podcasts: dict[str, Podcast] = {}
     books: dict[str, Book] = {}
     audiobooks: dict[str, Audiobook] = {}
+    airports: dict[str, Airport] = {}
+    cafes: dict[str, Cafe] = {}
+    clubs: dict[str, Club] = {}
+    parks: dict[str, Park] = {}
+    projects: dict[str, Project] = {}
+    stations: dict[str, Station] = {}
+    homes: dict[str, Home] = {}
+    shops: dict[str, Shop] = {}
+    universitys: dict[str, University] = {}
+    movies: dict[str, Movie] = {}
 
     def get_podcast(self, podcast_id: str) -> Podcast | None:
         return self.podcasts.get(podcast_id)
