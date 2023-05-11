@@ -282,3 +282,53 @@ class Objects(BaseModel):
                 object_ = d[id_]
                 commands.append(f"{key[:-1]} {id_} {object_.get_command()}")
         return commands
+
+    def fill(self, cache_path: Path):
+        for movie in self.movies.values():
+            if movie.wikidata_id:
+                continue
+            object_data: dict = json.loads(
+                get_data(
+                    cache_path / f"moving_image_{movie.title}@en.json",
+                    request_sparql,
+                    get_movie(movie.title),
+                ).decode()
+            )["results"]["bindings"]
+            print(f"No Wikidata ID for movie {movie.title}.")
+            if object_data:
+                print("  Possible candidates:")
+                items = [
+                    WikidataItem.from_id(
+                        int(
+                            x["item"]["value"][
+                            len("http://www.wikidata.org/entity/Q"):
+                            ]
+                        ),
+                        cache_path,
+                    )
+                    for x in object_data
+                ]
+                items = list(set(items))
+                for index, i in enumerate(items):
+                    s = i.labels["en"]["value"]
+                    for a in i.get_claim(Property.TITLE, cache_path):
+                        s += " - " + a["text"]
+                    for a in i.get_claim(Property.START_TIME, cache_path):
+                        s += " - " + a["time"][1:5]
+                    for a in i.get_claim(Property.DIRECTOR, cache_path):
+                        s += " - " + (a.labels["en"]["value"])
+                    for a in i.get_claim(Property.GENRE, cache_path):
+                        s += " - " + (a.labels["en"]["value"])
+                    for a in i.get_claim(
+                        Property.ORIGINAL_BROADCASTER, cache_path
+                    ):
+                        s += " - " + (a.labels["en"]["value"])
+                    for a in i.get_claim(Property.DISTRIBUTED_BY, cache_path):
+                        s += " - " + (a.labels["en"]["value"])
+                    for a in i.get_claim(
+                        Property.ORIGINAL_LANGUAGE_OF_FILM_OR_TV, cache_path
+                    ):
+                        s += " - " + (a.labels["en"]["value"])
+                    print(f"    {index + 1}.", s)
+                index = int(input()) - 1
+                movie.wikidata_id = items[index].wikidata_id
