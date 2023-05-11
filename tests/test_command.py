@@ -80,6 +80,16 @@ def test_listen_audiobook_hour_interval() -> None:
     )
 
 
+def test_sleep() -> None:
+    (timeline := Timeline()).parse_command(
+        "2022-01-01T00:00:00/2022-01-01T08:00:00 sleep"
+    )
+    assert len(timeline) == 1
+    event: Event = timeline.events[0]
+    assert isinstance(event, SleepEvent)
+    assert timeline.get_summary().sleep == 8 * 60 * 60
+
+
 def test_short_time() -> None:
     """Test listening song command with title, artist, and album."""
 
