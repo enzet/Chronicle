@@ -11,7 +11,6 @@ __email__ = "me@enzet.ru"
 
 
 class DoEvent(Event):
-
     description: str
 
     @classmethod
@@ -20,7 +19,6 @@ class DoEvent(Event):
 
 
 class CookEvent(Event):
-
     dish: str
 
     @classmethod
@@ -29,7 +27,6 @@ class CookEvent(Event):
 
 
 class CleanEvent(Event):
-
     object_: str | None = None
 
     @classmethod
@@ -38,7 +35,6 @@ class CleanEvent(Event):
 
 
 class CutEvent(Event):
-
     object_: str | None = None
 
     @classmethod
@@ -47,7 +43,6 @@ class CutEvent(Event):
 
 
 class DrinkEvent(Event):
-
     liquid: str
     amount: float
     """Amount of the liquid in litres."""
@@ -70,7 +65,6 @@ class DrinkEvent(Event):
 
 
 class PayEvent(Event):
-
     cost: Cost
     goods: str
 
@@ -86,7 +80,6 @@ class PayEvent(Event):
 
 
 class ProgramEvent(Event):
-
     project: str | None = None
 
     @classmethod

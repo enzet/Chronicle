@@ -30,7 +30,6 @@ class Moment:
 
     @classmethod
     def from_pseudo_edtf(cls, code: str) -> "Moment":
-
         moment: "Moment" = cls()
 
         date: str
@@ -60,7 +59,6 @@ class Moment:
 
     @classmethod
     def from_string(cls, code: str, context: Context) -> "Moment":
-
         moment: "Moment" = cls()
 
         if "T" in code:
@@ -164,7 +162,6 @@ class Time(str):
     """Point in time or time span."""
 
     def __init__(self, code: str) -> None:
-
         self.start: Moment | None
         self.end: Moment | None
 
@@ -180,7 +177,6 @@ class Time(str):
 
     @classmethod
     def from_string(cls, code: str, context: Context) -> "Time":
-
         time: "Time" = cls("")
 
         if "/" in code:

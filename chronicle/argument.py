@@ -36,7 +36,6 @@ class Arguments:
         self.arguments: list[Argument] = []
 
     def parse(self, text: str) -> dict[str, Any]:
-
         # Event may have no arguments.
         if not self.arguments:
             return {}
@@ -49,12 +48,10 @@ class Arguments:
         current: str = ""
 
         for index in range(len(words)):
-
             word: str = words[index]
             detected: bool = False
 
             for argument in self.arguments:
-
                 if word == argument.prefix:
                     if current:
                         result[current_key] = current
@@ -102,7 +99,6 @@ class Arguments:
         pretty_printer: Callable = lambda o, v: v.to_string(o),
         command_printer: Callable = None,
     ) -> "Arguments":
-
         argument: Argument = Argument(
             key,
             description,

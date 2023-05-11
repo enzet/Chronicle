@@ -96,7 +96,6 @@ class ListenMusicEvent(Event):
 
 
 class ReadEvent(Event):
-
     book_id: str
     language: str | None = None
     pages: tuple[float, float] | None = None
@@ -117,7 +116,6 @@ class ReadEvent(Event):
 
 
 class StandupEvent(Event):
-
     title: str
     language: str | None = None
     place_id: str | None = None
@@ -135,7 +133,6 @@ class StandupEvent(Event):
 
 
 class WatchEvent(Event):
-
     movie_id: str
     season: int | None = None
     episode: int | None = None

@@ -45,7 +45,6 @@ class Object(BaseModel):
 
 
 class Place(Object):
-
     name: str | None = None
 
     @classmethod
@@ -98,7 +97,6 @@ class Project(Object):
 
 
 class Movie(Object):
-
     title: str | None = None
     """Title of the movie."""
 
@@ -255,7 +253,6 @@ class Objects(BaseModel):
         return self.audiobooks.get(audiobook_id)
 
     def parse_command(self, command: str) -> bool:
-
         parts: list[str] = command.split(" ")
         if len(parts) < 3:
             return False
