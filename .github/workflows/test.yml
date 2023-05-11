@@ -25,7 +25,7 @@ jobs:
         black -l 80 --check chronicle tests
     - name: Lint with Flake8
       run: |
-        flake8 --max-line-length=80 --ignore=E203,W503,F403,F405
+        flake8 --max-line-length=80 --ignore=ANN002,ANN003,ANN101,ANN102,E203,F403,F405,W503
     - name: Test with pytest
       run: |
         pytest -v
