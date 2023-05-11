@@ -172,3 +172,8 @@ class Arguments:
             else:
                 logging.error(f"No {argument.key} of {value}.")
         return text
+
+    def replace(self, prefixes: list[str], command: str) -> "Arguments":
+        self.prefixes = prefixes
+        self.command = command
+        return self
