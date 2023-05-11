@@ -192,7 +192,11 @@ class ListenAudiobookEvent(Event):
                 ).title,
             )
             .add(interval_argument)
-            .add_argument("speed", patterns=[re.compile(r"x(\d*\.\d*)")], command_printer=lambda x: f"x{x}")
+            .add_argument(
+                "speed",
+                patterns=[re.compile(r"x(\d*\.\d*)")],
+                command_printer=lambda x: f"x{x}",
+            )
         )
 
     def get_audiobook(self, objects: Objects) -> Audiobook | None:

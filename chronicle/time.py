@@ -242,7 +242,10 @@ class Time(str):
 
     def get_moment(self) -> datetime:
         if self.start and self.end:
-            return self.start.get_lower() + (self.end.get_lower() - self.start.get_lower()) / 2
+            return (
+                self.start.get_lower()
+                + (self.end.get_lower() - self.start.get_lower()) / 2
+            )
         elif self.start:
             return self.start.get_lower()
         else:

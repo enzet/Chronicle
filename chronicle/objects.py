@@ -7,8 +7,13 @@ from pydantic.main import BaseModel
 
 from chronicle.argument import Arguments, Argument
 from chronicle.event.value import Language
-from chronicle.wikidata import Property, WikidataItem, get_data, request_sparql, \
-    get_movie
+from chronicle.wikidata import (
+    Property,
+    WikidataItem,
+    get_data,
+    get_movie,
+    request_sparql,
+)
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
@@ -89,9 +94,7 @@ class Project(Object):
 
     @classmethod
     def get_arguments(cls) -> Arguments:
-        return (
-            Arguments(["project"], "project").add_argument("title")
-        )
+        return Arguments(["project"], "project").add_argument("title")
 
 
 class Movie(Object):
@@ -301,7 +304,7 @@ class Objects(BaseModel):
                     WikidataItem.from_id(
                         int(
                             x["item"]["value"][
-                            len("http://www.wikidata.org/entity/Q"):
+                                len("http://www.wikidata.org/entity/Q") :
                             ]
                         ),
                         cache_path,
