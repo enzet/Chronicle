@@ -15,7 +15,7 @@ __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
 
 
-DATE_PATTERN: Pattern = re.compile("\d\d\d\d-\d\d-\d\d")
+DATE_PATTERN: Pattern = re.compile(r"\d\d\d\d-\d\d-\d\d")
 
 
 @dataclass

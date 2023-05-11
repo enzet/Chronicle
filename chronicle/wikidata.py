@@ -112,7 +112,7 @@ def get_movie(title: str) -> str:
         WHERE {{
             ?item wdt:{Property.INSTANCE_OF}/wdt:P279* wd:{Item.MOVING_IMAGE};
                   ?label "{title}"@en.
-            SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en" . }}
+            SERVICE wikibase:label {{bd:serviceParam wikibase:language "en" .}}
         }}"""
     )
 

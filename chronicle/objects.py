@@ -185,7 +185,7 @@ class Book(Object):
             .add_argument("title", command_printer=str)
             .add_argument(
                 "language",
-                patterns=[re.compile("\.(..)")],
+                patterns=[re.compile(r"\.(..)")],
                 command_printer=lambda x: f".{x}",
             )
             .add(wikidata_argument)

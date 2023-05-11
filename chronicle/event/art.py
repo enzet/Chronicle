@@ -15,7 +15,7 @@ from chronicle.event.value import Interval
 
 language_argument: Argument = Argument(
     "language",
-    patterns=[re.compile("\.(..)")],
+    patterns=[re.compile(r"\.(..)")],
     command_printer=lambda x: f".{x}",
 )
 episode_argument: Argument = Argument(
@@ -108,7 +108,7 @@ class ReadEvent(Event):
             .add(language_argument)
             .add_argument(
                 "pages",
-                patterns=[re.compile("(\d+(\.\d*)?)/(\d+(\.\d*)?)")],
+                patterns=[re.compile(r"(\d+(\.\d*)?)/(\d+(\.\d*)?)")],
                 extractors=[lambda x: (float(x(1)), float(x(3)))],
                 command_printer=lambda x: f"{x[0]}/{x[1]}",
             )
@@ -153,7 +153,7 @@ class WatchEvent(Event):
             )
             .add_argument(
                 "season",
-                patterns=[re.compile("s(\d+)")],
+                patterns=[re.compile(r"s(\d+)")],
                 extractors=[lambda x: int(x(1))],
                 command_printer=lambda x: f"s{x}",
             )

@@ -4,7 +4,6 @@ Event and global event parameters.
 This file describes events and some common attributes that events may have.
 """
 import logging
-import sys
 from datetime import timedelta
 from typing import Optional
 

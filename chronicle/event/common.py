@@ -54,7 +54,7 @@ class DrinkEvent(Event):
             .add_argument("liquid")
             .add_argument(
                 "amount",
-                patterns=[re.compile("(\d*\.\d*)l"), re.compile("(\d*)ml")],
+                patterns=[re.compile(r"(\d*\.\d*)l"), re.compile(r"(\d*)ml")],
                 extractors=[
                     lambda x: float(x(1)),
                     lambda x: float(x(1)) / 1000,
