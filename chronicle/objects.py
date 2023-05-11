@@ -250,7 +250,6 @@ class Objects(BaseModel):
         id_: str = parts[1]
 
         classes: list = Object.__subclasses__()
-
         for class_ in classes:
             classes += class_.__subclasses__()
             # FIXME: what if we have more levels?
@@ -264,3 +263,12 @@ class Objects(BaseModel):
                 return True
 
         return False
+
+    def get_commands(self) -> list[str]:
+        commands: list[str] = []
+        for key in sorted(self.__dict__.keys()):
+            d = getattr(self, key)
+            for id_ in sorted(d.keys()):
+                object_ = d[id_]
+                commands.append(f"{key[:-1]} {id_} {object_.get_command()}")
+        return commands
