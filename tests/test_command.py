@@ -126,3 +126,33 @@ def test_file() -> None:
     assert event.time.start == event.time.end
     assert event.time.start.year == 2000
     assert event.time.start.hour == 13
+
+
+def test_file_sleep() -> None:
+    commands: list[str] = [
+        "2000-01-01",
+        "00:00/08:00 sleep",
+    ]
+    parser: CommandParser = CommandParser()
+    parser.parse_commands(commands)
+
+    assert len(parser.timeline) == 1
+    event: Event = parser.timeline.events[0]
+    assert isinstance(event, SleepEvent)
+    assert event.to_string(parser.timeline.objects) == "sleep"
+    assert parser.timeline.get_summary().sleep == 8 * 60 * 60
+
+
+def test_dump_command() -> None:
+    commands: list[str] = [
+        "audiobook idiot idiot",
+        "book idiot Idiot .ru",
+        "",
+        "2000-01-01",
+        "",
+        "13:00 audiobook idiot",
+    ]
+    parser: CommandParser = CommandParser()
+    parser.parse_commands(commands)
+
+    assert commands == parser.timeline.get_commands()
