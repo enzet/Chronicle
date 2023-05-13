@@ -176,6 +176,13 @@ class Time(str):
             self.start = self.end = Moment.from_pseudo_edtf(code)
 
     @classmethod
+    def from_moment(cls, moment: Moment) -> "Time":
+        time: "Time" = cls("")
+        time.start = time.end = moment
+
+        return time
+
+    @classmethod
     def from_string(cls, code: str, context: Context) -> "Time":
         time: "Time" = cls("")
 
