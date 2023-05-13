@@ -37,6 +37,15 @@ class Timeline:
     def __len__(self) -> int:
         return len(self.events)
 
+    def parse_data(self, data: dict) -> None:
+        class_name: str = data["type"][0].upper() + data["type"][1:] + "Event"
+        if class_name in globals():
+            class_ = globals()[class_name]
+            event = class_(**data)
+            self.events.append(event)
+        else:
+            logging.error(f"No such event class: `{class_name}`.")
+
     def parse_command(
         self, command: str, context: Context | None = None
     ) -> None:
