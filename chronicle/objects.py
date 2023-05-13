@@ -175,6 +175,9 @@ class Book(Object):
     year: int | None = None
     """Year of the first publication of the book (not its translation)."""
 
+    wikidata_id: int | None = None
+    """Wikidata item identifier."""
+
     def to_string(self, objects: "Objects") -> str:
         return self.title
 
