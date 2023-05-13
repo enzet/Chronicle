@@ -28,6 +28,8 @@ class Argument:
 
     command_printer: Callable = lambda x: x.to_command()
 
+    html_printer: Callable = lambda x: x.to_string()
+
 
 class Arguments:
     def __init__(self, prefixes: list[str], command: str) -> None:
@@ -98,6 +100,7 @@ class Arguments:
         extractors: list[Callable[[Any], Any]] | None = None,
         pretty_printer: Callable = lambda o, v: v.to_string(o),
         command_printer: Callable = None,
+        html_printer: Callable = lambda o, v: v.to_string(o),
     ) -> "Arguments":
         argument: Argument = Argument(
             key,
@@ -108,6 +111,7 @@ class Arguments:
             extractors=extractors,
             pretty_printer=pretty_printer,
             command_printer=command_printer,
+            html_printer=html_printer,
         )
         self.arguments.append(argument)
         return self
@@ -121,6 +125,17 @@ class Arguments:
         for argument in self.arguments:
             if hasattr(value, argument.key) and getattr(value, argument.key):
                 string: str = argument.pretty_printer(
+                    objects, getattr(value, argument.key)
+                )
+                if string:
+                    text += " " + string
+        return text
+
+    def to_html(self, objects, value):
+        text = self.command
+        for argument in self.arguments:
+            if hasattr(value, argument.key) and getattr(value, argument.key):
+                string: str = argument.html_printer(
                     objects, getattr(value, argument.key)
                 )
                 if string:

@@ -67,6 +67,9 @@ class Event(BaseModel):
         """
         return self.get_arguments().to_string(objects, self)
 
+    def to_html(self, objects: Objects) -> str:
+        return self.get_arguments().to_html(objects, self)
+
     def get_command(self) -> str:
         return self.get_arguments().get_command(self)
 
