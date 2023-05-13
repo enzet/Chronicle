@@ -8,6 +8,7 @@ from typing import Any
 from chronicle.event.common import *
 from chronicle.event.art import *
 from chronicle.event.place import *
+from chronicle.event.sport import *
 from chronicle.event.transport import *
 from chronicle.time import Context, Time
 
