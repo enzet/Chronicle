@@ -6,6 +6,7 @@ from chronicle.event.value import Cost
 from chronicle.objects import Objects
 from chronicle.summary.core import Summary
 
+
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
 

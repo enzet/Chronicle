@@ -49,9 +49,15 @@ interval_argument: Argument = one_pattern_argument("interval", Interval)
 class ListenPodcastEvent(Event):
     """Listening podcast event."""
 
-    podcast_id: str
+    podcast_id: str | None = None
+    """Unique string identifier of the podcast."""
+
     episode: str | None = None
+    """Episode number or name."""
+
     speed: float | None = None
+    """"""
+
     interval: Interval | None = None
 
     @classmethod
