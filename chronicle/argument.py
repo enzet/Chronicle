@@ -103,6 +103,7 @@ class Arguments:
         pretty_printer: Callable = lambda o, v: v.to_string(o),
         command_printer: Callable = None,
         html_printer: Callable = lambda o, v: v.to_string(o),
+        is_insert: bool = False,
     ) -> "Arguments":
         argument: Argument = Argument(
             key,
@@ -114,6 +115,42 @@ class Arguments:
             pretty_printer=pretty_printer,
             command_printer=command_printer,
             html_printer=html_printer,
+        )
+        if is_insert:
+            self.arguments.insert(0, argument)
+        else:
+            self.arguments.append(argument)
+        return self
+
+    def __add__(self, other: "Arguments") -> "Arguments":
+        for argument in other.arguments:
+            self.add(argument)
+        return self
+
+    def add_language_argument(self):
+        argument: Argument = Argument(
+            "language",
+            patterns=[re.compile(r"\.([a-z]+)")],
+            command_printer=lambda x: f".{x}",
+        )
+        self.arguments.append(argument)
+        return self
+
+    def add_task_argument(self):
+        argument: Argument = Argument(
+            "language",
+            patterns=[re.compile(r"#([0-9a-z]+)")],
+            command_printer=lambda x: f".{x}",
+        )
+        self.arguments.append(argument)
+        return self
+
+    def add_tags_argument(self):
+        argument: Argument = Argument(
+            "tags",
+            patterns=[re.compile(r"!([0-9a-z,]+)")],
+            extractors=[lambda x: set(x(1).split(","))],
+            command_printer=lambda x: f".{x}",
         )
         self.arguments.append(argument)
         return self
