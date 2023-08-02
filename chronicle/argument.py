@@ -47,6 +47,7 @@ class Arguments:
         words: list[str] = text.split(" ")
 
         current_key: str | None = main.key
+        current_loader = main.loader
         current: str = ""
 
         for index in range(len(words)):
@@ -56,9 +57,10 @@ class Arguments:
             for argument in self.arguments:
                 if word == argument.prefix:
                     if current:
-                        result[current_key] = current
+                        result[current_key] = current_loader(current)
                         current = ""
                     current_key = argument.key
+                    current_loader = argument.loader
                     detected = True
                     break
 
@@ -68,7 +70,7 @@ class Arguments:
                 for i, pattern in enumerate(argument.patterns):
                     if matcher := pattern.match(word):
                         if current:
-                            result[current_key] = current
+                            result[current_key] = current_loader(current)
                             current_key = None
                             current = ""
                         if argument.extractors is not None:
@@ -86,7 +88,7 @@ class Arguments:
                 current += (" " if current else "") + word
 
         if current and current_key:
-            result[current_key] = current
+            result[current_key] = current_loader(current)
 
         return result
 
