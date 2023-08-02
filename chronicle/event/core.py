@@ -4,12 +4,10 @@ Event and global event parameters.
 This file describes events and some common attributes that events may have.
 """
 import logging
-from datetime import timedelta
-from typing import Optional
+from dataclasses import dataclass, field
+from typing import Optional, Any
 
 import pydantic
-from pydantic.json import timedelta_isoformat
-from pydantic.main import BaseModel
 
 from chronicle.argument import Arguments
 from chronicle.objects import Objects
@@ -20,7 +18,8 @@ __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
 
 
-class Event(BaseModel):
+@dataclass
+class Event:
     """
     Any event happened at some point or during some period in time.
 
@@ -32,8 +31,10 @@ class Event(BaseModel):
     time: Time
     """Point in time or time span when event is occurred."""
 
-    class Config:
-        json_encoders = {timedelta: timedelta_isoformat}
+    source: Any
+    """Source representation was used to create this event."""
+
+    tags: set[str] = field(default_factory=set)
 
     @classmethod
     def get_arguments(cls) -> Arguments:
@@ -70,8 +71,11 @@ class Event(BaseModel):
     def to_html(self, objects: Objects) -> str:
         return self.get_arguments().to_html(objects, self)
 
-    def get_command(self) -> str:
-        return self.get_arguments().get_command(self)
+    def to_command(self) -> str:
+        return self.get_arguments().to_command(self)
+
+    def get_color(self) -> str:
+        return "#000000"
 
 
 def to_camel(text: str) -> str:

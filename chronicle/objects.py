@@ -1,12 +1,16 @@
 import json
+import logging
 import re
+from dataclasses import dataclass, field
 from datetime import timedelta
 from pathlib import Path
+from colour import Color
 
-from pydantic.main import BaseModel
+import pydantic.error_wrappers
 
 from chronicle.argument import Arguments, Argument
 from chronicle.event.value import Language
+from chronicle.time import Moment
 from chronicle.wikidata import (
     Property,
     WikidataItem,
@@ -26,7 +30,10 @@ wikidata_argument: Argument = Argument(
 )
 
 
-class Object(BaseModel):
+@dataclass
+class Object:
+    tags: set[str] = field(default_factory=set)
+
     def to_string(self, objects: "Objects") -> str:
         """Get human-readable text representation of an object in English."""
         return self.__class__.__name__.lower()
@@ -38,12 +45,19 @@ class Object(BaseModel):
 
     @classmethod
     def parse_command(cls, command: str) -> "Object":
-        return cls(**cls.get_arguments().parse(command))
+        try:
+            data = cls.get_arguments().parse(command)
+            return cls(**data)
+        except pydantic.error_wrappers.ValidationError as error:
+            logging.critical(
+                f"Command `{command}` could not be parsed: {error}"
+            )
 
     def get_command(self) -> str:
         return self.get_arguments().to_object_command(self)
 
 
+@dataclass
 class Place(Object):
     name: str | None = None
 
@@ -53,42 +67,70 @@ class Place(Object):
         return Arguments([name], name).add_argument("name")
 
 
+@dataclass
 class Airport(Place):
     pass
 
 
+@dataclass
 class Cafe(Place):
     pass
 
 
+@dataclass
 class Club(Place):
     pass
 
 
+@dataclass
 class Home(Place):
     pass
 
 
+@dataclass
 class Park(Place):
     pass
 
 
+@dataclass
 class Shop(Place):
     pass
 
 
+@dataclass
 class Station(Place):
     pass
 
 
+@dataclass
 class University(Place):
     pass
 
 
-class Project(Object):
+@dataclass
+class Person(Object):
+    """Real human."""
+
+    name: str | None = None
+    """Person name in the form of "<first name> <second name>"."""
+
+    telegram: str | None = None
+    """Telegram messenger unique identifier."""
+
+    @classmethod
+    def get_arguments(cls) -> Arguments:
+        return (
+            Arguments(["person"], "person")
+            .add_argument("name")
+            .add_argument("telegram", prefix="tg")
+        )
+
+
+@dataclass
+class Project(ArtObject):
     """Programming project."""
 
-    title: str
+    title: str | None = None
     """Title of the project."""
 
     @classmethod
@@ -96,7 +138,138 @@ class Project(Object):
         return Arguments(["project"], "project").add_argument("title")
 
 
-class Movie(Object):
+@dataclass
+class Medication(Thing):
+    title: str | None = None
+
+    @classmethod
+    def get_arguments(cls) -> Arguments:
+        return (
+            Arguments(["medication"], "medication").add_argument("title")
+            + super().get_arguments()
+        )
+
+
+@dataclass
+class Notebook(Thing):
+    """"""
+
+
+# Clothes.
+
+
+@dataclass
+class Clothes(Thing):
+    art: str | None = None
+    size: str | None = None
+
+    @classmethod
+    def get_arguments(cls) -> Arguments:
+        return (
+            super()
+            .get_arguments()
+            .add_argument("art", prefix="art:")
+            .add_argument(
+                "size", patterns=[re.compile("^(XXS|XS|S|M|L|XL|XXL)$")]
+            )
+        )
+
+
+@dataclass
+class Pants(Clothes):
+    pass
+
+
+@dataclass
+class Shoes(Clothes):
+    pass
+
+
+@dataclass
+class Socks(Clothes):
+    pass
+
+
+@dataclass
+class Sweater(Clothes):
+    pass
+
+
+@dataclass
+class TShirt(Clothes):
+    pass
+
+
+@dataclass
+class Underpants(Clothes):
+    pass
+
+
+# Physical objects.
+
+
+@dataclass
+class Pen(Thing):
+    pass
+
+
+@dataclass
+class Cup(Thing):
+    pass
+
+
+@dataclass
+class Device(Thing):
+    pass
+
+
+@dataclass
+class Glasses(Thing):
+    pass
+
+
+@dataclass
+class Headphones(Thing):
+    pass
+
+
+@dataclass
+class Computer(Thing):
+    pass
+
+
+@dataclass
+class Pack(Thing):
+    pass
+
+
+@dataclass
+class Phone(Thing):
+    pass
+
+
+@dataclass
+class Watch(Thing):
+    pass
+
+
+@dataclass
+class Ink(Thing):
+    pass
+
+
+@dataclass
+class Cable(Thing):
+    pass
+
+
+@dataclass
+class BookObject(Thing):
+    pass
+
+
+@dataclass
+class Movie(ArtObject):
     title: str | None = None
     """Title of the movie."""
 
@@ -113,13 +286,14 @@ class Movie(Object):
         )
 
 
+@dataclass
 class Podcast(Object):
     """Episodic series of digital audio."""
 
-    title: str
+    title: str | None = None
     """Title of the podcast."""
 
-    language: Language
+    language: Language | None = None
     """Language of the podcast."""
 
     wikidata_id: int = 0
@@ -148,13 +322,14 @@ class Podcast(Object):
         )
 
 
+@dataclass
 class Book(Object):
     """A book, a paper, or any other text or one of its translations."""
 
-    title: str
+    title: str | None = None
     """Title in language of the text."""
 
-    language: Language
+    language: Language | None = None
     """Language of the text."""
 
     wikidata_id: int = 0
@@ -195,10 +370,11 @@ class Book(Object):
         )
 
 
+@dataclass
 class Audiobook(Object):
     """Audio version of the book."""
 
-    book_id: str
+    book_id: str | None = None
     """Unique string identifier."""
 
     wikidata_id: int = 0
@@ -208,13 +384,13 @@ class Audiobook(Object):
     reader: str | None = None
 
     def to_string(self, objects: "Objects") -> str:
-        return objects.get_book(self.book_id).to_string(objects)
+        return objects.get_object(self.book_id).to_string(objects)
 
     def get_book(self, objects: "Objects") -> Book | None:
-        return objects.get_book(self.book_id)
+        return objects.get_object(self.book_id)
 
     def get_language(self, objects: "Objects") -> Language | None:
-        book: Book | None = objects.get_book(self.book_id)
+        book: Book | None = objects.get_object(self.book_id)
         return book.language if book else None
 
     @classmethod
@@ -229,36 +405,20 @@ class Audiobook(Object):
         return self.book_id
 
 
-class Objects(BaseModel):
+@dataclass
+class Objects:
     """Collection of event-related object collections."""
 
-    podcasts: dict[str, Podcast] = {}
-    books: dict[str, Book] = {}
-    audiobooks: dict[str, Audiobook] = {}
-    airports: dict[str, Airport] = {}
-    cafes: dict[str, Cafe] = {}
-    clubs: dict[str, Club] = {}
-    parks: dict[str, Park] = {}
-    projects: dict[str, Project] = {}
-    stations: dict[str, Station] = {}
-    homes: dict[str, Home] = {}
-    shops: dict[str, Shop] = {}
-    universitys: dict[str, University] = {}
-    movies: dict[str, Movie] = {}
+    objects: dict[str, Object] = field(default_factory=dict)
 
-    def get_podcast(self, podcast_id: str) -> Podcast | None:
-        return self.podcasts.get(podcast_id)
-
-    def get_book(self, book_id: str) -> Book | None:
-        return self.books.get(book_id)
-
-    def get_audiobook(self, audiobook_id: str) -> Audiobook | None:
-        return self.audiobooks.get(audiobook_id)
+    def get_object(self, object_id: str) -> Object | None:
+        if object_id in self.objects:
+            return self.objects[object_id]
+        else:
+            logging.error(f"No such object: `{object_id}`.")
 
     def parse_command(self, command: str) -> bool:
         parts: list[str] = command.split(" ")
-        if len(parts) < 3:
-            return False
         prefix: str = parts[0]
         id_: str = parts[1]
 
@@ -269,10 +429,7 @@ class Objects(BaseModel):
 
         for class_ in classes:
             if prefix in class_.get_arguments().prefixes:
-                # FIXME: dirty hack.
-                self.__getattribute__(prefix + "s")[id_] = class_.parse_command(
-                    " ".join(parts[2:])
-                )
+                self.objects[id_] = class_.parse_command(" ".join(parts[3:]))
                 return True
 
         return False
@@ -283,7 +440,7 @@ class Objects(BaseModel):
             d = getattr(self, key)
             for id_ in sorted(d.keys()):
                 object_ = d[id_]
-                commands.append(f"{key[:-1]} {id_} {object_.get_command()}")
+                commands.append(f"{key[:-1]} {id_} {object_.to_command()}")
         return commands
 
     def fill(self, cache_path: Path):

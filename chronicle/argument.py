@@ -205,7 +205,7 @@ class Arguments:
                     )
         return text
 
-    def get_command(self, value):
+    def to_command(self, value):
         text = value.time.to_pseudo_edtf_time() + " " + self.prefixes[0]
         for argument in self.arguments:
             if hasattr(value, argument.key):
@@ -215,6 +215,8 @@ class Arguments:
                         string: str = argument.command_printer(v)
                     elif getattr(v, "to_command", None):
                         string: str = v.to_command()
+                    elif isinstance(v, float):
+                        string: str = f"{v:.2f}"
                     else:
                         string: str = str(v)
                     if string:

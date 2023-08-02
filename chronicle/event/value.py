@@ -1,19 +1,19 @@
 import re
-from datetime import timedelta
+from dataclasses import dataclass
 
 from pydantic import BaseModel
 
-from chronicle.time import parse_delta, format_delta, INTERVAL_PATTERN
+from chronicle.time import INTERVAL_PATTERN, Timedelta
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
 
 
-class Language(str):
+@dataclass
+class Language:
     """Natural language of text, speach, or song."""
 
-    def __init__(self, code: str):
-        self.code: str = code
+    code: str
 
     def __eq__(self, other: "Language") -> bool:
         if not other:
@@ -33,27 +33,26 @@ class Language(str):
     def __hash__(self) -> int:
         return hash(self.code)
 
-    @classmethod
-    def __get_validators__(cls):
-        yield cls
 
-
-class Interval(BaseModel):
+@dataclass
+class Interval:
     """Time interval in seconds."""
 
-    start: timedelta | None
-    end: timedelta | None
+    start: Timedelta | None = None
+    end: Timedelta | None = None
 
     @classmethod
-    def from_string(cls, string: str) -> "Interval":
+    def from_json(cls, string: str) -> "Interval":
         start, end = string.split("/")
-        return cls(start=parse_delta(start), end=parse_delta(end))
+        return cls(
+            start=Timedelta.from_json(start), end=Timedelta.from_json(end)
+        )
 
-    def to_string(self, _=None) -> str:
+    def to_json(self) -> str:
         return (
-            (format_delta(self.start) if self.start is not None else "")
+            (self.start.to_json() if self.start is not None else "")
             + ("/" if self.start is not None or self.end is not None else "")
-            + (format_delta(self.end) if self.end is not None else "")
+            + (self.end.to_json() if self.end is not None else "")
         )
 
     @staticmethod
@@ -61,7 +60,7 @@ class Interval(BaseModel):
         return INTERVAL_PATTERN
 
     def to_command(self) -> str:
-        return self.to_string()
+        return self.to_json()
 
     def get_duration(self) -> float:
         if self.start is None and self.end is None:

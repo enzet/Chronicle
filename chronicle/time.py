@@ -18,7 +18,9 @@ class Moment:
     """
     Point in time with some certainty.
 
-    For example, 1912 means time period from 1 January 1912 to 1 January 1913.
+    For example,
+        - `1912` means time period from 1 January 1912 to 1 January 1913,
+        - `1912-01` means time period from 1 January 1912 to 1 February 1912.
     """
 
     year: int | None = None
@@ -58,7 +60,7 @@ class Moment:
         return moment
 
     @classmethod
-    def from_string(cls, code: str, context: Context) -> "Moment":
+    def from_string(cls, code: str, context: Context = None) -> "Moment":
         moment: "Moment" = cls()
 
         if "T" in code:
@@ -76,15 +78,22 @@ class Moment:
             moment.month = context.current_date.month
             moment.day = context.current_date.day
         else:
-            return moment  # FIXME
+            time = None
+            date_parts: list[str] = code.split("-")
+            moment.year = int(date_parts[0])
+            if len(date_parts) > 1:
+                moment.month = int(date_parts[1])
+            if len(date_parts) > 2:
+                moment.day = int(date_parts[2])
 
-        time_parts: list[str] = time.split(":")
+        if time:
+            time_parts: list[str] = time.split(":")
 
-        moment.hour = int(time_parts[0])
-        if len(time_parts) > 1:
-            moment.minute = int(time_parts[1])
-        if len(time_parts) > 2:
-            moment.second = float(time_parts[2])
+            moment.hour = int(time_parts[0])
+            if len(time_parts) > 1:
+                moment.minute = int(time_parts[1])
+            if len(time_parts) > 2:
+                moment.second = float(time_parts[2])
 
         return moment
 
@@ -102,6 +111,9 @@ class Moment:
             minute=self.minute or 0,
             second=int(self.second) if self.second is not None else 0,
         )
+
+    def __lt__(self, other: "Moment"):
+        return self.get_lower() < other.get_lower()  # FIXME
 
     def get_upper(self) -> datetime | None:
         """Compute upper bound of the moment."""
@@ -141,6 +153,12 @@ class Moment:
         )
 
     def to_pseudo_edtf_time(self) -> str:
+        if self.hour is None:
+            return (
+                f"{self.year}"
+                + (f"-{self.month:02d}" if self.month else "")
+                + (f"-{self.day:02d}" if self.day else "")
+            )
         return (
             (f"{self.hour:02d}" if self.hour is not None else "")
             + (f":{self.minute:02d}" if self.minute is not None else "")
@@ -157,8 +175,42 @@ class Moment:
             + (f":{self.second}" if self.second is not None else "")
         )
 
+    @classmethod
+    def from_datetime(cls, date: datetime) -> "Moment":
+        moment = Moment(
+            date.year,
+            date.month,
+            date.day,
+            date.hour,
+            date.minute,
+            date.second,
+        )
+        return moment
 
-class Time(str):
+
+class MalformedTime(Exception):
+    pass
+
+
+@dataclass
+class Timedelta:
+    delta: timedelta
+
+    def __sub__(self, other: "Timedelta") -> "Timedelta":
+        return Timedelta(self.delta - other.delta)
+
+    def total_seconds(self) -> float:
+        return self.delta.total_seconds()
+
+    @classmethod
+    def from_json(cls, code):
+        return cls(parse_delta(code))
+
+    def to_json(self) -> str:
+        return format_delta(self.delta)
+
+
+class Time:
     """Point in time or time span."""
 
     def __init__(self, code: str) -> None:
@@ -175,10 +227,14 @@ class Time(str):
         elif code:
             self.start = self.end = Moment.from_pseudo_edtf(code)
 
+    def __lt__(self, other: "Time") -> bool:
+        return self.get_lower() < other.get_lower()
+
     @classmethod
     def from_moment(cls, moment: Moment) -> "Time":
         time: "Time" = cls("")
-        time.start = time.end = moment
+        time.start = moment
+        time.end = moment
 
         return time
 
@@ -236,12 +292,29 @@ class Time(str):
 
     def get_duration(self) -> float | None:
         if not self.start or not self.end:
-            return None
+            return 0  # FIXME
 
         if self.start == self.end:
             return 0
 
         return (self.end.get_lower() - self.start.get_lower()).total_seconds()
+
+    def get_lower(self) -> datetime:
+        if self.start:
+            return self.start.get_lower()
+        elif self.end:
+            return self.end.get_lower()
+
+        raise MalformedTime()
+
+    def get_upper(self) -> datetime:
+        if self.end:
+            return self.end.get_upper()
+        elif self.start:
+            # return self.start.get_upper()
+            return datetime.now()
+
+        raise MalformedTime()
 
     def get_moment(self) -> datetime:
         if self.start and self.end:
@@ -251,8 +324,10 @@ class Time(str):
             )
         elif self.start:
             return self.start.get_lower()
-        else:
+        elif self.end:
             return self.end.get_lower()
+
+        raise MalformedTime()
 
 
 def parse_delta(string_delta: str) -> timedelta:
@@ -281,3 +356,24 @@ def format_delta(delta: timedelta) -> str:
     if hours:
         return f"{hours}:{minutes:02}:{seconds:02}"
     return f"{minutes:02}:{seconds:02}"
+
+
+def humanize_delta(delta: timedelta) -> str:
+    if delta.days > 365 * 2:
+        return f"{delta.days // 365} years"
+    elif delta.days > 365:
+        return "1 year"
+    else:
+        return f"{delta.days} days"
+
+
+def start_of_day(time: datetime) -> datetime:
+    return datetime(year=time.year, month=time.month, day=time.day)
+
+
+def start_of_month(time: datetime) -> datetime:
+    return datetime(year=time.year, month=time.month, day=1)
+
+
+def start_of_year(time: datetime) -> datetime:
+    return datetime(year=time.year, month=1, day=1)

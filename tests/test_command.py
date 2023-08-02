@@ -18,7 +18,7 @@ __email__ = "me@enzet.ru"
 def test_listen_podcast() -> None:
     """Test listening podcast command."""
 
-    (timeline := Timeline()).parse_command(
+    (timeline := Timeline()).parse_event_command(
         "2022-01-01T13:00:00/2022-01-01T14:00:00 podcast inner_french e5 "
         "10:00/20:00"
     )
@@ -35,7 +35,7 @@ def test_listen_podcast() -> None:
 def test_listen_music() -> None:
     """Test listening song command with title, artist, and album."""
 
-    (timeline := Timeline()).parse_command(
+    (timeline := Timeline()).parse_event_command(
         "2022-01-01T13:00:00/2022-01-01T14:00:00 song "
         "Strawberry Fields Forever by The Beatles on Magic Mystery Tour"
     )
@@ -50,7 +50,7 @@ def test_listen_music() -> None:
 def test_listen_audiobook() -> None:
     """Test listening song command with title, artist, and album."""
 
-    (timeline := Timeline()).parse_command(
+    (timeline := Timeline()).parse_event_command(
         "2022-01-01T13:00:00/2022-01-01T14:00:00 audiobook idiot x1.25 "
         "00:00/10:00"
     )
@@ -67,7 +67,7 @@ def test_listen_audiobook() -> None:
 def test_listen_audiobook_hour_interval() -> None:
     """Test listening song command with title, artist, and album."""
 
-    (timeline := Timeline()).parse_command(
+    (timeline := Timeline()).parse_event_command(
         "2022-01-01T13:00:00/2022-01-01T14:00:00 audiobook idiot "
         "1:10:10/2:20:20"
     )
@@ -81,7 +81,7 @@ def test_listen_audiobook_hour_interval() -> None:
 
 
 def test_sleep() -> None:
-    (timeline := Timeline()).parse_command(
+    (timeline := Timeline()).parse_event_command(
         "2022-01-01T00:00:00/2022-01-01T08:00:00 sleep"
     )
     assert len(timeline) == 1
@@ -95,7 +95,9 @@ def test_short_time() -> None:
 
     context: Context = Context()
     context.current_date = datetime(2022, 1, 2)
-    (timeline := Timeline()).parse_command("13:00 audiobook idiot", context)
+    (timeline := Timeline()).parse_event_command(
+        "13:00 audiobook idiot", context
+    )
     assert len(timeline) == 1
     event: Event = timeline.events[0]
     assert isinstance(event, ListenAudiobookEvent)

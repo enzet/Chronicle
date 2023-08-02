@@ -1,4 +1,6 @@
+import logging
 import re
+from dataclasses import dataclass
 
 from chronicle.argument import Arguments
 from chronicle.event.core import Event
@@ -11,22 +13,28 @@ __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
 
 
+@dataclass
 class DoEvent(Event):
-    description: str
+    description: str | None = None
 
     @classmethod
     def get_arguments(cls) -> Arguments:
         return Arguments(["do"], "do").add_argument("description")
 
 
+@dataclass
 class CookEvent(Event):
-    dish: str
+    dish: str | None = None
 
     @classmethod
     def get_arguments(cls) -> Arguments:
         return Arguments(["cook"], "cook").add_argument("dish")
 
+    def register_summary(self, summary: Summary, objects: Objects):
+        summary.register_dish(self.dish)
 
+
+@dataclass
 class CleanEvent(Event):
     object_: str | None = None
 
@@ -35,6 +43,7 @@ class CleanEvent(Event):
         return Arguments(["clean", "wash"], "clean").add_argument("object_")
 
 
+@dataclass
 class CutEvent(Event):
     object_: str | None = None
 
@@ -43,9 +52,10 @@ class CutEvent(Event):
         return Arguments(["cut"], "cut").add_argument("object_")
 
 
+@dataclass
 class DrinkEvent(Event):
-    liquid: str
-    amount: float
+    liquid: str | None = None
+    amount: float | None = None
     """Amount of the liquid in litres."""
 
     @classmethod
@@ -65,9 +75,10 @@ class DrinkEvent(Event):
         )
 
 
+@dataclass
 class PayEvent(Event):
-    cost: Cost
-    goods: str
+    goods: str | None = None
+    cost: Cost | None = None
 
     @classmethod
     def get_arguments(cls) -> Arguments:
@@ -80,6 +91,8 @@ class PayEvent(Event):
         )
 
 
+
+@dataclass
 class ProgramEvent(Event):
     project: str | None = None
 

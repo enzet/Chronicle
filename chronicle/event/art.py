@@ -1,5 +1,7 @@
 """Events about reading, watching or listening things."""
 import re
+from dataclasses import dataclass
+from typing import Any
 
 from chronicle.argument import Arguments, Argument
 from chronicle.event.core import Event
@@ -38,7 +40,7 @@ def one_pattern_argument(name, class_, index: int = 0):
     return Argument(
         name,
         patterns=[class_.get_pattern()],
-        extractors=[lambda x: class_.from_string(x(index))],
+        extractors=[lambda x: class_.from_json(x(index))],
         pretty_printer=lambda o, v: v.to_string(),
     )
 
@@ -46,6 +48,7 @@ def one_pattern_argument(name, class_, index: int = 0):
 interval_argument: Argument = one_pattern_argument("interval", Interval)
 
 
+@dataclass
 class ListenPodcastEvent(Event):
     """Listening podcast event."""
 
@@ -75,14 +78,15 @@ class ListenPodcastEvent(Event):
     def register_summary(self, summary: Summary, objects: Objects):
         summary.register_listen(
             self.interval.get_duration(),
-            objects.get_podcast(self.podcast_id).language,
+            objects.get_object(self.podcast_id).language,
         )
 
 
+@dataclass
 class ListenMusicEvent(Event):
     """Listening music event."""
 
-    title: str
+    title: str | None = None
     """Title of the song or music description."""
 
     interval: Interval = Interval()
@@ -101,10 +105,12 @@ class ListenMusicEvent(Event):
         )
 
 
+@dataclass
 class ReadEvent(Event):
-    book_id: str
+    book_id: str | None = None
     language: str | None = None
-    pages: tuple[float, float] | None = None
+    volume: Volume | None = None
+    subject: str | None = None
 
     @classmethod
     def get_arguments(cls) -> Arguments:
@@ -121,8 +127,9 @@ class ReadEvent(Event):
         )
 
 
+@dataclass
 class StandupEvent(Event):
-    title: str
+    title: str | None = None
     language: str | None = None
     place_id: str | None = None
 
@@ -138,10 +145,11 @@ class StandupEvent(Event):
         )
 
 
+@dataclass
 class WatchEvent(Event):
-    movie_id: str
+    movie_id: str | None = None
     season: int | None = None
-    episode: int | None = None
+    episode: int | str | None = None
     interval: Interval | None = None
     language: str | None = None
     subtitles: str | None = None
@@ -177,10 +185,11 @@ class WatchEvent(Event):
             )
 
 
+@dataclass
 class ListenAudiobookEvent(Event):
     """Listening audiobook event."""
 
-    audiobook_id: str
+    audiobook_id: str | None = None
     interval: Interval = Interval()
     speed: float | None = None
 
@@ -203,7 +212,7 @@ class ListenAudiobookEvent(Event):
         )
 
     def get_audiobook(self, objects: Objects) -> Audiobook | None:
-        return objects.get_audiobook(self.audiobook_id)
+        return objects.get_object(self.audiobook_id)
 
     def get_language(self, objects: Objects) -> Language | None:
         audiobook: Audiobook | None = self.get_audiobook(objects)

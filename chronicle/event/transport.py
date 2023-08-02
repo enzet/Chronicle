@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 from chronicle.argument import Arguments
 from chronicle.event.core import Event
 
@@ -5,6 +7,7 @@ __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
 
 
+@dataclass
 class TransportEvent(Event):
     start_place_id: str | None = None
     end_place_id: str | None = None
@@ -17,13 +20,16 @@ class TransportEvent(Event):
         )
 
 
+@dataclass
 class TaxiEvent(TransportEvent):
     pass
 
 
+@dataclass
 class MetroEvent(TransportEvent):
     pass
 
 
+@dataclass
 class WaterTaxiEvent(TransportEvent):
     pass
