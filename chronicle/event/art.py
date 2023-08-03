@@ -106,6 +106,16 @@ class ListenMusicEvent(Event):
 
 
 @dataclass
+class Serializable:
+    @classmethod
+    def from_json(cls) -> "Serializable":
+        pass
+
+    def to_json(self) -> Any:
+        pass
+
+
+@dataclass
 class ReadEvent(Event):
     book_id: str | None = None
     language: str | None = None
