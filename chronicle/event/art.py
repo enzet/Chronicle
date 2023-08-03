@@ -106,6 +106,14 @@ class ListenMusicEvent(Event):
 
 
 @dataclass
+class ListenLectureEvent(Event):
+    title: str | None = None
+    """Title of the lecture."""
+
+    language: Language | None = None
+
+
+@dataclass
 class Serializable:
     @classmethod
     def from_json(cls) -> "Serializable":
@@ -113,6 +121,16 @@ class Serializable:
 
     def to_json(self) -> Any:
         pass
+
+
+@dataclass
+class Volume(Serializable):
+    from_: float
+    to_: float
+    of: float
+
+    def get_ratio(self) -> float:
+        return (self.to_ - self.from_) / self.of
 
 
 @dataclass
