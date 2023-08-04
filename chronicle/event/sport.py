@@ -27,7 +27,7 @@ class MoveEvent(SportEvent):
     @classmethod
     def get_arguments(cls) -> Arguments:
         return (
-            Arguments(["run"], "run")
+            Arguments(["move"], "move")
             .add_argument("duration")
             .add_argument("distance")
             .add_argument("pace")
