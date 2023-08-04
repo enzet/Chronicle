@@ -33,7 +33,8 @@ class TrainEvent(TransportEvent):
 
 @dataclass
 class MetroEvent(TransportEvent):
-    pass
+    from_: str | None = None
+    to_: str | None = None
 
 
 @dataclass
