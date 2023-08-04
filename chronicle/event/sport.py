@@ -78,4 +78,8 @@ class ChinUpEvent(CountableSportEvent):
 class RussianTwists(CountableSportEvent):
     @classmethod
     def get_arguments(cls) -> Arguments:
-        return super().get_arguments().replace(["push_up"], "push_up")
+        return (
+            super()
+            .get_arguments()
+            .replace(["russian_twists"], "russian_twists")
+        )
