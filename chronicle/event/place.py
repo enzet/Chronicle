@@ -23,6 +23,11 @@ class HomeEvent(PlaceEvent):
     pass
 
 
+@dataclass
+class BarEvent(PlaceEvent):
+    def get_color(self) -> str:
+        return "#008800"
+
 
 @dataclass
 class CafeEvent(PlaceEvent):
