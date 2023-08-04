@@ -164,6 +164,23 @@ class DrinkEvent(Event):
 
 
 @dataclass
+class StatusEvent(Event):
+    weight: float | None = None
+    """Body weight in kilograms."""
+
+    temperature: float | None = None
+    """Body temperature in Celsius."""
+
+    @classmethod
+    def get_arguments(cls) -> Arguments:
+        return (
+            Arguments(["_"], "_")
+            .add_argument("weight")
+            .add_argument("temperature")
+        )
+
+
+@dataclass
 class PayEvent(Event):
     goods: str | None = None
     cost: Cost | None = None
@@ -183,6 +200,8 @@ class PayEvent(Event):
 @dataclass
 class ProgramEvent(Event):
     project: str | None = None
+    language: str | None = None
+    task: str | None = None
 
     @classmethod
     def get_arguments(cls) -> Arguments:
