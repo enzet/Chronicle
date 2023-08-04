@@ -53,6 +53,12 @@ class CutEvent(Event):
 
 
 @dataclass
+class CallEvent(Event):
+    video: str | None = None
+    """`camera` or `screen`"""
+
+
+@dataclass
 class DrinkEvent(Event):
     liquid: str | None = None
     amount: float | None = None
