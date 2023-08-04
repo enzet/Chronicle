@@ -7,12 +7,14 @@ from chronicle.event.art import (
     ListenMusicEvent,
     ListenPodcastEvent,
 )
-from chronicle.event.value import Interval
-from chronicle.time import Context
+from chronicle.event.value import Interval, Language
+from chronicle.time import Context, Timedelta
 from chronicle.timeline import Timeline, CommandParser
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
+
+from objects import Audiobook, Book
 
 
 def test_listen_podcast() -> None:
@@ -28,7 +30,8 @@ def test_listen_podcast() -> None:
     assert event.podcast_id == "inner_french"
     assert event.episode == "5"
     assert event.interval == Interval(
-        start=timedelta(minutes=10), end=timedelta(minutes=20)
+        start=Timedelta(timedelta(minutes=10)),
+        end=Timedelta(timedelta(minutes=20)),
     )
 
 
@@ -51,16 +54,16 @@ def test_listen_audiobook() -> None:
     """Test listening song command with title, artist, and album."""
 
     (timeline := Timeline()).parse_event_command(
-        "2022-01-01T13:00:00/2022-01-01T14:00:00 audiobook idiot x1.25 "
+        "2022-01-01T13:00:00/2022-01-01T14:00:00 audiobook idiot_audio x1.25 "
         "00:00/10:00"
     )
     assert len(timeline) == 1
     event: Event = timeline.events[0]
     assert isinstance(event, ListenAudiobookEvent)
-    assert event.audiobook_id == "idiot"
+    assert event.audiobook_id == "idiot_audio"
     assert event.speed == 1.25
     assert event.interval == Interval(
-        start=timedelta(), end=timedelta(minutes=10)
+        start=Timedelta(), end=Timedelta(timedelta(minutes=10))
     )
 
 
@@ -75,8 +78,8 @@ def test_listen_audiobook_hour_interval() -> None:
     event: Event = timeline.events[0]
     assert isinstance(event, ListenAudiobookEvent)
     assert event.interval == Interval(
-        start=timedelta(hours=1, minutes=10, seconds=10),
-        end=timedelta(hours=2, minutes=20, seconds=20),
+        start=Timedelta(timedelta(hours=1, minutes=10, seconds=10)),
+        end=Timedelta(timedelta(hours=2, minutes=20, seconds=20)),
     )
 
 
@@ -96,15 +99,17 @@ def test_short_time() -> None:
     context: Context = Context()
     context.current_date = datetime(2022, 1, 2)
     (timeline := Timeline()).parse_event_command(
-        "13:00 audiobook idiot", context
+        "13:00 audiobook idiot_audio", context
     )
     assert len(timeline) == 1
     event: Event = timeline.events[0]
     assert isinstance(event, ListenAudiobookEvent)
 
     objects: Objects = Objects(
-        books={"idiot": {"title": "Idiot", "language": "ru"}},
-        audiobooks={"idiot": {"book_id": "idiot"}},
+        {
+            "idiot": Book(title="Idiot", language=Language("ru")),
+            "idiot_audio": Audiobook(book_id="idiot"),
+        }
     )
     assert event.to_string(objects) == "listen audiobook Idiot"
     assert event.time.start == event.time.end
@@ -114,9 +119,9 @@ def test_short_time() -> None:
 def test_file() -> None:
     commands: list[str] = [
         "book idiot Idiot .ru",
-        "audiobook idiot idiot",
+        "audiobook idiot_audio idiot",
         "2000-01-01",
-        "13:00 audiobook idiot",
+        "13:00 audiobook idiot_audio",
     ]
     parser: CommandParser = CommandParser()
     parser.parse_commands(commands)
