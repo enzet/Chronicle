@@ -69,7 +69,7 @@ class ListenPodcastEvent(Event):
             Arguments(["podcast"], "listen podcast")
             .add_argument(
                 "podcast_id",
-                pretty_printer=lambda o, v: o.get_podcast(v).title,
+                pretty_printer=lambda o, v: o.get_object(v).title,
             )
             .add(episode_argument)
             .add(one_pattern_argument("interval", Interval))
@@ -227,8 +227,8 @@ class ListenAudiobookEvent(Event):
             Arguments(["audiobook"], "listen audiobook")
             .add_argument(
                 "audiobook_id",
-                pretty_printer=lambda o, v: o.get_book(
-                    o.get_audiobook(v).book_id
+                pretty_printer=lambda o, v: o.get_object(
+                    o.get_object(v).book_id
                 ).title,
             )
             .add(interval_argument)
