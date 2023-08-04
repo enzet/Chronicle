@@ -23,6 +23,11 @@ class DoEvent(Event):
 
 
 @dataclass
+class AppointmentEvent(Event):
+    pass
+
+
+@dataclass
 class CookEvent(Event):
     dish: str | None = None
 
@@ -56,6 +61,83 @@ class CutEvent(Event):
 class CallEvent(Event):
     video: str | None = None
     """`camera` or `screen`"""
+
+
+@dataclass
+class EatEvent(Event):
+    meal: str | None = None
+    kilocalories: float | None = None
+
+
+@dataclass
+class LearnEvent(Event):
+    subject: str | None = None
+    service: str | None = None
+
+
+@dataclass
+class WriteEvent(Event):
+    pass
+
+
+@dataclass
+class ReviewEvent(Event):
+    pass
+
+
+@dataclass
+class BedEvent(Event):
+    pass
+
+
+@dataclass
+class PlayEvent(Event):
+    game: str | None = None
+
+
+@dataclass
+class DiscussEvent(Event):
+    pass
+
+
+@dataclass
+class IronEvent(Event):
+    pass
+
+
+@dataclass
+class ResearchEvent(Event):
+    pass
+
+
+@dataclass
+class VoteEvent(Event):
+    pass
+
+
+@dataclass
+class SiteDefectsEvent(Event):
+    pass
+
+
+@dataclass
+class VomitEvent(Event):
+    pass
+
+
+@dataclass
+class DrawEvent(Event):
+    tool: str | None = None
+
+
+@dataclass
+class PainEvent(Event):
+    pass
+
+
+@dataclass
+class ShaveEvent(Event):
+    object: str | None = None
 
 
 @dataclass
