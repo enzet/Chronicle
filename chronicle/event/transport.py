@@ -22,6 +22,12 @@ class TransportEvent(Event):
 
 @dataclass
 class TaxiEvent(TransportEvent):
+    def get_color(self) -> str:
+        return "#888800"
+
+
+@dataclass
+class TrainEvent(TransportEvent):
     pass
 
 
