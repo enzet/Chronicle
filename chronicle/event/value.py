@@ -55,6 +55,9 @@ class Interval:
             + (self.end.to_json() if self.end is not None else "")
         )
 
+    def to_string(self) -> str:
+        return self.to_json()
+
     @staticmethod
     def get_pattern() -> re.Pattern:
         return INTERVAL_PATTERN
