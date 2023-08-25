@@ -23,6 +23,17 @@ class DoEvent(Event):
 
 
 @dataclass
+class MedicationEvent(Event):
+    medication: str | None = None
+
+    @classmethod
+    def get_arguments(cls) -> Arguments:
+        return Arguments(["medication"], "medication").add_argument(
+            "medication"
+        )
+
+
+@dataclass
 class AppointmentEvent(Event):
     pass
 
