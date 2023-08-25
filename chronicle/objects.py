@@ -29,6 +29,14 @@ wikidata_argument: Argument = Argument(
     command_printer=lambda x: f"Q{x}",
 )
 
+COLOR_PATTERN = re.compile(
+    r"(red|darkred|lightred|"
+    r"green|darkgreen|lightgreen|"
+    r"blue|darkblue|lightblue|"
+    r"yellow|brown|violet|"
+    r"black|white|grey|gray|lightgrey|lightgray|darkgrey|darkgray)"
+)
+
 
 @dataclass
 class Object:
