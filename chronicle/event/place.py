@@ -38,6 +38,16 @@ class CafeEvent(PlaceEvent):
 class CinemaEvent(PlaceEvent):
     pass
 
+@dataclass
+class PharmacyEvent(PlaceEvent):
+    def get_color(self) -> str:
+        return "#FF8888"
+
+
+@dataclass
+class ClinicEvent(PlaceEvent):
+    def get_color(self) -> str:
+        return "#FF8888"
 
 
 @dataclass
