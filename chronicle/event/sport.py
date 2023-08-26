@@ -51,6 +51,16 @@ class WalkEvent(MoveEvent):
 
 
 @dataclass
+class PlankEvent(SportEvent):
+    pass
+
+
+@dataclass
+class HighPlankEvent(SportEvent):
+    pass
+
+
+@dataclass
 class CountableSportEvent(SportEvent):
     count: int | None = None
     """The number of rounds."""
