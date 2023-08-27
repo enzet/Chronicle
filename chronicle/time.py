@@ -194,7 +194,7 @@ class MalformedTime(Exception):
 
 @dataclass
 class Timedelta:
-    delta: timedelta
+    delta: timedelta = timedelta()
 
     def __sub__(self, other: "Timedelta") -> "Timedelta":
         return Timedelta(self.delta - other.delta)
