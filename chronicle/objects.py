@@ -66,6 +66,57 @@ class Object:
 
 
 @dataclass
+class Thing(Object):
+    """Physical object, not a place."""
+
+    name: str | None = None
+    link: str | None = None
+    cost: str | None = None
+
+    expired: Moment | None = None
+    """If this field is `None`, the object is not expendable."""
+
+    retired: bool = False
+    """If the object is not in use."""
+
+    since: Moment | None = None
+    """If the object is not in use."""
+
+    temperature: str | None = None
+
+    color: Color | None = None
+
+    @classmethod
+    def get_arguments(cls) -> Arguments:
+        name: str = re.sub(r"([A-Z])", r"_\1", cls.__name__)[1:].lower()
+        return (
+            Arguments([name], name)
+            .add_argument("name")
+            .add_argument("link", patterns=[re.compile(r"(https?://[^ ]*)")])
+            .add_argument(
+                "cost",
+                patterns=[re.compile(r"(\d+amd)")],
+                command_printer=lambda x: f"{x.value}{x.currency}",
+            )
+            .add_argument(
+                "expired", prefix="exp:", loader=lambda x: Moment.from_string(x)
+            )
+            .add_argument(
+                "since", prefix="since:", loader=lambda x: Moment.from_string(x)
+            )
+            .add_argument("temperature", prefix="temp:")
+            .add_argument(
+                "retired",
+                patterns=[re.compile("retired")],
+                extractors=[lambda x: True],
+            )
+            .add_argument(
+                "color", patterns=[COLOR_PATTERN], loader=lambda x: Color(x)
+            )
+        )
+
+
+@dataclass
 class Place(Object):
     name: str | None = None
 
