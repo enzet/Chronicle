@@ -118,6 +118,18 @@ class Thing(Object):
 
 @dataclass
 class Place(Object):
+    """Some place with geographical coordinates."""
+
+    name: str | None = None
+
+    @classmethod
+    def get_arguments(cls) -> Arguments:
+        name: str = cls.__name__.lower()
+        return Arguments([name], name).add_argument("name")
+
+
+@dataclass
+class ArtObject(Object):
     name: str | None = None
 
     @classmethod
