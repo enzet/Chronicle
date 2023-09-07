@@ -139,6 +139,11 @@ class ArtObject(Object):
 
 
 @dataclass
+class Country(Object):
+    pass
+
+
+@dataclass
 class Airport(Place):
     pass
 
