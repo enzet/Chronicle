@@ -48,8 +48,8 @@ class Object:
 
     @classmethod
     def get_arguments(cls) -> Arguments:
-        name: str = cls.__name__.lower()
-        return Arguments([name], name)
+        name: str = re.sub(r"([A-Z])", r"_\1", cls.__name__)[1:].lower()
+        return Arguments([name], name).add_tags_argument()
 
     @classmethod
     def parse_command(cls, command: str) -> "Object":
