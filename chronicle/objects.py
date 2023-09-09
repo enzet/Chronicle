@@ -149,6 +149,11 @@ class Airport(Place):
 
 
 @dataclass
+class Bank(Place):
+    pass
+
+
+@dataclass
 class Cafe(Place):
     pass
 
