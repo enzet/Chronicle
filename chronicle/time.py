@@ -1,9 +1,12 @@
+import random
 import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
+
+from typing import Optional
 
 DELTA_PATTERN: str = r"(\d+:)?\d\d:\d\d"
 INTERVAL_PATTERN: re.Pattern = re.compile(rf"{DELTA_PATTERN}/{DELTA_PATTERN}")
@@ -203,7 +206,9 @@ class Timedelta:
         return self.delta.total_seconds()
 
     @classmethod
-    def from_json(cls, code):
+    def from_json(cls, code: str) -> Optional["Timedelta"]:
+        if not code:
+            return None
         return cls(parse_delta(code))
 
     def to_json(self) -> str:
@@ -231,11 +236,17 @@ class Time:
         return self.get_lower() < other.get_lower()
 
     @classmethod
+    def from_moments(cls, start_moment: Moment, end_moment: Moment) -> "Time":
+        time: "Time" = cls("")
+        time.start = start_moment
+        time.end = end_moment
+        return time
+
+    @classmethod
     def from_moment(cls, moment: Moment) -> "Time":
         time: "Time" = cls("")
         time.start = moment
         time.end = moment
-
         return time
 
     @classmethod
@@ -253,10 +264,6 @@ class Time:
         time.start = time.end = Moment.from_string(code, context)
 
         return time
-
-    @classmethod
-    def __get_validators__(cls):
-        yield cls
 
     def __str__(self) -> str:
         return self.to_pseudo_edtf()
@@ -329,13 +336,27 @@ class Time:
 
         raise MalformedTime()
 
+    def get_random(self) -> datetime:
+        if self.start and self.end:
+            return (
+                self.start.get_lower()
+                + (self.end.get_lower() - self.start.get_lower())
+                * random.random()
+            )
+        elif self.start:
+            return self.start.get_lower()
+        elif self.end:
+            return self.end.get_lower()
+
+        raise MalformedTime()
+
 
 def parse_delta(string_delta: str) -> timedelta:
     """Parse time delta from a string representation."""
 
     if string_delta.count(":") == 2:
         hour, minute, second = (int(x) for x in string_delta.split(":"))
-    else:
+    elif string_delta.count(":") == 1:
         hour = 0
         minute, second = (int(x) for x in string_delta.split(":"))
     return timedelta(seconds=hour * 3600 + minute * 60 + second)
