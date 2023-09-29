@@ -8,13 +8,12 @@ from chronicle.event.art import (
     ListenPodcastEvent,
 )
 from chronicle.event.value import Interval, Language
+from chronicle.objects import Audiobook, Book
 from chronicle.time import Context, Timedelta
 from chronicle.timeline import Timeline, CommandParser
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
-
-from objects import Audiobook, Book
 
 
 def test_listen_podcast() -> None:

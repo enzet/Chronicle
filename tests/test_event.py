@@ -2,15 +2,13 @@
 
 from typing import Any
 
-from chronicle.event.core import Objects
 from chronicle.event.art import ListenPodcastEvent
+from chronicle.event.core import Objects
+from chronicle.event.value import Language
+from chronicle.objects import Podcast
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
-
-from event.value import Language
-
-from objects import Podcast
 
 
 def test_listen() -> None:
