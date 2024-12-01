@@ -1,18 +1,19 @@
-"""
-Event and global event parameters.
+"""Event and global event parameters.
 
 This file describes events and some common attributes that events may have.
 """
+
 import logging
 from dataclasses import dataclass, field
-from typing import Optional, Any
+from typing import Any
 
-import pydantic
+from chronicle.errors import ChronicleObjectNotFoundException
+from chronicle.value import Interval, Tags
 
 from chronicle.argument import Arguments
-from chronicle.objects import Objects
+from chronicle.objects.core import Objects
 from chronicle.summary.core import Summary
-from chronicle.time import Time
+from chronicle.time import Time, Timedelta
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
@@ -20,8 +21,7 @@ __email__ = "me@enzet.ru"
 
 @dataclass
 class Event:
-    """
-    Any event happened at some point or during some period in time.
+    """Any event happened at some point or during some period in time.
 
     This includes events such as reading, running, playing, as well as
     conditions, such as current body temperature, heart rate, being at some
@@ -31,42 +31,48 @@ class Event:
     time: Time
     """Point in time or time span when event is occurred."""
 
-    source: Any
+    source: Any = None
     """Source representation was used to create this event."""
 
     tags: set[str] = field(default_factory=set)
+    """Arbitrary user tag set for an event."""
+
+    def __post_init__(self):
+        assert self.time
 
     @classmethod
     def get_arguments(cls) -> Arguments:
-        return Arguments([], "")
+        return Arguments([], "").add_class_argument("tags", Tags)
 
     @classmethod
-    def parse_command(cls, time: str, command: str) -> Optional["Event"]:
-        parsed = cls.get_arguments().parse(command)
+    def parse_command(
+        cls, time: Time, command: str, tokens: list[str], objects: Objects
+    ) -> "Event":
+        arguments: Arguments = cls.get_arguments()
         try:
-            return cls(time=time, **parsed)
-        except pydantic.error_wrappers.ValidationError as e:
-            print(
-                f"Cannot construct class {cls} from {parsed} and time {time}."
-            )
-            logging.error(parsed)
-            raise e
+            parsed = arguments.parse(tokens, objects)
+        except ChronicleObjectNotFoundException as e:
+            raise ChronicleObjectNotFoundException(
+                f"Object with id `{e.object_id}` not found, needed to parse "
+                f"`{cls.__name__}` by command `{command}`."
+            ) from e
+        try:
+            return cls(time=time, source=(command, parsed), **parsed)
         except TypeError as e:
-            print(f"Cannot construct class {cls} from {parsed}.")
-            logging.error(parsed)
+            logging.error(f"Cannot construct class {cls} from {parsed}.")
             raise e
 
-    def register_summary(self, summary: Summary, objects: Objects):
-        """"""
+    def register_summary(self, summary: Summary) -> None:
+        """Register event effect on summary."""
 
-    def to_string(self, objects: Objects) -> str:
+    def to_string(self) -> str:
         """
         Get human-readable event text representation in English.
 
         :param objects: object information needed to fill data, because some
             events depend on objects and know solely about object identifier
         """
-        return self.get_arguments().to_string(objects, self)
+        return self.get_arguments().to_string(self)
 
     def to_html(self, objects: Objects) -> str:
         return self.get_arguments().to_html(objects, self)
@@ -77,7 +83,25 @@ class Event:
     def get_color(self) -> str:
         return "#000000"
 
+    def get_duration(self) -> float:
+        """Get event duration in seconds.
 
-def to_camel(text: str) -> str:
-    """Make the first letter capital."""
-    return text[0].upper() + text[1:]
+        Duration may be implemented as `self.time.get_duration()` or
+        `self.interval.get_duration()`, but it should be done explicitly.
+        """
+        if hasattr(self, "duration"):
+            duration: Timedelta = getattr(self, "duration")
+            if duration:
+                return duration.total_seconds()
+
+        if hasattr(self, "interval"):
+            interval: Interval = getattr(self, "interval")
+            if interval:
+                return interval.get_duration()
+
+        if not self.time.is_assumed:
+            result: float | None = self.time.get_duration()
+            if result:
+                return result
+
+        return 0.0

@@ -1,36 +1,37 @@
 import re
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from html.parser import HTMLParser
 from pathlib import Path
 
 from chronicle.event.common import LearnEvent
 from chronicle.event.core import Event
 from chronicle.harvest.core import Importer
-from chronicle.time import Time, Moment
+from chronicle.time import Time, Moment, Timedelta
 from chronicle.timeline import Timeline
+from chronicle.value import Subject
 
 
 LANGUAGE_NAMES: dict[str, tuple[str, ...]] = {
-    "armn": ("армянский алфавит",),
-    "de": ("немецкий",),
-    "el": ("греческий",),
-    "en": ("английский (cша)",),
-    "es": ("испанский",),
-    "fr": (
+    "/writing/armn": ("армянский алфавит",),
+    "/language/de": ("немецкий",),
+    "/language/el": ("греческий",),
+    "/language/en": ("английский (cша)",),
+    "/language/es": ("испанский",),
+    "/language/fr": (
         "french",
         "французский",
         "manuel de français",
         "delf b1 (часть 1)",
         "правила чтения французского языка",
     ),
-    "geor": ("georgian alphabet",),
-    "hy": ("1000 most frequent armenian words",),
-    "is": ("icelandic",),
-    "ja": ("японский",),
-    "ko": ("корейский",),
-    "rsl": ("русский жестовый язык", "ржя"),
-    "sv": ("swedish",),
+    "/writing/geor": ("georgian alphabet",),
+    "/language/hy": ("1000 most frequent armenian words",),
+    "/language/is": ("icelandic",),
+    "/language/ja": ("японский",),
+    "/writing/hang": ("корейский",),
+    "/language/rsl": ("русский жестовый язык", "ржя"),
+    "/language/sv": ("swedish",),
 }
 PATTERNS = (
     re.compile(r"^(.*) \d+$"),
@@ -85,6 +86,8 @@ class MemriseHTMLParser(HTMLParser):
 
 
 class MemriseImporter(Importer):
+    """Importer for Memrise data."""
+
     def __init__(self, path: Path):
         self.path: Path = path
 
@@ -126,18 +129,30 @@ class MemriseImporter(Importer):
             start: datetime = datetime.strptime(start_time, TIME_PATTERN)
             end: datetime = datetime.strptime(completion_time, TIME_PATTERN)
 
-            if tests:
-                actions[course_name] += int(tests)
-                event: Event = LearnEvent(
-                    Time.from_moments(
-                        Moment.from_datetime(start),
-                        Moment.from_datetime(end),
-                    ),
-                    subject=course_name,
-                    service="memrise",
-                    actions=tests,
-                )
-                timeline.events.append(event)
+            if not tests:
+                continue
 
-        for course_name, tests in actions.items():
-            print(course_name, tests)
+            actions[course_name] += int(tests)
+            seconds_per_test: float = (end - start).total_seconds() / int(tests)
+
+            # If the time per test is less than 1 minute, the time stamps look
+            # valid and we want to use the actual time spent on the session.
+            # Otherwise, we approximate the time spent on the session as 16
+            # seconds per test.
+            duration: Timedelta | None = None
+            if seconds_per_test >= 60:
+                duration = Timedelta.from_delta(
+                    timedelta(seconds=float(tests) * 16.0)
+                )
+
+            event: Event = LearnEvent(
+                Time.from_moments(
+                    Moment.from_datetime(start),
+                    Moment.from_datetime(end),
+                ),
+                subject=Subject.from_string(course_name),
+                service=timeline.objects.get_object("memrise"),
+                actions=tests,
+                duration=duration,
+            )
+            timeline.events.append(event)

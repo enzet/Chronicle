@@ -6,12 +6,18 @@ from datetime import datetime, timedelta
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
 
-from typing import Optional
+from typing import Callable, Optional
 
-DELTA_PATTERN: str = r"(\d+:)?\d\d:\d\d"
-INTERVAL_PATTERN: re.Pattern = re.compile(rf"{DELTA_PATTERN}/{DELTA_PATTERN}")
+DELTA_PATTERN_TEXT: str = r"(\d+:)?\d?\d:\d\d"
+DELTA_PATTERN_TEXT_GROUPS: str = r"((?P<h>\d+):)?(?P<m>\d?\d):(?P<s>\d\d)"
+DELTA_PATTERN: re.Pattern = re.compile(DELTA_PATTERN_TEXT)
+DELTA_PATTERN_GROUPS: re.Pattern = re.compile(DELTA_PATTERN_TEXT_GROUPS)
+INTERVAL_PATTERN: re.Pattern = re.compile(
+    rf"{DELTA_PATTERN_TEXT}/{DELTA_PATTERN_TEXT}"
+)
 
 
+@dataclass
 class Context:
     current_date: datetime | None = None
 
@@ -24,6 +30,8 @@ class Moment:
     For example,
         - `1912` means time period from 1 January 1912 to 1 January 1913,
         - `1912-01` means time period from 1 January 1912 to 1 February 1912.
+        - `1912-01-01` means time period from 1 January 1912 00:00 to 2 January
+          1912 00:00.
     """
 
     year: int | None = None
@@ -63,7 +71,7 @@ class Moment:
         return moment
 
     @classmethod
-    def from_string(cls, code: str, context: Context = None) -> "Moment":
+    def from_string(cls, code: str, context: Context | None = None) -> "Moment":
         moment: "Moment" = cls()
 
         if "T" in code:
@@ -75,7 +83,7 @@ class Moment:
                 moment.month = int(date_parts[1])
             if len(date_parts) > 2:
                 moment.day = int(date_parts[2])
-        elif context:
+        elif context and context.current_date:
             time = code
             moment.year = context.current_date.year
             moment.month = context.current_date.month
@@ -178,6 +186,12 @@ class Moment:
             + (f":{self.second}" if self.second is not None else "")
         )
 
+    def __repr__(self) -> str:
+        return self.to_string()
+
+    def __str__(self) -> str:
+        return self.to_string()
+
     @classmethod
     def from_datetime(cls, date: datetime) -> "Moment":
         moment = Moment(
@@ -211,8 +225,31 @@ class Timedelta:
             return None
         return cls(parse_delta(code))
 
+    @classmethod
+    def from_delta(cls, delta: timedelta) -> "Timedelta":
+        return cls(delta)
+
     def to_json(self) -> str:
         return format_delta(self.delta)
+
+    def to_string(self) -> str:
+        return format_delta(self.delta)
+
+    @staticmethod
+    def get_patterns() -> list[re.Pattern]:
+        return [DELTA_PATTERN_GROUPS]
+
+    @staticmethod
+    def get_extractors() -> list[Callable]:
+        def extractor(groups):
+            delta = timedelta(
+                seconds=(float(groups("h")) if groups("h") else 0.0) * 3600.0
+                + float(groups("m")) * 60.0
+                + float(groups("s")),
+            )
+            return Timedelta(delta)
+
+        return [extractor]
 
 
 class Time:
@@ -223,6 +260,9 @@ class Time:
         self.end: Moment | None
 
         self.start = self.end = None
+
+        self.is_assumed: bool = False
+
         if "/" in code:
             start, end = code.split("/")
             if start:
@@ -250,7 +290,7 @@ class Time:
         return time
 
     @classmethod
-    def from_string(cls, code: str, context: Context) -> "Time":
+    def from_string(cls, code: str, context: Context | None = None) -> "Time":
         time: "Time" = cls("")
 
         if "/" in code:
@@ -286,6 +326,9 @@ class Time:
             + " - "
             + (self.end.to_string() if self.end else "")
         )
+
+    def __repr__(self) -> str:
+        return self.to_string()
 
     def to_pseudo_edtf_time(self):
         if self.start == self.end:
@@ -353,7 +396,6 @@ class Time:
 
 def parse_delta(string_delta: str) -> timedelta:
     """Parse time delta from a string representation."""
-
     if string_delta.count(":") == 2:
         hour, minute, second = (int(x) for x in string_delta.split(":"))
     elif string_delta.count(":") == 1:
@@ -363,8 +405,7 @@ def parse_delta(string_delta: str) -> timedelta:
 
 
 def format_delta(delta: timedelta) -> str:
-    """
-    Get string representation of a time delta.
+    """Get string representation of a time delta.
 
     Format is `MM:SS` if number of hours is zero, otherwise `HH:MM:SS`. Hours
     are not zero-prefixed.

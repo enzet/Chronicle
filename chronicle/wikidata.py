@@ -1,6 +1,7 @@
 """
 Wikidata-specific data.
 """
+
 import json
 import logging
 from enum import Enum

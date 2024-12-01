@@ -1,252 +1,522 @@
 """Events about reading, watching or listening things."""
-import re
-from dataclasses import dataclass
-from typing import Any
 
-from chronicle.argument import Arguments, Argument
+import re
+from dataclasses import dataclass, field
+from typing import ClassVar
+
+from chronicle.argument import Arguments
 from chronicle.event.core import Event
-from chronicle.event.value import Language
-from chronicle.objects import Objects, Audiobook
+from chronicle.value import (
+    AudiobookVolume,
+    ChronicleValueException,
+    Episode,
+    Interval,
+    Language,
+    Season,
+    Subject,
+    Volume,
+)
+from chronicle.objects.core import (
+    Book,
+    Service,
+    Video,
+    Objects,
+    Audiobook,
+    Podcast,
+)
 from chronicle.summary.core import Summary
+from chronicle.time import Timedelta
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
 
-from chronicle.event.value import Interval
 
+@dataclass
+class ListenEvent(Event):
+    """Event representing listening to audio content."""
 
-language_argument: Argument = Argument(
-    "language",
-    patterns=[re.compile(r"\.(..)")],
-    command_printer=lambda x: f".{x}",
-)
-episode_argument: Argument = Argument(
-    "episode",
-    prefix="episode",
-    patterns=[re.compile(r"[Ee](\d+)")],
-    pretty_printer=lambda o, v: f"E {v}",
-    command_printer=lambda x: f"e{x}",
-)
+    title: str | None = None
+    """Title of what was listened to."""
 
+    duration: Timedelta | None = None
+    """Duration of the listening session."""
 
-def text_argument(name: str):
-    return Argument(
-        name,
-        pretty_printer=lambda o, v: o.get_podcast(v).title,
+    language: Language | None = None
+    """Language of the audio content."""
+
+    arguments: ClassVar[Arguments] = (
+        Arguments(["listen"], "listen")
+        .add_argument("title")
+        .add_class_argument("duration", Timedelta)
+        .add_class_argument("language", Language)
     )
 
+    @staticmethod
+    def get_arguments() -> Arguments:
+        return ListenEvent.arguments
 
-def one_pattern_argument(name, class_, index: int = 0):
-    return Argument(
-        name,
-        patterns=[class_.get_pattern()],
-        extractors=[lambda x: class_.from_json(x(index))],
-        pretty_printer=lambda o, v: v.to_string(),
-    )
-
-
-interval_argument: Argument = one_pattern_argument("interval", Interval)
+    def register_summary(self, summary: Summary) -> None:
+        if self.language:
+            summary.register_listen(self.get_duration(), self.language)
 
 
 @dataclass
 class ListenPodcastEvent(Event):
-    """Listening podcast event."""
+    """Event representing listening to a podcast episode."""
 
-    podcast_id: str | None = None
-    """Unique string identifier of the podcast."""
+    podcast: Podcast | None = None
+    """Podcast that was listened to."""
+
+    season: int | None = None
+    """Season number of the podcast."""
 
     episode: str | None = None
     """Episode number or name."""
 
     speed: float | None = None
-    """"""
+    """Speed at which the podcast was listened to."""
 
     interval: Interval | None = None
+    """Duration of the podcast listening session."""
 
-    @classmethod
-    def get_arguments(cls):
-        return (
-            Arguments(["podcast"], "listen podcast")
-            .add_argument(
-                "podcast_id",
-                pretty_printer=lambda o, v: o.get_object(v).title,
-            )
-            .add(episode_argument)
-            .add(one_pattern_argument("interval", Interval))
-        )
+    duration: Timedelta | None = None
+    """Duration of the podcast listening session."""
 
-    def register_summary(self, summary: Summary, objects: Objects):
-        summary.register_listen(
-            self.interval.get_duration(),
-            objects.get_object(self.podcast_id).language,
+    arguments: ClassVar[Arguments] = (
+        Arguments(["podcast"], "listen to podcast")
+        .add_object_argument("podcast", Podcast)
+        .add_class_argument("season", Season)
+        .add_class_argument("episode", Episode)
+        .add_class_argument("interval", Interval)
+        .add_class_argument("duration", Timedelta)
+        .add_argument(
+            "speed",
+            patterns=[re.compile(r"x(\d+(\.\d*))")],
+            extractors=[lambda groups: float(groups(2))],
         )
+    )
+
+    @staticmethod
+    def get_arguments() -> Arguments:
+        return ListenPodcastEvent.arguments
+
+    def get_duration(self) -> float:
+        """Get duration of the listening session in seconds."""
+        if self.interval:
+            return self.interval.get_duration()
+        if self.duration:
+            return self.duration.total_seconds()
+        return self.time.get_duration()
+
+    def get_language(self) -> Language | None:
+        """Get language of the podcast."""
+        if self.podcast:
+            return self.podcast.language
+        return None
+
+    def register_summary(self, summary: Summary) -> None:
+        language: Language | None = self.get_language()
+
+        if not language:
+            raise ChronicleValueException(f"Event `{self}` has no language.")
+
+        summary.register_listen(self.get_duration(), language)
 
 
 @dataclass
 class ListenMusicEvent(Event):
-    """Listening music event."""
+    """Event representing listening to music."""
 
     title: str | None = None
     """Title of the song or music description."""
 
-    interval: Interval = Interval()
-    artist: str | None = None
-    album: str | None = None
-    language: Language | None = None
+    interval: Interval = field(default_factory=Interval)
+    """Duration of the music listening session."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return (
-            Arguments(["music", "song"], "listen music")
-            .add_argument("title")
-            .add_argument("artist", prefix="by")
-            .add_argument("album", prefix="on")
-            .add(language_argument)
-        )
+    artist: str | None = None
+    """Artist who performed the song."""
+
+    album: str | None = None
+    """Album the song appears on."""
+
+    language: Language | None = None
+    """Language of the lyrics."""
+
+    def get_language(self, _: Objects) -> Language:
+        """Get language of the music."""
+        return self.language
+
+    arguments: ClassVar[Arguments] = (
+        Arguments(["music", "song"], "listen music")
+        .add_argument("title")
+        .add_argument("artist", prefix="by")
+        .add_argument("album", prefix="on")
+        .add_class_argument("language", Language)
+    )
+
+    @staticmethod
+    def get_arguments() -> Arguments:
+        return ListenMusicEvent.arguments
+
+    def get_duration(self) -> float:
+        """Get duration of the listening session in seconds."""
+        if self.interval:
+            return self.interval.get_duration()
+        return self.time.get_duration()
 
 
 @dataclass
 class ListenLectureEvent(Event):
+    """Event representing listening to a lecture."""
+
     title: str | None = None
     """Title of the lecture."""
 
     language: Language | None = None
+    """Language the lecture was given in."""
 
+    interval: Interval = field(default_factory=Interval)
+    """Duration of the lecture listening session."""
 
-@dataclass
-class Serializable:
-    @classmethod
-    def from_json(cls) -> "Serializable":
-        pass
+    @staticmethod
+    def get_arguments() -> Arguments:
+        return (
+            Arguments(["listen lecture"], "listen lecture")
+            .add_argument("title")
+            .add_class_argument("language", Language)
+        )
 
-    def to_json(self) -> Any:
-        pass
+    def get_language(self, _: Objects) -> Language:
+        """Get language of the lecture."""
+        return self.language
 
-
-@dataclass
-class Volume(Serializable):
-    from_: float
-    to_: float
-    of: float
-
-    def get_ratio(self) -> float:
-        return (self.to_ - self.from_) / self.of
+    def get_duration(self) -> float:
+        """Get duration of the listening session in seconds."""
+        if self.interval:
+            return self.interval.get_duration()
+        return self.time.get_duration()
 
 
 @dataclass
 class ReadEvent(Event):
-    book_id: str | None = None
-    language: str | None = None
-    volume: Volume | None = None
-    subject: str | None = None
+    """Event representing reading a text in a natural language."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return (
-            Arguments(["read"], "read")
-            .add_argument("book_id")
-            .add(language_argument)
-            .add_argument(
-                "pages",
-                patterns=[re.compile(r"(\d+(\.\d*)?)/(\d+(\.\d*)?)")],
-                extractors=[lambda x: (float(x(1)), float(x(3)))],
-                command_printer=lambda x: f"{x[0]}/{x[1]}",
+    book: Book | None = None
+    """Book that was read."""
+
+    language: Language | None = None
+    """Language of the book."""
+
+    volume: Volume | None = None
+    """Volume or portion of the book that was read."""
+
+    subject: Subject | None = None
+    """Subject category of the book (fiction, non-fiction, science, etc)."""
+
+    arguments: ClassVar[Arguments] = (
+        Arguments(["read"], "read")
+        .add_object_argument("book", Book)
+        .add_class_argument("language", Language)
+        .add_class_argument("volume", Volume)
+        .add_class_argument("subject", Subject)
+    )
+
+    @staticmethod
+    def get_arguments() -> Arguments:
+        return ReadEvent.arguments
+
+    def get_language(self) -> Language:
+        """Get language of the book."""
+        if self.language:
+            return self.language
+        if self.book and self.book.language:
+            return self.book.language
+        raise ChronicleValueException(f"Event {self} has no language.")
+
+    def register_summary(self, summary: Summary) -> None:
+        # Use language from the event or language of the book.
+        language: Language
+        if self.language:
+            language = self.language
+        else:
+            if self.book and self.book.language:
+                language = self.book.language
+            else:
+                return None
+
+        # Compute duration.
+        duration: float | None = self.get_duration()
+
+        # Compute pages.
+        pages: float | None = None
+        if self.volume and self.volume.get_ratio() and self.book.volume:
+            pages = self.volume.get_ratio() * self.book.volume
+
+        if self.volume and self.volume.measure in (
+            "four_inches_pages",
+            "pages",
+            "screens",
+            "slides",
+        ):
+            coef = 1.0
+            if self.volume.measure in (
+                "screens",
+                "slides",
+                "four_inches_pages",
+            ):
+                coef = 0.5
+            if self.volume and self.volume.value:
+                pages = self.volume.value * coef
+            if self.volume.to_ is not None and self.volume.from_ is not None:
+                pages = self.volume.to_ - self.volume.from_
+
+        # Register finished book.
+        if (
+            self.volume
+            and self.volume.measure == "percent"
+            and self.volume.to_ == 100.0
+        ) or (
+            self.volume and self.volume.of and self.volume.to_ == self.volume.of
+        ):
+            summary.register_finished_book(self.book)
+
+        # Register reading pages.
+        if pages is not None:
+            summary.register_read_pages(pages, language)
+        elif duration is not None:
+            summary.register_read_pages(duration / 60 / 3, language)
+        else:
+            raise ChronicleValueException(
+                f"Event {self} has neither pages, nor duration."
             )
-        )
+
+        # Register reading duration.
+        # FIXME: Check precision of the duration instead of the arbitrary limit.
+        if duration is not None and duration < 16 * 3600.0:
+            summary.register_read(duration, language)
+        elif pages is not None:
+            summary.register_read(pages * 60 * 3, language)
 
 
 @dataclass
 class StandupEvent(Event):
-    title: str | None = None
-    language: str | None = None
-    place_id: str | None = None
+    """Event representing attending a standup comedy show."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return (
-            Arguments(["standup"], "standup")
-            .add_argument("title")
-            .add(language_argument)
-            .add_argument(
-                "place_id", prefix="at", command_printer=lambda x: f"at {x}"
-            )
+    title: str | None = None
+    """Title or name of the standup show."""
+
+    language: str | None = None
+    """Language the show was performed in."""
+
+    place_id: str | None = None
+    """Identifier of the venue where the show took place."""
+
+    arguments: ClassVar[Arguments] = (
+        Arguments(["standup"], "standup")
+        .add_argument("title")
+        .add_class_argument("language", Language)
+        .add_argument(
+            "place_id", prefix="at", command_printer=lambda x: f"at {x}"
         )
+    )
+
+    @staticmethod
+    def get_arguments() -> Arguments:
+        return StandupEvent.arguments
 
 
 @dataclass
 class WatchEvent(Event):
-    movie_id: str | None = None
+    """Event representing watching video content."""
+
+    video: Video | None = None
+    """Movie or TV show that was watched."""
+
     season: int | None = None
+    """Season number for TV shows."""
+
     episode: int | str | None = None
+    """Episode number or name."""
+
     interval: Interval | None = None
-    language: str | None = None
-    subtitles: str | None = None
+    """Interval of the movie or TV show that was watched."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return (
-            Arguments(["watch"], "watch")
-            .add_argument("movie_id")
-            .add(language_argument)
-            .add_argument(
-                "subtitles",
-                patterns=[re.compile("_(..)")],
-                command_printer=lambda x: f"_{x}",
-            )
-            .add_argument(
-                "season",
-                patterns=[re.compile(r"s(\d+)")],
-                extractors=[lambda x: int(x(1))],
-                command_printer=lambda x: f"s{x}",
-            )
-            .add(episode_argument)
-            .add(interval_argument)
+    duration: Timedelta | None = None
+    """Duration of the watching session."""
+
+    language: Language | None = None
+    """Audio language of the content."""
+
+    subtitles: Language | None = None
+    """Language of subtitles if used."""
+
+    service: Service | None = None
+    """Streaming service used (e.g. cinema, Netflix, YouTube, TV, etc)."""
+
+    subject: Subject | None = None
+    """Categorised subject."""
+
+    arguments: ClassVar[Arguments] = (
+        Arguments(["watch"], "watch")
+        .add_object_argument("video", Video)
+        .add_class_argument("language", Language)
+        .add_argument(
+            "subtitles",
+            patterns=[re.compile("_(..)")],
+            extractors=[lambda groups: Language(groups(1))],
+            command_printer=lambda x: f"_{x}",
         )
+        .add_class_argument("season", Season)
+        .add_object_argument("service", Service)
+        .add_class_argument("episode", Episode)
+        .add_class_argument("interval", Interval)
+        .add_class_argument("duration", Timedelta)
+        .add_class_argument("subject", Subject)
+    )
 
-    def get_language(self) -> Language | None:
-        return self.language
+    @staticmethod
+    def get_arguments() -> Arguments:
+        return WatchEvent.arguments
 
-    def register_summary(self, summary: Summary, objects: Objects):
+    def register_summary(self, summary: Summary) -> None:
+        language: Language | None = (
+            self.subtitles if self.subtitles else self.language
+        )
+        if language:
+            summary.register_watch(self.get_duration(), language)
+
+        subject = self.subject if self.subject else self.video.subject
+        if subject:
+            summary.register_learn(self.get_duration(), subject, self.service)
+
+    def get_duration(self) -> float:
+        """Get duration of the watching session in seconds."""
+
         if self.interval:
-            summary.register_listen(
-                self.interval.get_duration(), self.get_language()
-            )
+            return self.interval.get_duration()
+        if self.duration:
+            return self.duration.total_seconds()
+        if not self.time.is_assumed:
+            return self.time.get_duration()
+
+        # Estimate episode length to be 40 minutes.
+        if self.episode or self.season:
+            return 40.0 * 60.0
+
+        # Estimate movie length to be 2 hours.
+        return 2.0 * 60.0 * 60.0
 
 
 @dataclass
 class ListenAudiobookEvent(Event):
-    """Listening audiobook event."""
+    """Event representing listening to an audiobook."""
 
-    audiobook_id: str | None = None
-    interval: Interval = Interval()
+    audiobook: Audiobook | None = None
+    """Audiobook that was listened to."""
+
+    interval: Interval | None = None
+    """Interval of the audiobook that was listened to."""
+
+    volume: AudiobookVolume | None = None
+    """Volume or portion of the audiobook that was listened to."""
+
     speed: float | None = None
+    """Playback speed multiplier."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return (
-            Arguments(["audiobook"], "listen audiobook")
-            .add_argument(
-                "audiobook_id",
-                pretty_printer=lambda o, v: o.get_object(
-                    o.get_object(v).book_id
-                ).title,
-            )
-            .add(interval_argument)
-            .add_argument(
-                "speed",
-                patterns=[re.compile(r"x(\d*\.\d*)")],
-                command_printer=lambda x: f"x{x}",
-            )
+    arguments: ClassVar[Arguments] = (
+        Arguments(["audiobook"], "listen to audiobook")
+        .add_object_argument("audiobook", Audiobook)
+        .add_class_argument("interval", Interval)
+        .add_class_argument("volume", AudiobookVolume)
+        .add_argument(
+            "speed",
+            loader=lambda value, _: float(value),
+            patterns=[re.compile(r"x(\d*\.\d*)")],
+            command_printer=lambda x: f"x{x}",
         )
+    )
 
-    def get_audiobook(self, objects: Objects) -> Audiobook | None:
-        return objects.get_object(self.audiobook_id)
+    @staticmethod
+    def get_arguments() -> Arguments:
+        return ListenAudiobookEvent.arguments
 
-    def get_language(self, objects: Objects) -> Language | None:
-        audiobook: Audiobook | None = self.get_audiobook(objects)
-        return audiobook.get_language(objects) if audiobook else None
+    def get_language(self) -> Language | None:
+        """Get language of the audiobook."""
+        return self.audiobook.get_language() if self.audiobook else None
 
-    def register_summary(self, summary: Summary, objects: Objects):
-        summary.register_listen(
-            self.interval.get_duration(), self.get_language(objects)
-        )
+    def register_summary(self, summary: Summary) -> None:
+        """Register this audiobook event in the summary statistics."""
+        if not self.interval and not self.volume:
+            raise ChronicleValueException(
+                f"Event {self} has neither interval, nor volume."
+            )
+
+        language: Language | None = self.get_language()
+        if not language:
+            raise ChronicleValueException(f"Event {self} has no language.")
+
+        duration: float | None = None
+
+        if self.interval:
+            duration = self.interval.get_duration()
+        elif self.volume:
+            if not self.audiobook:
+                raise ChronicleValueException(
+                    f"Cannot get audiobook for event {self}."
+                )
+            if not isinstance(self.audiobook, Audiobook):
+                raise ChronicleValueException(
+                    f"{self.audiobook} is not an audiobook."
+                )
+            if not self.audiobook.duration:
+                raise ChronicleValueException(
+                    f"{self.audiobook} has no duration."
+                )
+            duration = (
+                self.volume.get_ratio()
+                * self.audiobook.duration.total_seconds()
+            )
+
+        if duration:
+            if duration > 24.0 * 3600.0:
+                raise ChronicleValueException(
+                    f"Event {self} has duration {duration}."
+                )
+            summary.register_listen(duration, language)
+
+
+@dataclass
+class ConcertEvent(Event):
+    """Event representing attending a concert."""
+
+    musician: str | None = None
+    """Name of the musician or band performing."""
+
+    arguments: ClassVar[Arguments] = Arguments(
+        ["concert"], "concert"
+    ).add_argument("musician")
+
+    @staticmethod
+    def get_arguments() -> Arguments:
+        return ConcertEvent.arguments
+
+
+@dataclass
+class DrawEvent(Event):
+    """Event representing drawing."""
+
+    project: str | None = None
+    """Project that was drawn."""
+
+    service: Service | None = None
+    """Service used to draw: graphical editor, CAD, etc."""
+
+    arguments: ClassVar[Arguments] = (
+        Arguments(["draw"], "draw")
+        .add_argument("project")
+        .add_object_argument("service", Service)
+    )
+
+    @staticmethod
+    def get_arguments() -> Arguments:
+        return DrawEvent.arguments

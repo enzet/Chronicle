@@ -19,6 +19,25 @@ class TransportEvent(Event):
             "start_place_id", command_printer=str
         )
 
+    def get_color(self) -> str:
+        return "#000088"
+
+
+@dataclass
+class BusEvent(TransportEvent):
+    pass
+
+
+@dataclass
+class FlightEvent(TransportEvent):
+    pass
+
+
+@dataclass
+class KickScooterEvent(TransportEvent):
+    def get_color(self) -> str:
+        return "#008888"
+
 
 @dataclass
 class TaxiEvent(TransportEvent):

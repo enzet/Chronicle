@@ -1,4 +1,5 @@
 from datetime import timedelta, datetime
+from textwrap import dedent
 
 from chronicle.event.core import Event, Objects
 from chronicle.event.common import SleepEvent
@@ -7,8 +8,9 @@ from chronicle.event.art import (
     ListenMusicEvent,
     ListenPodcastEvent,
 )
-from chronicle.event.value import Interval, Language
-from chronicle.objects import Audiobook, Book
+from chronicle.value import Interval, Language, ProgrammingLanguage
+from chronicle.event.common import ProgramEvent
+from chronicle.objects.core import Audiobook, Book, Project
 from chronicle.time import Context, Timedelta
 from chronicle.timeline import Timeline, CommandParser
 
@@ -19,14 +21,17 @@ __email__ = "me@enzet.ru"
 def test_listen_podcast() -> None:
     """Test listening podcast command."""
 
-    (timeline := Timeline()).parse_event_command(
-        "2022-01-01T13:00:00/2022-01-01T14:00:00 podcast inner_french e5 "
+    parser: CommandParser = CommandParser()
+    parser.parse_command(
+        "2022-01-01T13:00:00/2022-01-01T14:00:00 podcast Inner French e5 "
         "10:00/20:00"
     )
+    timeline: Timeline = parser.timeline
+
     assert len(timeline) == 1
     event: Event = timeline.events[0]
     assert isinstance(event, ListenPodcastEvent)
-    assert event.podcast_id == "inner_french"
+    assert event.podcast.title == "Inner French"
     assert event.episode == "5"
     assert event.interval == Interval(
         start=Timedelta(timedelta(minutes=10)),
@@ -34,13 +39,28 @@ def test_listen_podcast() -> None:
     )
 
 
+def test_book() -> None:
+    """Test book command."""
+
+    parser: CommandParser = CommandParser()
+    parser.parse_command("book idiot = Idiot .ru")
+    objects = parser.timeline.objects.objects
+
+    assert len(objects) == 1
+    assert objects["idiot"].title == "Idiot"
+    assert objects["idiot"].language == Language("ru")
+
+
 def test_listen_music() -> None:
     """Test listening song command with title, artist, and album."""
 
-    (timeline := Timeline()).parse_event_command(
+    parser: CommandParser = CommandParser()
+    parser.parse_command(
         "2022-01-01T13:00:00/2022-01-01T14:00:00 song "
         "Strawberry Fields Forever by The Beatles on Magic Mystery Tour"
     )
+    timeline: Timeline = parser.timeline
+
     assert len(timeline) == 1
     event: Event = timeline.events[0]
     assert isinstance(event, ListenMusicEvent)
@@ -52,14 +72,17 @@ def test_listen_music() -> None:
 def test_listen_audiobook() -> None:
     """Test listening song command with title, artist, and album."""
 
-    (timeline := Timeline()).parse_event_command(
-        "2022-01-01T13:00:00/2022-01-01T14:00:00 audiobook idiot_audio x1.25 "
+    parser: CommandParser = CommandParser()
+    parser.parse_command(
+        "2022-01-01T13:00:00/2022-01-01T14:00:00 audiobook Idiot x1.25 "
         "00:00/10:00"
     )
+    timeline: Timeline = parser.timeline
+
     assert len(timeline) == 1
     event: Event = timeline.events[0]
     assert isinstance(event, ListenAudiobookEvent)
-    assert event.audiobook_id == "idiot_audio"
+    assert event.audiobook.book.title == "Idiot"
     assert event.speed == 1.25
     assert event.interval == Interval(
         start=Timedelta(), end=Timedelta(timedelta(minutes=10))
@@ -69,10 +92,13 @@ def test_listen_audiobook() -> None:
 def test_listen_audiobook_hour_interval() -> None:
     """Test listening song command with title, artist, and album."""
 
-    (timeline := Timeline()).parse_event_command(
+    parser: CommandParser = CommandParser()
+    parser.parse_command(
         "2022-01-01T13:00:00/2022-01-01T14:00:00 audiobook idiot "
         "1:10:10/2:20:20"
     )
+    timeline: Timeline = parser.timeline
+
     assert len(timeline) == 1
     event: Event = timeline.events[0]
     assert isinstance(event, ListenAudiobookEvent)
@@ -83,9 +109,9 @@ def test_listen_audiobook_hour_interval() -> None:
 
 
 def test_sleep() -> None:
-    (timeline := Timeline()).parse_event_command(
-        "2022-01-01T00:00:00/2022-01-01T08:00:00 sleep"
-    )
+    parser: CommandParser = CommandParser()
+    parser.parse_command("2022-01-01T00:00:00/2022-01-01T08:00:00 sleep")
+    timeline: Timeline = parser.timeline
     assert len(timeline) == 1
     event: Event = timeline.events[0]
     assert isinstance(event, SleepEvent)
@@ -95,32 +121,33 @@ def test_sleep() -> None:
 def test_short_time() -> None:
     """Test listening song command with title, artist, and album."""
 
-    context: Context = Context()
-    context.current_date = datetime(2022, 1, 2)
-    (timeline := Timeline()).parse_event_command(
-        "13:00 audiobook idiot_audio", context
+    book: Book = Book("idiot", title="Idiot", language=Language("ru"))
+    parser: CommandParser = CommandParser()
+    timeline: Timeline = parser.timeline
+    timeline.objects = Objects(
+        {
+            "idiot": book,
+            "idiot_audio": Audiobook("idiot_audio", book=book),
+        }
     )
+    parser.context = Context(current_date=datetime(2022, 1, 2))
+    parser.parse_command("13:00 audiobook @idiot_audio")
+
     assert len(timeline) == 1
     event: Event = timeline.events[0]
     assert isinstance(event, ListenAudiobookEvent)
 
-    objects: Objects = Objects(
-        {
-            "idiot": Book(title="Idiot", language=Language("ru")),
-            "idiot_audio": Audiobook(book_id="idiot"),
-        }
-    )
-    assert event.to_string(objects) == "listen audiobook Idiot"
+    assert event.to_string() == "listen to audiobook Idiot"
     assert event.time.start == event.time.end
     assert event.time.start.hour == 13
 
 
 def test_file() -> None:
     commands: list[str] = [
-        "book idiot Idiot .ru",
-        "audiobook idiot_audio idiot",
+        "book idiot = Idiot .ru",
+        "audiobook idiot_audio = @idiot",
         "2000-01-01",
-        "13:00 audiobook idiot_audio",
+        "13:00 audiobook @idiot_audio",
     ]
     parser: CommandParser = CommandParser()
     parser.parse_commands(commands)
@@ -128,7 +155,7 @@ def test_file() -> None:
     assert len(parser.timeline) == 1
     event: Event = parser.timeline.events[0]
     assert isinstance(event, ListenAudiobookEvent)
-    assert event.to_string(parser.timeline.objects) == "listen audiobook Idiot"
+    assert event.to_string() == "listen to audiobook Idiot"
     assert event.time.start == event.time.end
     assert event.time.start.year == 2000
     assert event.time.start.hour == 13
@@ -145,20 +172,41 @@ def test_file_sleep() -> None:
     assert len(parser.timeline) == 1
     event: Event = parser.timeline.events[0]
     assert isinstance(event, SleepEvent)
-    assert event.to_string(parser.timeline.objects) == "sleep"
+    assert event.to_string() == "sleep"
     assert parser.timeline.get_summary().sleep == 8 * 60 * 60
 
 
 def test_dump_command() -> None:
     commands: list[str] = [
-        "audiobook idiot idiot",
-        "book idiot Idiot .ru",
+        "book idiot = Idiot 600.0p .ru",
         "",
         "2000-01-01",
         "",
-        "13:00 audiobook idiot",
+        "13:00 read @idiot 10.0/12.0%",
     ]
     parser: CommandParser = CommandParser()
     parser.parse_commands(commands)
 
     assert commands == parser.timeline.get_commands()
+
+
+def test_program() -> None:
+    commands: list[str] = dedent(
+        """
+        project @linux = Linux .c
+        2000-01-01
+        program @linux 3:00:00 !work
+        """
+    ).split("\n")
+    (parser := CommandParser()).parse_commands(commands)
+    timeline: Timeline = parser.timeline
+
+    assert len(timeline.events) == 1
+
+    event: Event = timeline.events[0]
+    assert isinstance(event, ProgramEvent)
+
+    assert event.tags == {"work"}
+    assert event.project == Project(
+        "linux", title="Linux", language=ProgrammingLanguage("c")
+    )

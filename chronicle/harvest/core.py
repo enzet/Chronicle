@@ -1,6 +1,3 @@
-from chronicle.timeline import Timeline
-
-
 class Importer:
-    def import_data(self, timeline: Timeline) -> None:
+    def import_data(self, timeline) -> None:
         raise NotImplementedError()

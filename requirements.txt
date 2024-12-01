@@ -1,3 +1,5 @@
+colour
 pydantic~=1.10.2
 urllib3~=1.26.6
 matplotlib
+rich

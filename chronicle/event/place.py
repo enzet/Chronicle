@@ -16,11 +16,20 @@ class PlaceEvent(Event):
         name = cls.__name__[:-5].lower()
         return Arguments([name], name).add_argument("place_id")
 
+    def get_color(self) -> str:
+        return "#CCCCCC"
 
 
 @dataclass
 class HomeEvent(PlaceEvent):
-    pass
+    def get_color(self) -> str:
+        return "#EEEEDD"
+
+
+@dataclass
+class HotelEvent(PlaceEvent):
+    def get_color(self) -> str:
+        return "#EEEEDD"
 
 
 @dataclass
@@ -31,12 +40,15 @@ class BarEvent(PlaceEvent):
 
 @dataclass
 class CafeEvent(PlaceEvent):
-    pass
+    def get_color(self) -> str:
+        return "#008800"
 
 
 @dataclass
 class CinemaEvent(PlaceEvent):
-    pass
+    def get_color(self) -> str:
+        return "#008800"
+
 
 @dataclass
 class PharmacyEvent(PlaceEvent):
@@ -52,8 +64,14 @@ class ClinicEvent(PlaceEvent):
 
 @dataclass
 class ClubEvent(PlaceEvent):
-    pass
+    def get_color(self) -> str:
+        return "#008800"
 
+
+@dataclass
+class TransportPlaceEvent(PlaceEvent):
+    def get_color(self) -> str:
+        return "#000088"
 
 
 @dataclass
@@ -63,9 +81,11 @@ class PortEvent(TransportPlaceEvent):
 
 @dataclass
 class ShopEvent(PlaceEvent):
-    pass
+    def get_color(self) -> str:
+        return "#880088"
 
 
 @dataclass
 class UniversityEvent(PlaceEvent):
-    pass
+    def get_color(self) -> str:
+        return "#CC0000"

@@ -2,4 +2,9 @@
 .idea
 .pytest_cache
 .venv
+Chronicle.egg-info
+__pycache__
+build.sh
 cache
+commands.txt
+work

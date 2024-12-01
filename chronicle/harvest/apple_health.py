@@ -9,8 +9,7 @@ from chronicle.harvest.core import Importer
 
 
 class AppleHealthImporter(Importer):
-    """
-    Importer for Apple Health data.
+    """Importer for Apple Health data.
 
     Apple Health: https://www.apple.com/ios/health
     """

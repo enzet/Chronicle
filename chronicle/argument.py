@@ -3,8 +3,30 @@ import re
 from dataclasses import dataclass
 from typing import Any, Callable
 
+from chronicle.errors import (
+    ChronicleAmbiguousArgumentError,
+    ChronicleArgumentError,
+    ChronicleObjectNotFoundException,
+)
+
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
+
+
+def default_pretty_printer(value) -> str:
+    if isinstance(value, str):
+        return value
+    if isinstance(value, float):
+        return str(value)
+    if isinstance(value, int):
+        return str(value)
+    if isinstance(value, set):
+        return "(" + ", ".join(value) + ")"
+    return value.to_string()
+
+
+def default_loader(value: str, objects) -> Any:
+    return value
 
 
 @dataclass
@@ -12,7 +34,7 @@ class Argument:
     key: str
     description: str | None = None
 
-    loader: Callable[[Any], Any] = lambda x: x
+    loader: Callable[[Any], Any] = default_loader
     """Value loader."""
 
     prefix: str | None = None
@@ -24,11 +46,19 @@ class Argument:
     extractors: list[Callable[[Any], Any]] | None = None
     """Functions that extract values from a pattern matchers."""
 
-    pretty_printer: Callable = lambda x: x.to_string()
+    pretty_printer: Callable = default_pretty_printer
 
     command_printer: Callable = lambda x: x.to_command()
 
     html_printer: Callable = lambda x: x.to_string()
+
+
+def one_pattern_argument(name, class_, index: int = 0):
+    return Argument(
+        name,
+        patterns=class_.get_patterns(),
+        extractors=[lambda x: class_.from_json(x(index))],
+    )
 
 
 class Arguments:
@@ -37,58 +67,85 @@ class Arguments:
         self.command: str = command
         self.arguments: list[Argument] = []
 
-    def parse(self, text: str) -> dict[str, Any]:
+    def parse(self, tokens: list[str], objects) -> dict[str, Any]:
+        """Parse arguments from command."""
         # Event may have no arguments.
         if not self.arguments:
             return {}
 
-        main: Argument = self.arguments[0]
+        # FIXME: rewrite, there should be no more than one main argument without
+        # patterns. We should check it here.
+        main: Argument | None = (
+            self.arguments[0] if not self.arguments[0].patterns else None
+        )
         result: dict[str, str] = {}
-        words: list[str] = text.split(" ")
 
-        current_key: str | None = main.key
-        current_loader = main.loader
+        current_key: str | None = main.key if main else None
+        current_loader = main.loader if main else None
         current: str = ""
 
-        for index in range(len(words)):
-            word: str = words[index]
-            detected: bool = False
+        def load_current() -> Any:
+            try:
+                result[current_key] = current_loader(current, objects)
+            except ChronicleObjectNotFoundException:
+                raise
+
+        for index in range(len(tokens)):
+            token: str = tokens[index]
+            detected: Argument | None = None
 
             for argument in self.arguments:
-                if word == argument.prefix:
+                if token == argument.prefix:
+                    if detected:
+                        raise ChronicleAmbiguousArgumentError(
+                            "Token `{token}` is ambiguous, possible arguments: "
+                            f"`{detected.key}`, `{argument.key}`."
+                        )
                     if current:
-                        result[current_key] = current_loader(current)
+                        if not current_key:
+                            raise ChronicleArgumentError(
+                                f"No argument name before `{current}`."
+                            )
+                        load_current()
                         current = ""
                     current_key = argument.key
                     current_loader = argument.loader
-                    detected = True
-                    break
+                    detected = argument
 
                 if not argument.patterns:
                     continue
 
                 for i, pattern in enumerate(argument.patterns):
-                    if matcher := pattern.match(word):
+                    if matcher := pattern.fullmatch(token):
                         if current:
-                            result[current_key] = current_loader(current)
+                            if not current_key:
+                                raise ChronicleArgumentError(
+                                    f"No argument name before `{current}`."
+                                )
+                            load_current()
                             current_key = None
                             current = ""
+                        if detected:
+                            raise ChronicleAmbiguousArgumentError(
+                                f"Token `{token}` is ambiguous, possible "
+                                f"arguments: `{detected.key}`, "
+                                f"`{argument.key}`."
+                            )
                         if argument.extractors is not None:
                             result[argument.key] = argument.extractors[i](
                                 matcher.group
                             )
                         else:
                             result[argument.key] = argument.loader(
-                                matcher.group(1)
+                                matcher.group(1), objects
                             )
-                        detected = True
-                        break
+                        detected = argument
 
             if not detected:
-                current += (" " if current else "") + word
+                current += (" " if current else "") + token
 
         if current and current_key:
-            result[current_key] = current_loader(current)
+            load_current()
 
         return result
 
@@ -98,9 +155,9 @@ class Arguments:
         description: str | None = None,
         prefix: str | None = None,
         patterns: list[re.Pattern] | None = None,
-        loader: Callable[[Any], Any] = lambda x: x,
+        loader: Callable[[Any, Any], Any] = lambda x, _: x,
         extractors: list[Callable[[Any], Any]] | None = None,
-        pretty_printer: Callable = lambda o, v: v.to_string(o),
+        pretty_printer: Callable = default_pretty_printer,
         command_printer: Callable = None,
         html_printer: Callable = lambda o, v: v.to_string(o),
         is_insert: bool = False,
@@ -127,44 +184,74 @@ class Arguments:
             self.add(argument)
         return self
 
-    def add_language_argument(self):
-        argument: Argument = Argument(
-            "language",
-            patterns=[re.compile(r"\.([a-z]+)")],
-            command_printer=lambda x: f".{x}",
+    def add_class_argument(self, name: str, class_: type) -> "Arguments":
+        """Add argument using value class.
+
+        Value class should specify patterns and extractors. E.g. language.
+        """
+        argument: Argument = Argument(name)
+
+        assert (
+            hasattr(class_, "get_patterns")
+            and hasattr(class_, "get_extractors")
+            or hasattr(class_, "get_prefix")
         )
+
+        if hasattr(class_, "get_patterns"):
+            argument.patterns = class_.get_patterns()
+        if hasattr(class_, "get_extractors"):
+            argument.extractors = class_.get_extractors()
+        if hasattr(class_, "get_prefix"):
+            argument.prefix = class_.get_prefix()
+
         self.arguments.append(argument)
         return self
 
-    def add_task_argument(self):
-        argument: Argument = Argument(
-            "language",
-            patterns=[re.compile(r"#([0-9a-z]+)")],
-            command_printer=lambda x: f".{x}",
-        )
-        self.arguments.append(argument)
-        return self
+    def add_object_argument(
+        self, name: str, class_: type, is_insert: bool = False
+    ) -> "Arguments":
+        """Add argument using object class.
 
-    def add_tags_argument(self):
+        Value of this argument is a link to an object or a simple description
+        of an object.
+        """
+
+        def object_loader(value: str, objects):
+            """Get an existing object or create a new one."""
+            if value.startswith("@"):
+                try:
+                    return objects.get_object(value)
+                except ChronicleObjectNotFoundException:
+                    raise
+            new_object = class_.from_value(value)
+            objects.set_object(value, new_object)
+            return new_object
+
+        def to_command(value: Any) -> str:
+            return f"@{value.id}"
+
         argument: Argument = Argument(
-            "tags",
-            patterns=[re.compile(r"!([0-9a-z,]+)")],
-            extractors=[lambda x: set(x(1).split(","))],
-            command_printer=lambda x: f".{x}",
+            name,
+            loader=object_loader,
+            command_printer=to_command,
+            prefix=class_.get_prefix(),
         )
-        self.arguments.append(argument)
+        if is_insert:
+            self.arguments.insert(0, argument)
+        else:
+            self.arguments.append(argument)
         return self
 
     def add(self, argument: Argument) -> "Arguments":
         self.arguments.append(argument)
         return self
 
-    def to_string(self, objects, value):
+    def to_string(self, value):
         text = self.command
         for argument in self.arguments:
             if hasattr(value, argument.key) and getattr(value, argument.key):
                 string: str = argument.pretty_printer(
-                    objects, getattr(value, argument.key)
+                    getattr(value, argument.key)
                 )
                 if string:
                     text += " " + string
@@ -182,35 +269,39 @@ class Arguments:
         return text
 
     def to_object_command(self, value):
-        text = ""
+        """Convert entity with arguments to normalized command."""
+        text: str = ""
         for argument in self.arguments:
-            if hasattr(value, argument.key) and getattr(value, argument.key):
-                try:
-                    v = getattr(value, argument.key)
-                    if argument.command_printer:
-                        string: str = argument.command_printer(v)
-                    elif getattr(v, "to_command", None):
-                        string: str = v.to_command()
-                    else:
-                        string: str = str(v)
+            if not hasattr(value, argument.key) or not getattr(
+                value, argument.key
+            ):
+                continue
+            try:
+                v = getattr(value, argument.key)
+                if argument.command_printer:
+                    string: str = argument.command_printer(v)
+                elif getattr(v, "to_command", None):
+                    string: str = v.to_command()
+                else:
+                    string: str = str(v)
 
-                    if string:
-                        if text:
-                            text += " " + string
-                        else:
-                            text += string
-                except AttributeError:
-                    logging.error(
-                        f"Cannot print command for {argument.key} of {value}."
-                    )
+                if string:
+                    if text:
+                        text += " " + string
+                    else:
+                        text += string
+            except AttributeError:
+                logging.error(
+                    f"Cannot print command for {argument.key} of {value}."
+                )
         return text
 
-    def to_command(self, value):
-        text = value.time.to_pseudo_edtf_time() + " " + self.prefixes[0]
+    def to_command(self, event):
+        text = event.time.to_pseudo_edtf_time() + " " + self.prefixes[0]
         for argument in self.arguments:
-            if hasattr(value, argument.key):
-                if getattr(value, argument.key):
-                    v = getattr(value, argument.key)
+            if hasattr(event, argument.key):
+                if getattr(event, argument.key):
+                    v = getattr(event, argument.key)
                     if argument.command_printer:
                         string: str = argument.command_printer(v)
                     elif getattr(v, "to_command", None):
@@ -222,7 +313,7 @@ class Arguments:
                     if string:
                         text += " " + string
             else:
-                logging.error(f"No {argument.key} of {value}.")
+                logging.error(f"No {argument.key} of {event}.")
         return text
 
     def replace(self, prefixes: list[str], command: str) -> "Arguments":
