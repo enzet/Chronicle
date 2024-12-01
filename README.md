@@ -1,46 +1,80 @@
 # Chronicle
 
-A pretty simple command-line journalling tool for systematically logging and
-analyzing daily life events, activities, and metrics.
+> A minimalist command-line journaling system for tracking daily activities,
+metrics, and insights.
 
-Chronicle provides a simple, flexible human-readable plain text format for files
-that may be privately stored locally and edited by any preferred text editor.
+Chronicle is a lightweight tool that helps you systematically log and analyze
+your daily life using simple, human-readable text files. It emphasizes privacy
+by storing all data locally while maintaining flexibility in how you record and
+review your information.
 
-Chronicle allows you to
-  - track events: exercises, meals, work, learning,
-  - track metrics: sleep, body metrics, productivity,
-  - track tasks,
-  - generate insights and summaries.
+## Features
 
-# Data format
+- Chronicle uses a **simple text format**: you can use any text editor with our `.chr`
+file format.
+- It is **privacy-first**: all data stored locally on your machine.
+- You can **track multiple metrics**:
+  - daily activities and events,
+  - health and fitness metrics,
+  - tasks and goals,
+  - sleep patterns,
+  - custom metrics.
+- Chronicle allows you to **generate insights**: analyze patterns and create
+summaries.
+- `.chr` files have a **flexible syntax**: intuitive format for quick entries.
 
-All data is written to text files with `.chr` extension.
+## Data Format
 
-Types of data:
-  - events or tasks,
-  - objects,
-  - special commands.
+Chronicle uses plain text files with the `.chr` extension. The syntax is
+designed to be both human-readable and machine-parseable.
 
-## Events or tasks
+### Events and Tasks
 
-In Chronicle, tasks are treated as planned future events.
+Events are activities that have occurred, while tasks are planned future events.
 
-Examples:
-  - `podcast @inner_french e147 00:00/45:00`,
-  - `19:00/19:30 run 5.2km`,
-  - `--- clean @bathroom`.
-  - `>>> 20:00/ concert @radiohead`.
+<pre><code><span style="color: green; font-style: italic;">-- Comments start with `--`.</span>
 
-## Objects
+<span style="color: green; font-style: italic;">-- Completed events.</span>
+<span style="font-weight: bold;">podcast</span> @inner_french e147 00:00/45:00
+19:00/19:30 <span style="font-weight: bold;">run</span> 5.2km
 
-Examples:
+<span style="color: green; font-style: italic;">-- Tasks (prefixed with [ ] or [x]).</span>
+[x] <span style="font-weight: bold;">do</span> the dishes
+[ ] <span style="font-weight: bold;">clean</span> @bathroom
 
-  - `podcast @innerfrench = Inner French Podcast .fr`
+<span style="color: green; font-style: italic;">-- Future events (prefixed with >>>).</span>
+>>> 20:00/ concert @radiohead
+</code></pre>
 
-## Special commands
+### Objects
 
-  - Date setter. E.g. `2024-01-01`: set current date to 1 January 2024.
+Define reusable objects to simplify your entries:
 
-# Run
+<pre><code><span style="font-weight: bold;">podcast</span> @innerfrench = Inner French Podcast .fr
+<span style="font-weight: bold;">book</span> @dune = Dune by Frank Herbert
+</code></pre>
+
+### Special Commands
+
+Date entries help organize your journal chronologically:
+
+<pre><code>2024-01-01 <span style="color: green; font-style: italic;">-- Sets the current date.</span>
+</code></pre>
+
+## Requirements
+
+- Python 3.12+.
 
 ## Installation
+
+```shell
+pip install .
+```
+
+## Usage
+
+See
+
+```shell
+chronicle --help
+```
