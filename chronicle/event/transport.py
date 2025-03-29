@@ -1,7 +1,10 @@
-from dataclasses import dataclass
-
+from dataclasses import dataclass, field
+import re
+from typing import ClassVar
 from chronicle.argument import Arguments
 from chronicle.event.core import Event
+from chronicle.objects.core import Person, Place, Service
+from chronicle.value import Cost
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
@@ -9,28 +12,52 @@ __email__ = "me@enzet.ru"
 
 @dataclass
 class TransportEvent(Event):
-    start_place_id: str | None = None
-    end_place_id: str | None = None
+    """Moving by any means of transport."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        name = cls.__name__[:-5].lower()
-        return Arguments([name], name).add_argument(
-            "start_place_id", command_printer=str
+    places: list[Place] = field(default_factory=list)
+    persons: list[Person] = field(default_factory=list)
+
+    arguments: ClassVar[Arguments] = (
+        Arguments(["transport"], "transport")
+        .add_argument(
+            "places",
+            patterns=[
+                re.compile(r"@[a-zA-Z0-9_]+(/@[a-zA-Z0-9_]+)+"),
+            ],
+            extractors=[
+                lambda groups: [Place(x) for x in groups(0).split("/")],
+            ],
         )
-
-    def get_color(self) -> str:
-        return "#000088"
+        .add_argument(
+            "persons",
+            prefix="with",
+            patterns=[re.compile(r"@[a-zA-Z0-9_]+(;@[a-zA-Z0-9_]+)*")],
+            extractors=[
+                lambda groups: [Person(x) for x in groups(0).split(";")]
+            ],
+        )
+    )
+    color: ClassVar[str] = "#000088"
 
 
 @dataclass
 class BusEvent(TransportEvent):
-    pass
+    """Moving by bus."""
+
+    arguments: ClassVar[Arguments] = TransportEvent.arguments.replace(
+        ["bus"], "bus"
+    )
 
 
 @dataclass
 class FlightEvent(TransportEvent):
-    pass
+    """Flying by airplane."""
+
+    number: str | None = None
+
+    arguments: ClassVar[Arguments] = TransportEvent.arguments.replace(
+        ["flight"], "flight"
+    ).add_argument("number", is_insert=True)
 
 
 @dataclass
@@ -38,24 +65,50 @@ class KickScooterEvent(TransportEvent):
     def get_color(self) -> str:
         return "#008888"
 
+    """Riding a kick scooter."""
+
+    color: ClassVar[str] = "#008888"
+    arguments: ClassVar[Arguments] = (
+        TransportEvent.arguments.replace(["kick_scooter"], "kick_scooter")
+        .add_class_argument("service", Service)
+        .add_class_argument("cost", Cost)
+    )
+
 
 @dataclass
 class TaxiEvent(TransportEvent):
-    def get_color(self) -> str:
-        return "#888800"
+    """Moving by taxi."""
+
+    color: ClassVar[str] = "#888800"
+    arguments: ClassVar[Arguments] = TransportEvent.arguments.replace(
+        ["taxi"], "taxi"
+    )
 
 
 @dataclass
 class TrainEvent(TransportEvent):
-    pass
+    """Traveling by train."""
+
+    arguments: ClassVar[Arguments] = TransportEvent.arguments.replace(
+        ["train"], "train"
+    )
 
 
 @dataclass
 class MetroEvent(TransportEvent):
+    """Moving by metro."""
+
     from_: str | None = None
     to_: str | None = None
+    arguments: ClassVar[Arguments] = TransportEvent.arguments.replace(
+        ["metro"], "metro"
+    )
 
 
 @dataclass
 class WaterTaxiEvent(TransportEvent):
-    pass
+    """Moving by water taxi."""
+
+    arguments: ClassVar[Arguments] = TransportEvent.arguments.replace(
+        ["water_taxi"], "water_taxi"
+    )

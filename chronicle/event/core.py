@@ -5,7 +5,7 @@ This file describes events and some common attributes that events may have.
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, ClassVar
 
 from chronicle.errors import ChronicleObjectNotFoundException
 from chronicle.value import Interval, Tags
@@ -40,15 +40,15 @@ class Event:
     def __post_init__(self):
         assert self.time
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return Arguments([], "").add_class_argument("tags", Tags)
+    arguments: ClassVar[Arguments] = Arguments(
+        ["event"], "event"
+    ).add_class_argument("tags", Tags)
 
     @classmethod
     def parse_command(
         cls, time: Time, command: str, tokens: list[str], objects: Objects
     ) -> "Event":
-        arguments: Arguments = cls.get_arguments()
+        arguments: Arguments = cls.arguments
         try:
             parsed = arguments.parse(tokens, objects)
         except ChronicleObjectNotFoundException as e:
@@ -72,13 +72,13 @@ class Event:
         :param objects: object information needed to fill data, because some
             events depend on objects and know solely about object identifier
         """
-        return self.get_arguments().to_string(self)
+        return self.arguments.to_string(self)
 
     def to_html(self, objects: Objects) -> str:
-        return self.get_arguments().to_html(objects, self)
+        return self.arguments.to_html(objects, self)
 
     def to_command(self) -> str:
-        return self.get_arguments().to_command(self)
+        return self.arguments.to_command(self)
 
     def get_color(self) -> str:
         return "#000000"

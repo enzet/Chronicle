@@ -45,7 +45,12 @@ WRITING_SYSTEM_NAMES = {
 }
 
 
+@dataclass
 class Value:
+    """Base class for all values."""
+
+    prefix: ClassVar[str] = None
+
     @classmethod
     def from_string(cls, string: str) -> "Value":
         for i, pattern in enumerate(cls.patterns):
@@ -63,14 +68,6 @@ class WikidataId(Value):
 
     patterns: ClassVar[list[re.Pattern]] = [re.compile(r"Q\d+")]
     extractors: ClassVar[list[Callable]] = [lambda groups: int(groups(0)[1:])]
-
-    @classmethod
-    def get_patterns(cls) -> list[re.Pattern]:
-        return WikidataId.patterns
-
-    @classmethod
-    def get_extractors(cls) -> list[Callable]:
-        return WikidataId.extractors
 
 
 @dataclass
@@ -117,14 +114,6 @@ class Language:
     def __hash__(self) -> int:
         return hash(self.code)
 
-    @staticmethod
-    def get_patterns() -> list[re.Pattern]:
-        return Language.patterns
-
-    @staticmethod
-    def get_extractors() -> list[Callable]:
-        return Language.extractors
-
 
 @dataclass
 class Subject(Value):
@@ -138,14 +127,6 @@ class Subject(Value):
     extractors: ClassVar[list[Callable]] = [
         lambda groups: Subject(groups("subjects").split("/")),
     ]
-
-    @staticmethod
-    def get_patterns() -> list[re.Pattern]:
-        return Subject.patterns
-
-    @staticmethod
-    def get_extractors() -> list[Callable]:
-        return Subject.extractors
 
     def is_language(self) -> bool:
         return self.subject[0] == "language"
@@ -173,14 +154,6 @@ class Tags:
         lambda groups: set(groups(1).split(","))
     ]
 
-    @staticmethod
-    def get_patterns() -> list[re.Pattern]:
-        return Tags.patterns
-
-    @staticmethod
-    def get_extractors() -> list[Callable]:
-        return Tags.extractors
-
 
 @dataclass
 class ProgrammingLanguage:
@@ -192,14 +165,6 @@ class ProgrammingLanguage:
     extractors: ClassVar[list[Callable]] = [
         lambda groups: ProgrammingLanguage(groups("code"))
     ]
-
-    @staticmethod
-    def get_patterns():
-        return ProgrammingLanguage.patterns
-
-    @staticmethod
-    def get_extractors():
-        return ProgrammingLanguage.extractors
 
 
 @dataclass
@@ -215,14 +180,6 @@ class OSM:
     extractors: ClassVar[list[Callable]] = [
         lambda groups: OSM(id=int(groups("id")), version=int(groups("version")))
     ]
-
-    @staticmethod
-    def get_patterns() -> list[re.Pattern]:
-        return OSM.patterns
-
-    @staticmethod
-    def get_extractors() -> list[Callable]:
-        return OSM.extractors
 
 
 @dataclass
@@ -243,14 +200,6 @@ class Birthday:
             year=int(groups("y")) if groups("y") else None,
         )
     ]
-
-    @staticmethod
-    def get_patterns() -> list[re.Pattern]:
-        return Birthday.patterns
-
-    @staticmethod
-    def get_extractors() -> list[Callable]:
-        return Birthday.extractors
 
 
 @dataclass
@@ -282,14 +231,6 @@ class Interval:
     def to_string(self) -> str:
         return self.to_json()
 
-    @staticmethod
-    def get_patterns() -> list[re.Pattern]:
-        return Interval.patterns
-
-    @staticmethod
-    def get_extractors() -> list[Callable]:
-        return Interval.extractors
-
     def to_command(self) -> str:
         return self.to_json()
 
@@ -300,7 +241,9 @@ class Interval:
 
 
 @dataclass
-class Cost:
+class Cost(Value):
+    """Cost, price in some currency."""
+
     value: float
     currency: str
 
@@ -310,14 +253,6 @@ class Cost:
     extractors: ClassVar[list[Callable]] = [
         lambda groups: Cost(value=float(groups("v")), currency=groups("c"))
     ]
-
-    @staticmethod
-    def get_patterns() -> list[re.Pattern]:
-        return Cost.patterns
-
-    @staticmethod
-    def get_extractors() -> list[Callable]:
-        return Cost.extractors
 
 
 class Distance:
@@ -334,14 +269,6 @@ class Distance:
         lambda groups: float(groups("v")) * 1000.0,
     ]
 
-    @staticmethod
-    def get_patterns() -> list[re.Pattern]:
-        return Distance.patterns
-
-    @staticmethod
-    def get_extractors() -> list[Callable]:
-        return Distance.extractors
-
 
 class Kilocalories:
     """Kilocalories."""
@@ -353,14 +280,6 @@ class Kilocalories:
     ]
     extractors: ClassVar[list[Callable]] = [lambda groups: float(groups("v"))]
 
-    @staticmethod
-    def get_patterns() -> list[re.Pattern]:
-        return Kilocalories.patterns
-
-    @staticmethod
-    def get_extractors() -> list[Callable]:
-        return Kilocalories.extractors
-
 
 class Season:
     """Season number."""
@@ -369,14 +288,6 @@ class Season:
 
     patterns: ClassVar[list[re.Pattern]] = [re.compile(r"[Ss](\d+)")]
     extractors: ClassVar[list[Callable]] = [lambda groups: int(groups(1))]
-
-    @staticmethod
-    def get_patterns() -> list[re.Pattern]:
-        return Season.patterns
-
-    @staticmethod
-    def get_extractors() -> list[Callable]:
-        return Season.extractors
 
 
 class Episode:
@@ -389,14 +300,6 @@ class Episode:
 
     patterns: ClassVar[list[re.Pattern]] = [re.compile(r"[Ee](\d+)")]
     extractors: ClassVar[list[Callable]] = [lambda groups: groups(1)]
-
-    @staticmethod
-    def get_patterns() -> list[re.Pattern]:
-        return Episode.patterns
-
-    @staticmethod
-    def get_extractors() -> list[Callable]:
-        return Episode.extractors
 
 
 @dataclass
@@ -529,14 +432,6 @@ class Volume:
             else f"{self.from_}–{self.to_}"
         )
 
-    @staticmethod
-    def get_patterns() -> list[re.Pattern]:
-        return Volume.patterns
-
-    @staticmethod
-    def get_extractors() -> list[Callable]:
-        return Volume.extractors
-
 
 @dataclass
 class AudiobookVolume:
@@ -593,11 +488,3 @@ class AudiobookVolume:
             case "seconds":
                 return f"{self.from_}–{self.to_}s"
         raise ChronicleValueException(f"Unknown measure `{self.measure}`.")
-
-    @staticmethod
-    def get_patterns() -> list[re.Pattern]:
-        return AudiobookVolume.patterns
-
-    @staticmethod
-    def get_extractors() -> list[Callable]:
-        return AudiobookVolume.extractors

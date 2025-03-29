@@ -51,10 +51,6 @@ class ListenEvent(Event):
         .add_class_argument("language", Language)
     )
 
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return ListenEvent.arguments
-
     def register_summary(self, summary: Summary) -> None:
         if self.language:
             summary.register_listen(self.get_duration(), self.language)
@@ -95,10 +91,6 @@ class ListenPodcastEvent(Event):
             extractors=[lambda groups: float(groups(2))],
         )
     )
-
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return ListenPodcastEvent.arguments
 
     def get_duration(self) -> float:
         """Get duration of the listening session in seconds."""
@@ -154,10 +146,6 @@ class ListenMusicEvent(Event):
         .add_class_argument("language", Language)
     )
 
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return ListenMusicEvent.arguments
-
     def get_duration(self) -> float:
         """Get duration of the listening session in seconds."""
         if self.interval:
@@ -178,13 +166,11 @@ class ListenLectureEvent(Event):
     interval: Interval = field(default_factory=Interval)
     """Duration of the lecture listening session."""
 
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return (
-            Arguments(["listen lecture"], "listen lecture")
-            .add_argument("title")
-            .add_class_argument("language", Language)
-        )
+    arguments: ClassVar[Arguments] = (
+        Arguments(["listen lecture"], "listen lecture")
+        .add_argument("title")
+        .add_class_argument("language", Language)
+    )
 
     def get_language(self, _: Objects) -> Language:
         """Get language of the lecture."""
@@ -220,10 +206,6 @@ class ReadEvent(Event):
         .add_class_argument("volume", Volume)
         .add_class_argument("subject", Subject)
     )
-
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return ReadEvent.arguments
 
     def get_language(self) -> Language:
         """Get language of the book."""
@@ -320,10 +302,6 @@ class StandupEvent(Event):
         )
     )
 
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return StandupEvent.arguments
-
 
 @dataclass
 class WatchEvent(Event):
@@ -373,10 +351,6 @@ class WatchEvent(Event):
         .add_class_argument("duration", Timedelta)
         .add_class_argument("subject", Subject)
     )
-
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return WatchEvent.arguments
 
     def register_summary(self, summary: Summary) -> None:
         language: Language | None = (
@@ -436,10 +410,6 @@ class ListenAudiobookEvent(Event):
         )
     )
 
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return ListenAudiobookEvent.arguments
-
     def get_language(self) -> Language | None:
         """Get language of the audiobook."""
         return self.audiobook.get_language() if self.audiobook else None
@@ -496,10 +466,6 @@ class ConcertEvent(Event):
         ["concert"], "concert"
     ).add_argument("musician")
 
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return ConcertEvent.arguments
-
 
 @dataclass
 class DrawEvent(Event):
@@ -516,7 +482,3 @@ class DrawEvent(Event):
         .add_argument("project")
         .add_object_argument("service", Service)
     )
-
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return DrawEvent.arguments

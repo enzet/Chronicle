@@ -92,7 +92,7 @@ class Timeline:
             classes += class_.__subclasses__()
 
         for class_ in classes:
-            for prefix in class_.get_arguments().prefixes:
+            for prefix in class_.arguments.prefixes:
                 self.prefix_to_class[prefix] = class_
 
     def __len__(self) -> int:

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import ClassVar
 import re
 
 from chronicle.argument import Arguments
@@ -10,14 +11,11 @@ class Clothes(Thing):
     art: str | None = None
     size: str | None = None
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return (
-            super()
-            .get_arguments()
-            .add_argument("art", prefix="art:")
-            .add_argument("size", patterns=[re.compile(r"^(X+S|S|M|L|X+L)$")])
-        )
+    arguments: ClassVar[Arguments] = (
+        Thing.arguments.replace(["clothes"], "clothes")
+        .add_argument("art", prefix="art:")
+        .add_argument("size", patterns=[re.compile(r"^(X+S|S|M|L|X+L)$")])
+    )
 
 
 @dataclass
@@ -27,42 +25,70 @@ class Coat(Clothes):
     color: str
     size: str
 
+    arguments: ClassVar[Arguments] = Clothes.arguments.replace(["coat"], "coat")
+
 
 @dataclass
 class Hat(Clothes):
     """Any type of clothing worn on the head."""
 
+    arguments: ClassVar[Arguments] = Clothes.arguments.replace(["hat"], "hat")
+
 
 @dataclass
 class Jacket(Clothes):
-    pass
+    """A jacket is a light jacket worn over other clothes."""
+
+    arguments: ClassVar[Arguments] = Clothes.arguments.replace(
+        ["jacket"], "jacket"
+    )
 
 
 @dataclass
 class Pants(Clothes):
-    pass
+    arguments: ClassVar[Arguments] = Clothes.arguments.replace(
+        ["pants"], "pants"
+    )
 
 
 @dataclass
 class Shoes(Clothes):
-    pass
+    arguments: ClassVar[Arguments] = Clothes.arguments.replace(
+        ["shoes"], "shoes"
+    )
 
 
 @dataclass
 class Socks(Clothes):
-    pass
+    """A pair of socks worn on the feet."""
+
+    arguments: ClassVar[Arguments] = Clothes.arguments.replace(
+        ["socks"], "socks"
+    )
 
 
 @dataclass
 class Sweater(Clothes):
-    pass
+    """A warm, knitted garment worn on the body."""
+
+    arguments: ClassVar[Arguments] = Clothes.arguments.replace(
+        ["sweater"], "sweater"
+    )
 
 
 @dataclass
 class TShirt(Clothes):
-    pass
+    """A short-sleeved shirt."""
+
+    arguments: ClassVar[Arguments] = Clothes.arguments.replace(
+        ["t_shirt"], "t_shirt"
+    )
 
 
 @dataclass
 class Underpants(Clothes):
-    pass
+    """Underwear worn on the body."""
+
+    arguments: ClassVar[Arguments] = Clothes.arguments.replace(
+        ["underpants"], "underpants"
+    )

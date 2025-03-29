@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
 
-from typing import Callable, Optional
+from typing import Callable, ClassVar, Optional
 
 DELTA_PATTERN_TEXT: str = r"(\d+:)?\d?\d:\d\d"
 DELTA_PATTERN_TEXT_GROUPS: str = r"((?P<h>\d+):)?(?P<m>\d?\d):(?P<s>\d\d)"
@@ -235,21 +235,17 @@ class Timedelta:
     def to_string(self) -> str:
         return format_delta(self.delta)
 
-    @staticmethod
-    def get_patterns() -> list[re.Pattern]:
-        return [DELTA_PATTERN_GROUPS]
+    patterns: ClassVar[list[re.Pattern]] = [DELTA_PATTERN_GROUPS]
 
-    @staticmethod
-    def get_extractors() -> list[Callable]:
-        def extractor(groups):
-            delta = timedelta(
+    extractors: ClassVar[list[Callable]] = [
+        lambda groups: Timedelta(
+            delta=timedelta(
                 seconds=(float(groups("h")) if groups("h") else 0.0) * 3600.0
                 + float(groups("m")) * 60.0
                 + float(groups("s")),
             )
-            return Timedelta(delta)
-
-        return [extractor]
+        )
+    ]
 
 
 class Time:

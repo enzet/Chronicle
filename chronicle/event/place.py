@@ -1,7 +1,10 @@
 from dataclasses import dataclass
+from typing import ClassVar
+import re
 
 from chronicle.argument import Arguments
 from chronicle.event.core import Event
+from chronicle.objects.core import Person, Place
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
@@ -11,81 +14,112 @@ __email__ = "me@enzet.ru"
 class PlaceEvent(Event):
     place_id: str | None = None
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        name = cls.__name__[:-5].lower()
-        return Arguments([name], name).add_argument("place_id")
+    arguments: ClassVar[Arguments] = (
+        Arguments(["place"], "place")
+        .add_object_argument("place", Place)
+        .add_argument(
+            "persons",
+            prefix="with",
+            patterns=[re.compile(r"@[a-zA-Z0-9_]+(;@[a-zA-Z0-9_]+)*")],
+            extractors=[
+                lambda groups: [Person(x) for x in groups(0).split(";")]
+            ],
+        )
+    )
 
-    def get_color(self) -> str:
-        return "#CCCCCC"
+    color: ClassVar[str] = "#CCCCCC"
 
 
 @dataclass
 class HomeEvent(PlaceEvent):
-    def get_color(self) -> str:
-        return "#EEEEDD"
+    arguments: ClassVar[Arguments] = PlaceEvent.arguments.replace(
+        ["home"], "home"
+    )
+    color: ClassVar[str] = "#EEEEDD"
 
 
 @dataclass
 class HotelEvent(PlaceEvent):
-    def get_color(self) -> str:
-        return "#EEEEDD"
+    arguments: ClassVar[Arguments] = PlaceEvent.arguments.replace(
+        ["hotel"], "hotel"
+    )
+    color: ClassVar[str] = "#EEEEDD"
 
 
 @dataclass
 class BarEvent(PlaceEvent):
-    def get_color(self) -> str:
-        return "#008800"
+    arguments: ClassVar[Arguments] = PlaceEvent.arguments.replace(
+        ["bar"], "bar"
+    )
+    color: ClassVar[str] = "#008800"
 
 
 @dataclass
 class CafeEvent(PlaceEvent):
-    def get_color(self) -> str:
-        return "#008800"
+    arguments: ClassVar[Arguments] = PlaceEvent.arguments.replace(
+        ["cafe"], "cafe"
+    )
+    color: ClassVar[str] = "#008800"
 
 
 @dataclass
 class CinemaEvent(PlaceEvent):
-    def get_color(self) -> str:
-        return "#008800"
+    arguments: ClassVar[Arguments] = PlaceEvent.arguments.replace(
+        ["cinema"], "cinema"
+    )
+    color: ClassVar[str] = "#008800"
 
 
 @dataclass
 class PharmacyEvent(PlaceEvent):
-    def get_color(self) -> str:
-        return "#FF8888"
+    arguments: ClassVar[Arguments] = PlaceEvent.arguments.replace(
+        ["pharmacy"], "pharmacy"
+    )
+    color: ClassVar[str] = "#FF8888"
 
 
 @dataclass
 class ClinicEvent(PlaceEvent):
-    def get_color(self) -> str:
-        return "#FF8888"
+    arguments: ClassVar[Arguments] = PlaceEvent.arguments.replace(
+        ["clinic"], "clinic"
+    )
+    color: ClassVar[str] = "#FF8888"
 
 
 @dataclass
 class ClubEvent(PlaceEvent):
-    def get_color(self) -> str:
-        return "#008800"
+    arguments: ClassVar[Arguments] = PlaceEvent.arguments.replace(
+        ["club"], "club"
+    )
+    color: ClassVar[str] = "#008800"
 
 
 @dataclass
 class TransportPlaceEvent(PlaceEvent):
-    def get_color(self) -> str:
-        return "#000088"
+    arguments: ClassVar[Arguments] = PlaceEvent.arguments.replace(
+        ["transport"], "transport"
+    )
+    color: ClassVar[str] = "#000088"
 
 
 @dataclass
 class PortEvent(TransportPlaceEvent):
-    pass
+    arguments: ClassVar[Arguments] = TransportPlaceEvent.arguments.replace(
+        ["port"], "port"
+    )
 
 
 @dataclass
 class ShopEvent(PlaceEvent):
-    def get_color(self) -> str:
-        return "#880088"
+    arguments: ClassVar[Arguments] = PlaceEvent.arguments.replace(
+        ["shop"], "shop"
+    )
+    color: ClassVar[str] = "#880088"
 
 
 @dataclass
 class UniversityEvent(PlaceEvent):
-    def get_color(self) -> str:
-        return "#CC0000"
+    arguments: ClassVar[Arguments] = PlaceEvent.arguments.replace(
+        ["university"], "university"
+    )
+    color: ClassVar[str] = "#CC0000"

@@ -1,6 +1,7 @@
 """Events related to sports and physical activity."""
 
 from dataclasses import dataclass
+from typing import ClassVar
 
 from chronicle.argument import Arguments
 from chronicle.event.core import Event
@@ -36,72 +37,61 @@ class MoveEvent(SportEvent):
     kilocalories: float | None = None
     """Kilocalories burned."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return (
-            Arguments(["move"], "move")
-            .add_argument("duration", Timedelta)
-            .add_class_argument("distance", Distance)
-            .add_argument("pace", Timedelta)
-            .add_argument("kilocalories", Kilocalories)
-        )
+    arguments: ClassVar[Arguments] = (
+        Arguments(["move"], "move")
+        .add_argument("duration", Timedelta)
+        .add_class_argument("distance", Distance)
+        .add_argument("pace", Timedelta)
+        .add_argument("kilocalories", Kilocalories)
+    )
 
 
 @dataclass
 class RunEvent(MoveEvent):
     """Event representing running."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return super().get_arguments().replace(["run"], "run")
+    arguments: ClassVar[Arguments] = MoveEvent.arguments.replace(["run"], "run")
 
-    def get_color(self) -> str:
-        return "#FF8800"
+    color: ClassVar[str] = "#FF8800"
 
 
 @dataclass
 class HikeEvent(MoveEvent):
     """Event representing hiking."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return super().get_arguments().replace(["hike"], "hike")
-
-    def get_color(self) -> str:
-        return "#FF8800"
+    arguments: ClassVar[Arguments] = MoveEvent.arguments.replace(
+        ["hike"], "hike"
+    )
+    color: ClassVar[str] = "#FF8800"
 
 
 @dataclass
 class LongboardEvent(MoveEvent):
     """Event representing longboarding."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return super().get_arguments().replace(["longboard"], "longboard")
-
-    def get_color(self) -> str:
-        return "#FF8800"
+    arguments: ClassVar[Arguments] = MoveEvent.arguments.replace(
+        ["longboard"], "longboard"
+    )
+    color: ClassVar[str] = "#FF8800"
 
 
 @dataclass
 class WalkEvent(MoveEvent):
     """Event representing walking."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return super().get_arguments().replace(["walk"], "walk")
-
-    def get_color(self) -> str:
-        return "#CCCCCC"
+    arguments: ClassVar[Arguments] = MoveEvent.arguments.replace(
+        ["walk"], "walk"
+    )
+    color: ClassVar[str] = "#CCCCCC"
 
 
 @dataclass
 class WarmUpEvent(SportEvent):
     """Event representing warming up."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return super().get_arguments().replace(["warm_up"], "warm_up")
+    arguments: ClassVar[Arguments] = SportEvent.arguments.replace(
+        ["warm_up"], "warm_up"
+    )
 
 
 @dataclass
@@ -125,38 +115,36 @@ class KickScooterEvent(SportEvent):
     service: str | None = None
     """Service used to rent the kick scooter."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return Arguments(["kick_scooter"], "kick_scooter").add_argument(
-            "service", prefix="using"
-        )
+    arguments: ClassVar[Arguments] = Arguments(
+        ["kick_scooter"], "kick_scooter"
+    ).add_argument("service", prefix="using")
 
 
 @dataclass
 class PlankEvent(SportEvent):
     """Event representing planking."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return super().get_arguments().replace(["plank"], "plank")
+    arguments: ClassVar[Arguments] = SportEvent.arguments.replace(
+        ["plank"], "plank"
+    )
 
 
 @dataclass
 class HighPlankEvent(SportEvent):
     """Event representing high plank."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return super().get_arguments().replace(["high_plank"], "high_plank")
+    arguments: ClassVar[Arguments] = SportEvent.arguments.replace(
+        ["high_plank"], "high_plank"
+    )
 
 
 @dataclass
 class HighKneeEvent(SportEvent):
     """Event representing high knees."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return super().get_arguments().replace(["high_knee"], "high_knee")
+    arguments: ClassVar[Arguments] = SportEvent.arguments.replace(
+        ["high_knee"], "high_knee"
+    )
 
 
 @dataclass
@@ -164,19 +152,12 @@ class CountableSportEvent(SportEvent):
     count: int | None = None
     """The number of rounds."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return (
-            super()
-            .get_arguments()
-            .replace(["countable"], "countable")
-            .add_argument(
-                "count", loader=lambda value, _: int(value), is_insert=True
-            )
-        )
+    arguments: ClassVar[Arguments] = SportEvent.arguments.replace(
+        ["countable"], "countable"
+    ).add_argument("count", loader=lambda value, _: int(value), is_insert=True)
 
     def register_summary(self, summary: Summary) -> None:
-        name: str = self.get_arguments().command
+        name: str = self.arguments.command
         if name == "abs":
             name = "abs_"
         if self.count is not None:
@@ -187,93 +168,87 @@ class CountableSportEvent(SportEvent):
 class AbsEvent(CountableSportEvent):
     """Event representing abs exercises."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return super().get_arguments().replace(["abs"], "abs")
+    arguments: ClassVar[Arguments] = CountableSportEvent.arguments.replace(
+        ["abs"], "abs"
+    )
 
 
 @dataclass
 class SquatsEvent(CountableSportEvent):
     """Event representing squats."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return super().get_arguments().replace(["squats"], "squats")
+    arguments: ClassVar[Arguments] = CountableSportEvent.arguments.replace(
+        ["squats"], "squats"
+    )
 
 
 @dataclass
 class ChinUpsEvent(CountableSportEvent):
     """Event representing chin ups."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return super().get_arguments().replace(["chin_ups"], "chin_ups")
+    arguments: ClassVar[Arguments] = CountableSportEvent.arguments.replace(
+        ["chin_ups"], "chin_ups"
+    )
 
 
 @dataclass
 class SquatJumpsEvent(CountableSportEvent):
     """Event representing squat jumps."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return super().get_arguments().replace(["squat_jumps"], "squat_jumps")
+    arguments: ClassVar[Arguments] = CountableSportEvent.arguments.replace(
+        ["squat_jumps"], "squat_jumps"
+    )
 
 
 @dataclass
 class DipsEvent(CountableSportEvent):
     """Event representing dips."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return super().get_arguments().replace(["dips"], "dips")
+    arguments: ClassVar[Arguments] = CountableSportEvent.arguments.replace(
+        ["dips"], "dips"
+    )
 
 
 @dataclass
 class PushUpsEvent(CountableSportEvent):
     """Event representing push ups."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return super().get_arguments().replace(["push_ups"], "push_ups")
+    arguments: ClassVar[Arguments] = CountableSportEvent.arguments.replace(
+        ["push_ups"], "push_ups"
+    )
 
 
 @dataclass
 class JumpingJacksEvent(CountableSportEvent):
     """Event representing jumping jacks."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return (
-            super().get_arguments().replace(["jumping_jacks"], "jumping_jacks")
-        )
+    arguments: ClassVar[Arguments] = CountableSportEvent.arguments.replace(
+        ["jumping_jacks"], "jumping_jacks"
+    )
 
 
 @dataclass
 class HandGripsEvent(CountableSportEvent):
     """Event representing hand grips."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return super().get_arguments().replace(["hand_grips"], "hand_grips")
+    arguments: ClassVar[Arguments] = CountableSportEvent.arguments.replace(
+        ["hand_grips"], "hand_grips"
+    )
 
 
 @dataclass
 class BurpeeEvent(CountableSportEvent):
     """Event representing burpees."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return super().get_arguments().replace(["burpee"], "burpee")
+    arguments: ClassVar[Arguments] = CountableSportEvent.arguments.replace(
+        ["burpee"], "burpee"
+    )
 
 
 @dataclass
 class RussianTwistsEvent(CountableSportEvent):
     """Event representing russian twists."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return (
-            super()
-            .get_arguments()
-            .replace(["russian_twists"], "russian_twists")
-        )
+    arguments: ClassVar[Arguments] = CountableSportEvent.arguments.replace(
+        ["russian_twists"], "russian_twists"
+    )

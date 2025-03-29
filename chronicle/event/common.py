@@ -33,10 +33,6 @@ class DoEvent(Event):
         "description"
     )
 
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return DoEvent.arguments
-
 
 @dataclass
 class MedicationEvent(Event):
@@ -48,10 +44,6 @@ class MedicationEvent(Event):
     arguments: ClassVar[Arguments] = Arguments(
         ["medication"], "medication"
     ).add_argument("medication")
-
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return MedicationEvent.arguments
 
 
 @dataclass
@@ -65,10 +57,6 @@ class AppointmentEvent(Event):
         ["appointment"], "appointment"
     ).add_argument("description")
 
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return AppointmentEvent.arguments
-
 
 @dataclass
 class CookEvent(Event):
@@ -80,10 +68,6 @@ class CookEvent(Event):
     arguments: ClassVar[Arguments] = Arguments(["cook"], "cook").add_argument(
         "dish"
     )
-
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return CookEvent.arguments
 
     def register_summary(self, summary: Summary) -> None:
         """Register unique dish."""
@@ -107,10 +91,6 @@ class CleanEvent(Event):
         .add_class_argument("tags", Tags)
     )
 
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return CleanEvent.arguments
-
 
 @dataclass
 class CutEvent(Event):
@@ -122,10 +102,6 @@ class CutEvent(Event):
     arguments: ClassVar[Arguments] = Arguments(["cut"], "cut").add_argument(
         "object_"
     )
-
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return CutEvent.arguments
 
 
 @dataclass
@@ -141,10 +117,6 @@ class EatEvent(Event):
     arguments: ClassVar[Arguments] = Arguments(["eat"], "eat").add_argument(
         "meal"
     )
-
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return EatEvent.arguments
 
 
 @dataclass
@@ -170,10 +142,6 @@ class LearnEvent(Event):
         .add_class_argument("duration", Timedelta)
         .add_argument("actions", prefix="actions:")
     )
-
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return LearnEvent.arguments
 
     def register_summary(self, summary: Summary) -> None:
         if not self.subject:
@@ -205,10 +173,6 @@ class WriteEvent(Event):
         .add_class_argument("duration", Timedelta)
         .add_object_argument("person", Person)
     )
-
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return WriteEvent.arguments
 
     def register_summary(self, summary: Summary) -> None:
         if self.language:
@@ -242,10 +206,6 @@ class BuyEvent(Event):
         .add_class_argument("cost", Cost)
     )
 
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return BuyEvent.arguments
-
 
 @dataclass
 class PlayEvent(Event):
@@ -257,10 +217,6 @@ class PlayEvent(Event):
     arguments: ClassVar[Arguments] = Arguments(["play"], "play").add_argument(
         "game"
     )
-
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return PlayEvent.arguments
 
 
 @dataclass
@@ -278,10 +234,6 @@ class SpeakEvent(Event):
         .add_class_argument("language", Language)
         .add_class_argument("duration", Timedelta)
     )
-
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return SpeakEvent.arguments
 
     def register_summary(self, summary: Summary) -> None:
         if self.language:
@@ -302,20 +254,12 @@ class CallEvent(Event):
         "with_", prefix="to"
     )
 
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return CallEvent.arguments
-
 
 @dataclass
 class SitEvent(Event):
     """Event representing sitting."""
 
     arguments: ClassVar[Arguments] = Arguments(["sit"], "sit")
-
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return SitEvent.arguments
 
 
 @dataclass
@@ -329,10 +273,6 @@ class TryEvent(Event):
         "item"
     )
 
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return TryEvent.arguments
-
 
 @dataclass
 class ReviewEvent(Event):
@@ -344,10 +284,6 @@ class ReviewEvent(Event):
     arguments: ClassVar[Arguments] = Arguments(
         ["review"], "review"
     ).add_argument("project")
-
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return ReviewEvent.arguments
 
 
 @dataclass
@@ -411,10 +347,6 @@ class ShaveEvent(Event):
         "object_"
     )
 
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return ShaveEvent.arguments
-
 
 @dataclass
 class DrinkEvent(Event):
@@ -440,10 +372,6 @@ class DrinkEvent(Event):
         )
     )
 
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return DrinkEvent.arguments
-
 
 @dataclass
 class StatusEvent(Event):
@@ -458,10 +386,6 @@ class StatusEvent(Event):
     arguments: ClassVar[Arguments] = (
         Arguments(["_"], "_").add_argument("weight").add_argument("temperature")
     )
-
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return StatusEvent.arguments
 
 
 @dataclass
@@ -481,10 +405,6 @@ class PayEvent(Event):
             "cost", command_printer=lambda x: f"{x.value}{x.currency}"
         )
     )
-
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return PayEvent.arguments
 
     def get_color(self) -> str:
         return "#FF0000"
@@ -510,21 +430,18 @@ class ProgramEvent(Event):
     duration: Timedelta | None = None
     """Duration of programming session."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return (
-            super()
-            .get_arguments()
-            .replace(["program"], "program")
-            .add_object_argument("project", Project, is_insert=True)
-            .add_argument(
-                "task",
-                patterns=[re.compile(r"#([0-9A-Za-z!#_-]+)")],
-                command_printer=lambda x: f"#{x}",
-            )
-            .add_class_argument("language", ProgrammingLanguage)
-            .add_class_argument("duration", Timedelta)
+    arguments: ClassVar[Arguments] = (
+        Arguments(["program"], "program")
+        .add_object_argument("project", Project, is_insert=True)
+        .add_argument(
+            "task",
+            patterns=[re.compile(r"#([0-9A-Za-z!#_-]+)")],
+            command_printer=lambda x: f"#{x}",
         )
+        .add_class_argument("language", ProgrammingLanguage)
+        .add_class_argument("duration", Timedelta)
+        .add_class_argument("tags", Tags)
+    )
 
     def register_summary(self, summary: Summary) -> None:
         if self.project:
@@ -539,9 +456,7 @@ class ProgramEvent(Event):
 class SleepEvent(Event):
     """Event representing sleeping."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return Arguments(["sleep"], "sleep")
+    arguments: ClassVar[Arguments] = Arguments(["sleep"], "sleep")
 
     def register_summary(self, summary: Summary) -> None:
         summary.register_sleep(self.time.get_duration())
@@ -554,7 +469,3 @@ class InBedEvent(Event):
     """Event representing being in bed."""
 
     arguments: ClassVar[Arguments] = Arguments(["in_bed"], "in_bed")
-
-    @staticmethod
-    def get_arguments() -> Arguments:
-        return InBedEvent.arguments

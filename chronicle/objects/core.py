@@ -3,7 +3,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import timedelta
 from pathlib import Path
-from typing import Self
+from typing import ClassVar, Self
 from colour import Color
 
 from chronicle.argument import Arguments
@@ -74,17 +74,14 @@ class Object:
     def from_value(cls, value: str) -> Self:
         return cls(None)
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        name: str = camel_to_snake(cls.__name__)
-        return Arguments([name], name).add_class_argument("tags", Tags)
+    arguments: ClassVar[Arguments] = Arguments(
+        ["object"], "object"
+    ).add_class_argument("tags", Tags)
 
     def to_command(self) -> str:
-        return self.get_arguments().to_object_command(self)
+        return self.arguments.to_object_command(self)
 
-    @classmethod
-    def get_prefix(cls) -> str | None:
-        return None
+    prefix: ClassVar[str] = None
 
 
 @dataclass
@@ -115,36 +112,33 @@ class Thing(Object):
     color: Color | None = None
     """Main color of the thing."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        name: str = camel_to_snake(cls.__name__)
-        return (
-            Arguments([name], name)
-            .add_argument("name")
-            .add_argument("link", patterns=[re.compile(r"(https?://[^ ]*)")])
-            .add_class_argument("cost", Cost)
-            .add_argument(
-                "expired",
-                prefix="exp:",
-                loader=lambda value, _: Moment.from_string(value),
-            )
-            .add_argument(
-                "since",
-                prefix="since:",
-                loader=lambda value, _: Moment.from_string(value),
-            )
-            .add_argument("temperature", prefix="temp:")
-            .add_argument(
-                "retired",
-                patterns=[re.compile("retired")],
-                extractors=[lambda _: True],
-            )
-            .add_argument(
-                "color",
-                patterns=[COLOR_PATTERN],
-                loader=lambda value, _: Color(value),
-            )
+    arguments: ClassVar[Arguments] = (
+        Arguments(["thing"], "thing")
+        .add_argument("name")
+        .add_argument("link", patterns=[re.compile(r"(https?://[^ ]*)")])
+        .add_class_argument("cost", Cost)
+        .add_argument(
+            "expired",
+            prefix="exp:",
+            loader=lambda value, _: Moment.from_string(value),
         )
+        .add_argument(
+            "since",
+            prefix="since:",
+            loader=lambda value, _: Moment.from_string(value),
+        )
+        .add_argument("temperature", prefix="temp:")
+        .add_argument(
+            "retired",
+            patterns=[re.compile("retired")],
+            extractors=[lambda _: True],
+        )
+        .add_argument(
+            "color",
+            patterns=[COLOR_PATTERN],
+            loader=lambda value, _: Color(value),
+        )
+    )
 
 
 @dataclass
@@ -157,88 +151,94 @@ class Place(Object):
     osm: OSM | None = None
     """Link to the OpenStreetMap object."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        name: str = camel_to_snake(cls.__name__)
-        return (
-            Arguments([name], name)
-            .add_argument("name")
-            .add_class_argument("osm", OSM)
-        )
+    arguments: ClassVar[Arguments] = (
+        Arguments(["place"], "place")
+        .add_argument("name")
+        .add_class_argument("osm", OSM)
+    )
 
 
 @dataclass
 class ArtObject(Object):
     name: str | None = None
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        name: str = camel_to_snake(cls.__name__)
-        return Arguments([name], name).add_argument("name")
+    arguments: ClassVar[Arguments] = Arguments(
+        ["art_object"], "art_object"
+    ).add_argument("name")
 
 
 @dataclass
 class Country(Object):
     name: str | None = None
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return Arguments(["country"], "country").add_argument("name")
+    arguments: ClassVar[Arguments] = Arguments(
+        ["country"], "country"
+    ).add_argument("name")
 
 
 @dataclass
 class Airport(Place):
-    pass
+    arguments: ClassVar[Arguments] = Place.arguments.replace(
+        ["airport"], "airport"
+    )
 
 
 @dataclass
 class ArtCenter(Place):
-    pass
+    arguments: ClassVar[Arguments] = Place.arguments.replace(
+        ["art_center"], "art_center"
+    )
 
 
 @dataclass
 class Bank(Place):
-    pass
+    arguments: ClassVar[Arguments] = Place.arguments.replace(["bank"], "bank")
 
 
 @dataclass
 class Cafe(Place):
-    pass
+    arguments: ClassVar[Arguments] = Place.arguments.replace(["cafe"], "cafe")
 
 
 @dataclass
 class Clinic(Place):
-    pass
+    arguments: ClassVar[Arguments] = Place.arguments.replace(
+        ["clinic"], "clinic"
+    )
 
 
 @dataclass
 class Club(Place):
-    pass
+    arguments: ClassVar[Arguments] = Place.arguments.replace(["club"], "club")
 
 
 @dataclass
 class Home(Place):
-    pass
+    arguments: ClassVar[Arguments] = Place.arguments.replace(["home"], "home")
 
 
 @dataclass
 class Park(Place):
-    pass
+    arguments: ClassVar[Arguments] = Place.arguments.replace(["park"], "park")
 
 
 @dataclass
 class Shop(Place):
-    pass
+    arguments: ClassVar[Arguments] = Place.arguments.replace(["shop"], "shop")
 
 
 @dataclass
 class Station(Place):
-    pass
+    arguments: ClassVar[Arguments] = Place.arguments.replace(
+        ["station"], "station"
+    )
 
 
 @dataclass
 class University(Place):
-    pass
+    arguments: ClassVar[Arguments] = Place.arguments.replace(
+        ["university"], "university"
+    )
 
 
 @dataclass
@@ -254,22 +254,17 @@ class Person(Object):
     birthday: Birthday | None = None
     """Person birthday."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return (
-            Arguments(["person"], "person")
-            .add_argument("name")
-            .add_argument("telegram", prefix="tg:")
-            .add_class_argument("birthday", Birthday)
-        )
+    prefix: ClassVar[str] = "with"
+    arguments: ClassVar[Arguments] = (
+        Arguments(["person"], "person")
+        .add_argument("name")
+        .add_argument("telegram", prefix="tg:")
+        .add_class_argument("birthday", Birthday)
+    )
 
     @classmethod
     def from_value(cls, value: str) -> Self:
         return cls(None, name=value)
-
-    @classmethod
-    def get_prefix(cls) -> str | None:
-        return "with"
 
 
 SERVICE_NAMES = {
@@ -285,13 +280,10 @@ class Service(Object):
     name: str | None = None
     """Name of the service."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return Arguments(["service"], "service").add_argument("name")
-
-    @classmethod
-    def get_prefix(cls) -> str:
-        return "using"
+    arguments: ClassVar[Arguments] = Arguments(
+        ["service"], "service"
+    ).add_argument("name")
+    prefix: ClassVar[str] = "using"
 
     def __hash__(self) -> int:
         return hash(self.id)
@@ -305,22 +297,24 @@ class Service(Object):
 class Medication(Thing):
     title: str | None = None
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return (
-            Arguments(["medication"], "medication").add_argument("title")
-            + super().get_arguments()
-        )
+    arguments: ClassVar[Arguments] = (
+        Arguments(["medication"], "medication").add_argument("title")
+        + Thing.arguments
+    )
 
 
 @dataclass
 class Notebook(Thing):
-    """"""
+    """Notebook."""
+
+    arguments: ClassVar[Arguments] = Thing.arguments.replace(
+        ["notebook"], "notebook"
+    )
 
 
 @dataclass
 class Card(Thing):
-    pass
+    arguments: ClassVar[Arguments] = Thing.arguments.replace(["card"], "card")
 
 
 # Physical objects.
@@ -328,67 +322,79 @@ class Card(Thing):
 
 @dataclass
 class Pen(Thing):
-    pass
+    arguments: ClassVar[Arguments] = Thing.arguments.replace(["pen"], "pen")
 
 
 @dataclass
 class Cup(Thing):
-    pass
+    arguments: ClassVar[Arguments] = Thing.arguments.replace(["cup"], "cup")
 
 
 @dataclass
 class Device(Thing):
-    pass
+    arguments: ClassVar[Arguments] = Thing.arguments.replace(
+        ["device"], "device"
+    )
 
 
 @dataclass
 class Glasses(Thing):
-    pass
+    arguments: ClassVar[Arguments] = Thing.arguments.replace(
+        ["glasses"], "glasses"
+    )
 
 
 @dataclass
 class Headphones(Thing):
-    pass
+    arguments: ClassVar[Arguments] = Thing.arguments.replace(
+        ["headphones"], "headphones"
+    )
 
 
 @dataclass
 class Computer(Thing):
-    pass
+    arguments: ClassVar[Arguments] = Thing.arguments.replace(
+        ["computer"], "computer"
+    )
 
 
 @dataclass
 class Pack(Thing):
-    pass
+    arguments: ClassVar[Arguments] = Thing.arguments.replace(["pack"], "pack")
 
 
 @dataclass
 class Phone(Thing):
-    pass
+    arguments: ClassVar[Arguments] = Thing.arguments.replace(["phone"], "phone")
 
 
 @dataclass
 class Watch(Thing):
-    pass
+    arguments: ClassVar[Arguments] = Thing.arguments.replace(["watch"], "watch")
 
 
 @dataclass
 class Ink(Thing):
-    pass
+    arguments: ClassVar[Arguments] = Thing.arguments.replace(["ink"], "ink")
 
 
 @dataclass
 class Cable(Thing):
-    pass
+    arguments: ClassVar[Arguments] = Thing.arguments.replace(["cable"], "cable")
 
 
 @dataclass
 class BookObject(Thing):
-    pass
+    arguments: ClassVar[Arguments] = Thing.arguments.replace(
+        ["book_object"], "book_object"
+    )
 
 
 @dataclass
 class Document(Thing):
-    pass
+    arguments: ClassVar[Arguments] = Thing.arguments.replace(
+        ["document"], "document"
+    )
 
 
 @dataclass
@@ -405,15 +411,13 @@ class Video(ArtObject):
     subject: Subject | None = None
     """Categorised subject."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return (
-            Arguments(["video"], "video")
-            .add_argument("title")
-            .add_class_argument("language", Language)
-            .add_class_argument("wikidata_id", WikidataId)
-            .add_class_argument("subject", Subject)
-        )
+    arguments: ClassVar[Arguments] = (
+        Arguments(["video"], "video")
+        .add_argument("title")
+        .add_class_argument("language", Language)
+        .add_class_argument("wikidata_id", WikidataId)
+        .add_class_argument("subject", Subject)
+    )
 
     @classmethod
     def from_value(cls, value: str) -> Self:
@@ -449,14 +453,12 @@ class Podcast(Object):
     def from_value(cls, value: str) -> Self:
         return cls(None, title=value)
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return (
-            Arguments(["podcast"], "podcast")
-            .add_argument("title")
-            .add_class_argument("language", Language)
-            .add_class_argument("wikidata_id", WikidataId)
-        )
+    arguments: ClassVar[Arguments] = (
+        Arguments(["podcast"], "podcast")
+        .add_argument("title")
+        .add_class_argument("language", Language)
+        .add_class_argument("wikidata_id", WikidataId)
+    )
 
 
 @dataclass
@@ -511,19 +513,17 @@ class Book(Object):
     def from_value(cls, value: str) -> Self:
         return cls(None, title=value)
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return (
-            Arguments(["book"], "book")
-            .add_argument("title", command_printer=str)
-            .add_argument(
-                "volume",
-                patterns=[re.compile(r"(\d*)p")],
-                extractors=[lambda groups: float(groups(1))],
-            )
-            .add_class_argument("language", Language)
-            .add_class_argument("wikidata_id", WikidataId)
+    arguments: ClassVar[Arguments] = (
+        Arguments(["book"], "book")
+        .add_argument("title", command_printer=str)
+        .add_argument(
+            "volume",
+            patterns=[re.compile(r"(\d*)p")],
+            extractors=[lambda groups: float(groups(1))],
         )
+        .add_class_argument("language", Language)
+        .add_class_argument("wikidata_id", WikidataId)
+    )
 
 
 @dataclass
@@ -554,15 +554,13 @@ class Audiobook(Object):
             return self.book.language
         return self.language
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return (
-            Arguments(["audiobook"], "audiobook")
-            .add_object_argument("book", Book)
-            .add_class_argument("duration", Timedelta)
-            .add_class_argument("language", Language)
-            .add_argument("reader")
-        )
+    arguments: ClassVar[Arguments] = (
+        Arguments(["audiobook"], "audiobook")
+        .add_object_argument("book", Book)
+        .add_class_argument("duration", Timedelta)
+        .add_class_argument("language", Language)
+        .add_argument("reader")
+    )
 
 
 class Objects:
@@ -577,7 +575,7 @@ class Objects:
 
         classes: list = Objects.get_classes(Object)
         for class_ in classes:
-            for prefix in class_.get_arguments().prefixes:
+            for prefix in class_.arguments.prefixes:
                 if prefix in self.prefix_to_class:
                     raise ChronicleCodeException(
                         f"Prefix `{prefix}` is already used by "
@@ -612,10 +610,8 @@ class Objects:
             id_ = id_[1:]
 
         if prefix in self.prefix_to_class:
-            data = (
-                self.prefix_to_class[prefix]
-                .get_arguments()
-                .parse(tokens[3:], self)
+            data = self.prefix_to_class[prefix].arguments.parse(
+                tokens[3:], self
             )
             # Create new object.
             new_object = self.prefix_to_class[prefix](id_, **data)
@@ -704,10 +700,8 @@ class Project(Object):
     language: ProgrammingLanguage | None = None
     """Main programming language of the project."""
 
-    @classmethod
-    def get_arguments(cls) -> Arguments:
-        return (
-            Arguments(["project"], "project")
-            .add_argument("title")
-            .add_class_argument("language", ProgrammingLanguage)
-        )
+    arguments: ClassVar[Arguments] = (
+        Arguments(["project"], "project")
+        .add_argument("title")
+        .add_class_argument("language", ProgrammingLanguage)
+    )

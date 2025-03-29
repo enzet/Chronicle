@@ -1,5 +1,6 @@
 import logging
 import re
+import copy
 from dataclasses import dataclass
 from typing import Any, Callable
 
@@ -56,7 +57,7 @@ class Argument:
 def one_pattern_argument(name, class_, index: int = 0):
     return Argument(
         name,
-        patterns=class_.get_patterns(),
+        patterns=class_.patterns,
         extractors=[lambda x: class_.from_json(x(index))],
     )
 
@@ -69,6 +70,7 @@ class Arguments:
 
     def parse(self, tokens: list[str], objects) -> dict[str, Any]:
         """Parse arguments from command."""
+
         # Event may have no arguments.
         if not self.arguments:
             return {}
@@ -192,17 +194,17 @@ class Arguments:
         argument: Argument = Argument(name)
 
         assert (
-            hasattr(class_, "get_patterns")
-            and hasattr(class_, "get_extractors")
-            or hasattr(class_, "get_prefix")
-        )
+            hasattr(class_, "patterns")
+            and hasattr(class_, "extractors")
+            or hasattr(class_, "prefix")
+        ), f"{class_.__name__} should have patterns, extractors or prefix."
 
-        if hasattr(class_, "get_patterns"):
-            argument.patterns = class_.get_patterns()
-        if hasattr(class_, "get_extractors"):
-            argument.extractors = class_.get_extractors()
-        if hasattr(class_, "get_prefix"):
-            argument.prefix = class_.get_prefix()
+        if hasattr(class_, "patterns"):
+            argument.patterns = class_.patterns
+        if hasattr(class_, "extractors"):
+            argument.extractors = class_.extractors
+        if hasattr(class_, "prefix"):
+            argument.prefix = class_.prefix
 
         self.arguments.append(argument)
         return self
@@ -234,7 +236,7 @@ class Arguments:
             name,
             loader=object_loader,
             command_printer=to_command,
-            prefix=class_.get_prefix(),
+            prefix=class_.prefix,
         )
         if is_insert:
             self.arguments.insert(0, argument)
@@ -317,6 +319,7 @@ class Arguments:
         return text
 
     def replace(self, prefixes: list[str], command: str) -> "Arguments":
-        self.prefixes = prefixes
-        self.command = command
-        return self
+        new_arguments = copy.deepcopy(self)
+        new_arguments.prefixes = prefixes
+        new_arguments.command = command
+        return new_arguments
