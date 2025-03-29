@@ -21,12 +21,15 @@ __email__ = "me@enzet.ru"
 
 
 def main():
-    logging.basicConfig(level=logging.INFO)
-
-    logging.info("Starting Chronicle.")
-
     argument_parser: argparse.ArgumentParser = argparse.ArgumentParser(
         "Chronicle"
+    )
+    argument_parser.add_argument(
+        "--logging",
+        type=str,
+        choices=["info", "silent", "debug"],
+        default="silent",
+        help="logging level",
     )
     argument_parser.add_argument("-c", "--command", help="command")
     argument_parser.add_argument("--sub-command", default="")
@@ -67,6 +70,15 @@ def main():
         metavar="<CSV file path>",
     )
     arguments = argument_parser.parse_args(sys.argv[1:])
+
+    if arguments.logging == "info":
+        logging.basicConfig(level=logging.INFO)
+    elif arguments.logging == "silent":
+        logging.basicConfig(level=logging.WARNING)
+    elif arguments.logging == "debug":
+        logging.basicConfig(level=logging.DEBUG)
+
+    logging.info("Starting Chronicle.")
 
     timeline: Timeline = Timeline()
     cache_path: Path = Path.home() / "program" / "chronicle" / "cache"
