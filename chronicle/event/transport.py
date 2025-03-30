@@ -62,10 +62,10 @@ class FlightEvent(TransportEvent):
 
 @dataclass
 class KickScooterEvent(TransportEvent):
-    def get_color(self) -> str:
-        return "#008888"
-
     """Riding a kick scooter."""
+
+    service: Service | None = None
+    cost: Cost | None = None
 
     color: ClassVar[str] = "#008888"
     arguments: ClassVar[Arguments] = (
