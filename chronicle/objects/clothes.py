@@ -92,3 +92,10 @@ class Underpants(Clothes):
     arguments: ClassVar[Arguments] = Clothes.arguments.replace(
         ["underpants"], "underpants"
     )
+
+
+@dataclass
+class Belt(Clothes):
+    """A strip of material worn around the waist."""
+
+    arguments: ClassVar[Arguments] = Clothes.arguments.replace(["belt"], "belt")
