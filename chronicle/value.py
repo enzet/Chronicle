@@ -339,6 +339,7 @@ class Volume:
         re.compile(r"(?P<value>\d+(\.\d*)?)/(?P<of>\d+(\.\d*)?)"),
         re.compile(r"(?P<value>\d+(\.\d*)?)%"),
         re.compile(r"(?P<value>\d+(\.\d*)?)p"),
+        re.compile(r"(?P<value>\d+(\.\d*)?)w"),
     ]
 
     extractors: ClassVar[list[Callable]] = [
@@ -369,6 +370,7 @@ class Volume:
         ),
         lambda groups: Volume(value=float(groups("value")), measure="percent"),
         lambda groups: Volume(value=float(groups("value")), measure="pages"),
+        lambda groups: Volume(value=float(groups("value")), measure="words"),
     ]
 
     def __hash__(self) -> int:
