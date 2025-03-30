@@ -12,6 +12,7 @@ from chronicle.value import (
     ProgrammingLanguage,
     Subject,
     Tags,
+    Volume,
 )
 from chronicle.objects.core import Object, Person, Project, Service
 from chronicle.summary.core import Summary
@@ -158,25 +159,43 @@ class LearnEvent(Event):
 class WriteEvent(Event):
     """Event representing writing something."""
 
+    title: str | None = None
+    """Title of the document was written."""
+
     language: Language | None = None
     """Language used for writing."""
 
     duration: Timedelta | None = None
     """Duration of the writing event."""
 
+    volume: Volume | None = None
+    """Volume of the writing event."""
+
     person: Person | None = None
     """Person you were writing to."""
 
+    tags: Tags | None = None
+    """User-defined tags."""
+
     arguments: ClassVar[Arguments] = (
         Arguments(["write"], "write")
+        .add_argument("title")
         .add_class_argument("language", Language)
         .add_class_argument("duration", Timedelta)
+        .add_class_argument("volume", Volume)
         .add_object_argument("person", Person)
+        .add_class_argument("tags", Tags)
     )
 
     def register_summary(self, summary: Summary) -> None:
         if self.language:
-            summary.register_write(self.get_duration(), self.language)
+            if not self.get_duration() and self.volume:
+                if self.volume.measure == "words":
+                    summary.register_write_words(
+                        self.volume.value, self.language
+                    )
+            else:
+                summary.register_write(self.get_duration(), self.language)
 
 
 @dataclass
