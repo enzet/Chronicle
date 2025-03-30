@@ -172,11 +172,11 @@ class ListenLectureEvent(Event):
         .add_class_argument("language", Language)
     )
 
-    def get_language(self, _: Objects) -> Language:
+    def get_language(self, _: Objects) -> Language | None:
         """Get language of the lecture."""
         return self.language
 
-    def get_duration(self) -> float:
+    def get_duration(self) -> float | None:
         """Get duration of the listening session in seconds."""
         if self.interval:
             return self.interval.get_duration()

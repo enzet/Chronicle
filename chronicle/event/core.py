@@ -54,7 +54,7 @@ class Event:
         except ChronicleObjectNotFoundException as e:
             raise ChronicleObjectNotFoundException(
                 f"Object with id `{e.object_id}` not found, needed to parse "
-                f"`{cls.__name__}` by command `{command}`."
+                f"`{cls.__name__}` from command `{command}`."
             ) from e
         try:
             return cls(time=time, source=(command, parsed), **parsed)
@@ -83,7 +83,7 @@ class Event:
     def get_color(self) -> str:
         return "#000000"
 
-    def get_duration(self) -> float:
+    def get_duration(self) -> float | None:
         """Get event duration in seconds.
 
         Duration may be implemented as `self.time.get_duration()` or
@@ -104,4 +104,4 @@ class Event:
             if result:
                 return result
 
-        return 0.0
+        return None
