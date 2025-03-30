@@ -131,6 +131,8 @@ class OldImporter(Importer):
                         if "subtitles" in data and data["subtitles"]
                         else None
                     ),
+                    season=data.get("season", None),
+                    episode=data.get("episode", None),
                 )
 
             elif data["type"] == "read":
@@ -267,6 +269,8 @@ class OldMovieImporter(Importer):
                 duration=duration,
                 language=language,
                 subtitles=subtitles,
+                episode=data.get("episode", None),
+                season=data.get("season", None),
             )
             timeline.events.append(event)
 
