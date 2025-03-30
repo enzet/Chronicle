@@ -83,7 +83,7 @@ class Moment:
                 moment.month = int(date_parts[1])
             if len(date_parts) > 2:
                 moment.day = int(date_parts[2])
-        elif context and context.current_date:
+        elif ":" in code and context and context.current_date:
             time = code
             moment.year = context.current_date.year
             moment.month = context.current_date.month
