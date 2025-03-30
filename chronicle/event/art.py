@@ -17,6 +17,7 @@ from chronicle.value import (
     Volume,
 )
 from chronicle.objects.core import (
+    Ballet,
     Book,
     Service,
     Video,
@@ -453,6 +454,21 @@ class ListenAudiobookEvent(Event):
                     f"Event {self} has duration {duration}."
                 )
             summary.register_listen(duration, language)
+
+
+@dataclass
+class BalletEvent(Event):
+    """Event representing attending a ballet performance."""
+
+    ballet: Ballet | None = None
+    """Show that was attended."""
+
+    arguments: ClassVar[Arguments] = Arguments(
+        ["ballet"], "ballet"
+    ).add_object_argument("ballet", Ballet)
+
+    def register_summary(self, summary: Summary) -> None:
+        summary.register_show(self.ballet)
 
 
 @dataclass

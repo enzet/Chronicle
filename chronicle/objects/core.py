@@ -705,3 +705,21 @@ class Project(Object):
         .add_argument("title")
         .add_class_argument("language", ProgrammingLanguage)
     )
+
+
+@dataclass
+class Ballet(Object):
+    """Ballet performance."""
+
+    title: str | None = None
+    """Title of the ballet performance."""
+
+    arguments: ClassVar[Arguments] = Arguments(
+        ["ballet"], "ballet"
+    ).add_argument("title")
+
+    def __hash__(self) -> int:
+        return hash(self.title)
+
+    def to_string(self) -> str:
+        return self.title or "Ballet"
