@@ -79,7 +79,7 @@ class ObjectsHtmlViewer:
             </style>
             """
             )
-        output_file.write(
-            self.timeline.get_objects_html(Path.home() / "Raster" / "thing")
-        )
-        print(f"Output HTML was written into {output_path}.")
+            output_file.write(
+                self.timeline.get_objects_html(Path.home() / "Raster" / "thing")
+            )
+            print(f"Output HTML was written into {output_path}.")
