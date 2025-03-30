@@ -87,10 +87,7 @@ class Arguments:
         current: str = ""
 
         def load_current() -> Any:
-            try:
-                result[current_key] = current_loader(current, objects)
-            except ChronicleObjectNotFoundException:
-                raise
+            result[current_key] = current_loader(current, objects)
 
         for index in range(len(tokens)):
             token: str = tokens[index]
@@ -106,7 +103,8 @@ class Arguments:
                     if current:
                         if not current_key:
                             raise ChronicleArgumentError(
-                                f"No argument name before `{current}`."
+                                f"No argument name before `{current}` for "
+                                f"tokens `{tokens}`."
                             )
                         load_current()
                         current = ""
