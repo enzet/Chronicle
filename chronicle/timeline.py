@@ -192,7 +192,8 @@ class Timeline:
                 time.is_assumed = True
             else:
                 raise ChronicleValueException(
-                    f"Not recognized as event or object: `{command}`."
+                    f"Not recognized as event or object: `{command}`, "
+                    f"tokens: {tokens}. No time or context specified for event."
                 )
 
         if len(tokens) <= 1:
@@ -208,7 +209,7 @@ class Timeline:
             self.events.append(event)
         else:
             raise ChronicleValueException(
-                f"No event class for prefix `{prefix}`."
+                f"No event class for prefix `{prefix}` in command `{command}`."
             )
 
     def get_commands(self) -> list[str]:

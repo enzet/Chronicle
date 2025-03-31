@@ -77,7 +77,7 @@ class LanguageLearningViewer:
         is_sum: bool = True
 
         if is_sum:
-            for index, point in enumerate(xs):
+            for index, _ in enumerate(xs):
                 if index == 0:
                     continue
                 for key in data:
@@ -86,7 +86,7 @@ class LanguageLearningViewer:
                     language_data[key][index] += language_data[key][index - 1]
 
         total__ = []
-        for index, point in enumerate(xs):
+        for index, _ in enumerate(xs):
             s = 0
             for key in data:
                 s += data[key][index]

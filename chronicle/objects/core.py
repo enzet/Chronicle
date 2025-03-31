@@ -578,8 +578,8 @@ class Objects:
             for prefix in class_.arguments.prefixes:
                 if prefix in self.prefix_to_class:
                     raise ChronicleCodeException(
-                        f"Prefix `{prefix}` is already used by "
-                        f"`{self.prefix_to_class[prefix]}`."
+                        f"Prefix `{prefix}` in class `{class_.__name__}` is "
+                        f"already used by `{self.prefix_to_class[prefix]}`."
                     )
                 self.prefix_to_class[prefix] = class_
 
