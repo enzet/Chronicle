@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import ClassVar
 import re
 
@@ -12,7 +12,8 @@ __email__ = "me@enzet.ru"
 
 @dataclass
 class PlaceEvent(Event):
-    place_id: str | None = None
+    place: Place | None = None
+    persons: list[Person] = field(default_factory=list)
 
     arguments: ClassVar[Arguments] = (
         Arguments(["place"], "place")
