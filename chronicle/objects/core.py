@@ -723,3 +723,45 @@ class Ballet(Object):
 
     def to_string(self) -> str:
         return self.title or "Ballet"
+
+
+@dataclass
+class Concert(Object):
+    """Concert."""
+
+    title: str | None = None
+    """Title of the concert."""
+
+    artist: str | None = None
+    """Artist that performed."""
+
+    arguments: ClassVar[Arguments] = (
+        Arguments(["concert"], "concert")
+        .add_argument("title")
+        .add_argument("artist", prefix="by")
+    )
+
+    def __hash__(self) -> int:
+        return hash(f"{self.title}.{self.artist}")
+
+    def to_string(self) -> str:
+        title: str = self.title or "Concert"
+        return f"{title} by {self.artist}"
+
+
+@dataclass
+class Opera(Object):
+    """Opera performance."""
+
+    title: str | None = None
+    """Title of the opera performance."""
+
+    arguments: ClassVar[Arguments] = Arguments(["opera"], "opera").add_argument(
+        "title"
+    )
+
+    def __hash__(self) -> int:
+        return hash(self.title)
+
+    def to_string(self) -> str:
+        return self.title or "Opera"

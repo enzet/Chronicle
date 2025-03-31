@@ -19,6 +19,8 @@ from chronicle.value import (
 from chronicle.objects.core import (
     Ballet,
     Book,
+    Concert,
+    Opera,
     Service,
     Video,
     Objects,
@@ -475,12 +477,38 @@ class BalletEvent(Event):
 class ConcertEvent(Event):
     """Event representing attending a concert."""
 
+    concert: Concert | None = None
+    """Concert that was attended."""
+
     musician: str | None = None
     """Name of the musician or band performing."""
 
+    arguments: ClassVar[Arguments] = (
+        Arguments(["concert"], "concert")
+        .add_object_argument("concert", Concert)
+        .add_argument("musician", prefix="by")
+    )
+
+    def register_summary(self, summary: Summary) -> None:
+        if self.concert:
+            summary.register_show(self.concert)
+        else:
+            summary.register_show(Concert(None, artist=self.musician))
+
+
+@dataclass
+class OperaEvent(Event):
+    """Event representing attending an opera performance."""
+
+    opera: Opera | None = None
+    """Opera that was attended."""
+
     arguments: ClassVar[Arguments] = Arguments(
-        ["concert"], "concert"
-    ).add_argument("musician")
+        ["opera"], "opera"
+    ).add_object_argument("opera", Opera)
+
+    def register_summary(self, summary: Summary) -> None:
+        summary.register_show(self.opera)
 
 
 @dataclass
