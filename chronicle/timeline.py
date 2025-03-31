@@ -196,7 +196,7 @@ class Timeline:
                     f"tokens: {tokens}. No time or context specified for event."
                 )
 
-        if len(tokens) <= 1:
+        if len(tokens) == 1:
             raise ChronicleValueException(
                 f"Not recognized as event or object: `{command}`: not enough "
                 f"words."
@@ -551,44 +551,47 @@ class CommandParser:
             if not tokens:
                 return
 
-        if tokens[0] == "[x]" or tokens[0] == "[" and tokens[1] == "]":
-            # Parse task (planned event).
-            if len(tokens) > 1:
-                if tokens[0] == "[x]":
-                    parameters = tokens[1:]
-                else:
-                    parameters = tokens[2:]
-                if parameters and parameters[0] in ["<!>", "<.>", "<*>"]:
-                    parameters = parameters[1:]
-                if parameters:
-                    self.timeline.parse_event_command(
-                        command, parameters, self.context, is_task=True
-                    )
-            return
-
         if tokens[0] == ">>>":
             # Skip planned event.
             return
 
         if len(tokens) >= 3 and tokens[2] == "=":
             # Parse object.
-            success: bool = self.timeline.objects.parse_command(command, tokens)
-            if not success:
-                raise ChronicleValueException(
-                    f"Failed to parse object by command `{command}`."
-                )
-            else:
-                return
+            self.timeline.objects.parse_command(command, tokens)
+            return
 
-        if matcher := DATE_PATTERN.fullmatch(command):
+        if len(tokens) == 1 and (matcher := DATE_PATTERN.fullmatch(tokens[0])):
             # Parse date setter.
             self.context.current_date = datetime.strptime(
                 matcher.group(1), "%Y-%m-%d"
             )
             return
 
+        is_task: bool = False
+        parameters: list[str] = tokens
+        task_prefixes: list[str] = ["[x]", "[-]", "[/]"]
+
+        if (
+            tokens
+            and tokens[0] in task_prefixes
+            or len(tokens) > 1
+            and tokens[0] == "["
+            and tokens[1] == "]"
+        ):
+            # Parse task (planned event).
+            is_task = True
+            if len(tokens) > 1:
+                if tokens[0] in task_prefixes:
+                    parameters = tokens[1:]
+                else:
+                    parameters = tokens[2:]
+                if parameters and parameters[0] in ["<!>", "<.>", "<*>"]:
+                    parameters = parameters[1:]
+
         # Parse event.
-        self.timeline.parse_event_command(command, tokens, self.context)
+        self.timeline.parse_event_command(
+            command, parameters, self.context, is_task=is_task
+        )
 
     def parse_commands(self, commands: list[str]) -> None:
         for command in commands:
