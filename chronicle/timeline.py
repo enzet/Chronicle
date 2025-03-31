@@ -371,7 +371,8 @@ class Timeline:
                 continue
             if object_.expired:
                 continue
-            id_ = id_[1:]
+            if id_.startswith("@"):
+                id_ = id_[1:]
             if "__" in id_:
                 id_ = id_.split("__")[0]
             # text = f"<code style='font-size: 85%; color: #AAAAAA;'>
@@ -533,7 +534,7 @@ class CommandParser:
     def parse_command(self, command: str) -> None:
         """Parse special Chronicle command."""
 
-        if not command:
+        if not command.strip():
             # Skip empty command.
             return
 
