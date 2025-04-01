@@ -765,3 +765,27 @@ class Opera(Object):
 
     def to_string(self) -> str:
         return self.title or "Opera"
+
+
+@dataclass
+class Standup(Object):
+    """Standup comedy performance."""
+
+    title: str | None = None
+    """Title of the standup comedy performance."""
+
+    artist: str | None = None
+    """Artist that performed."""
+
+    arguments: ClassVar[Arguments] = (
+        Arguments(["standup"], "standup")
+        .add_argument("title")
+        .add_argument("artist", prefix="by")
+    )
+
+    def __hash__(self) -> int:
+        return hash(f"{self.title}.{self.artist}")
+
+    def to_string(self) -> str:
+        title: str = self.title or "Standup"
+        return f"{title} by {self.artist}"

@@ -22,6 +22,7 @@ from chronicle.objects.core import (
     Concert,
     Opera,
     Service,
+    Standup,
     Video,
     Objects,
     Audiobook,
