@@ -296,7 +296,7 @@ class Season:
 class Episode:
     """Episode number."""
 
-    episode_id: str
+    episode_id: int | str
     """Episode identifier.
 
     Sometimes it's not a number, but a string."""
