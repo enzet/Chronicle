@@ -603,23 +603,23 @@ class Objects:
 
         raise ChronicleObjectNotFoundException(object_id)
 
-    def parse_command(self, command: str, tokens: list[str]) -> bool:
+    def parse_command(self, command: str, tokens: list[str]) -> None:
         prefix: str = tokens[0]
         id_: str = tokens[1]
         if id_.startswith("@"):
             id_ = id_[1:]
 
-        if prefix in self.prefix_to_class:
-            data = self.prefix_to_class[prefix].arguments.parse(
-                tokens[3:], self
+        if prefix not in self.prefix_to_class:
+            raise ChronicleValueException(
+                f"Class for objects with prefix `{prefix}` not found."
             )
-            # Create new object.
-            new_object = self.prefix_to_class[prefix](id_, **data)
-            # Register new object.
-            self.objects[id_] = new_object
-            return True
 
-        return False
+        data = self.prefix_to_class[prefix].arguments.parse(tokens[3:], self)
+        # Create new object.
+        new_object = self.prefix_to_class[prefix](id_, **data)
+        # Register new object.
+        self.objects[id_] = new_object
+        return
 
     def get_commands(self) -> list[str]:
         commands: list[str] = []
