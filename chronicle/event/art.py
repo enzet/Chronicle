@@ -21,7 +21,9 @@ from chronicle.objects.core import (
     Book,
     Concert,
     Opera,
+    Place,
     Service,
+    Standup,
     Video,
     Objects,
     Audiobook,
@@ -315,20 +317,25 @@ class StandupEvent(Event):
     title: str | None = None
     """Title or name of the standup show."""
 
-    language: str | None = None
+    artist: str | None = None
+    """Artist that performed."""
+
+    language: Language | None = None
     """Language the show was performed in."""
 
-    place_id: str | None = None
-    """Identifier of the venue where the show took place."""
+    place: Place | None = None
+    """Venue where the show took place."""
 
     arguments: ClassVar[Arguments] = (
         Arguments(["standup"], "standup")
         .add_argument("title")
+        .add_argument("artist", prefix="by")
         .add_class_argument("language", Language)
-        .add_argument(
-            "place_id", prefix="at", command_printer=lambda x: f"at {x}"
-        )
+        .add_object_argument("place", Place)
     )
+
+    def register_summary(self, summary: Summary) -> None:
+        summary.register_show(Standup(self.title, artist=self.artist))
 
 
 @dataclass
@@ -474,6 +481,14 @@ class ListenAudiobookEvent(Event):
                 self.volume.get_ratio()
                 * self.audiobook.duration.total_seconds()
             )
+
+        # Register finished audiobook.
+        if (
+            self.volume
+            and self.volume.measure == "percent"
+            and self.volume.to_ == 100.0
+        ):
+            summary.register_finished_book(self.audiobook.book)
 
         if duration:
             if duration > 24.0 * 3600.0:
