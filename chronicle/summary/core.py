@@ -42,6 +42,11 @@ class Summary:
     )
     """Writing something in seconds."""
 
+    write_words: defaultdict[Language, float] = field(
+        default_factory=lambda: defaultdict(float)
+    )
+    """Writing something in words."""
+
     speak: defaultdict[Language, float] = field(
         default_factory=lambda: defaultdict(float)
     )
@@ -95,6 +100,10 @@ class Summary:
     def register_write(self, duration: float, language: Language) -> None:
         """Register the number of seconds writing in language."""
         self.write[language] += duration
+
+    def register_write_words(self, words: float, language: Language) -> None:
+        """Register the number of words written in language."""
+        self.write_words[language] += words
 
     def register_speak(self, duration: float, language: Language) -> None:
         """Register the number of seconds speaking in language."""
