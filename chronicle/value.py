@@ -17,6 +17,7 @@ LANGUAGES: dict[str, tuple[str, str]] = {
     "es": ("Spanish", "#CE6C5E"),
     "fa": ("Persian", "#FF7F50"),
     "fr": ("French", "#274766"),
+    "ge": ("Georgian", "#FF7F50"),
     "he": ("Hebrew", "#FF7F50"),
     "hi": ("Hindi", "#FF7F50"),
     "hy": ("Armenian", "#FF7F50"),
@@ -39,9 +40,11 @@ LANGUAGES: dict[str, tuple[str, str]] = {
 
 WRITING_SYSTEM_NAMES = {
     "arab": "Arabic",
+    "armn": "Armenian",
     "deva": "Devanagari",
     "geor": "Georgian",
     "hang": "Hangul",
+    "kana": "Hiragana, Katakana, and Kanji",
 }
 
 
