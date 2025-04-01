@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from datetime import timedelta
 
 from chronicle.value import Language, Subject
-from chronicle.objects.core import Book, Service
+from chronicle.objects.core import Book, Object, Service
 from chronicle.time import format_delta
 
 __author__ = "Sergey Vartanov"
@@ -17,7 +17,7 @@ class Summary:
     )
     """Listening something in seconds."""
 
-    learn: defaultdict[str, float] = field(
+    learn: defaultdict[Subject, float] = field(
         default_factory=lambda: defaultdict(float)
     )
     """Learn something in seconds."""
@@ -93,6 +93,9 @@ class Summary:
     russian_twists: int = 0
     """Number of Russian twists performed."""
 
+    shows: set[Object] = field(default_factory=set)
+    """Shows watched."""
+
     def register_listen(self, duration: float, language: Language) -> None:
         """Register the number of seconds listened in language."""
         self.listen[language] += duration
@@ -150,6 +153,10 @@ class Summary:
     def register_work(self, duration: float) -> None:
         """Register working time in seconds."""
         self.work += duration
+
+    def register_show(self, show: Object) -> None:
+        """Register a show was watched."""
+        self.shows.add(show)
 
     def __str__(self) -> str:
         """Get human-readable text representation of the summary."""
