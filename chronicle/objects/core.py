@@ -411,6 +411,9 @@ class Video(ArtObject):
     subject: Subject | None = None
     """Categorised subject."""
 
+    def __hash__(self) -> int:
+        return hash(f"{self.title}/{self.language}/{self.wikidata_id}")
+
     arguments: ClassVar[Arguments] = (
         Arguments(["video"], "video")
         .add_argument("title")
@@ -421,7 +424,7 @@ class Video(ArtObject):
 
     @classmethod
     def from_value(cls, value: str) -> Self:
-        return cls(None, title=value)
+        return cls(value, title=value)
 
 
 @dataclass
