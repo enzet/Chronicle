@@ -518,8 +518,9 @@ class Book(Object):
         .add_argument("title", command_printer=str)
         .add_argument(
             "volume",
-            patterns=[re.compile(r"(\d*)p")],
+            patterns=[re.compile(r"(\d*\.\d*)p")],
             extractors=[lambda groups: float(groups(1))],
+            command_printer=lambda x: str(x) + "p",
         )
         .add_class_argument("language", Language)
         .add_class_argument("wikidata_id", WikidataId)

@@ -22,7 +22,6 @@ from chronicle.objects.core import (
     Concert,
     Opera,
     Service,
-    Standup,
     Video,
     Objects,
     Audiobook,
@@ -203,13 +202,26 @@ class ReadEvent(Event):
     subject: Subject | None = None
     """Subject category of the book (fiction, non-fiction, science, etc)."""
 
+    duration: Timedelta | None = None
+    """Duration of the reading session."""
+
     arguments: ClassVar[Arguments] = (
         Arguments(["read"], "read")
         .add_object_argument("book", Book)
         .add_class_argument("language", Language)
         .add_class_argument("volume", Volume)
         .add_class_argument("subject", Subject)
+        .add_class_argument("duration", Timedelta)
     )
+
+    def __post_init__(self) -> None:
+        if (
+            self.book
+            and self.book.volume is None
+            and self.volume
+            and self.volume.of
+        ):
+            self.book.volume = self.volume.of
 
     def get_language(self) -> Language:
         """Get language of the book."""
@@ -258,13 +270,25 @@ class ReadEvent(Event):
 
         # Register finished book.
         if (
-            self.volume
-            and self.volume.measure == "percent"
-            and self.volume.to_ == 100.0
-        ) or (
-            self.volume and self.volume.of and self.volume.to_ == self.volume.of
+            (
+                self.volume
+                and self.volume.measure == "percent"
+                and self.volume.to_ == 100.0
+            )
+            or (
+                self.volume
+                and self.book
+                and self.book.volume
+                and self.volume.to_ == self.book.volume
+            )
+            or (
+                self.volume
+                and self.volume.of
+                and self.volume.to_ == self.volume.of
+            )
         ):
-            summary.register_finished_book(self.book)
+            if self.book:
+                summary.register_finished_book(self.book)
 
         # Register reading pages.
         if pages is not None:
