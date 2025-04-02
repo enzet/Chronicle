@@ -1,34 +1,40 @@
+"""Harvest data from the Arc iOS application."""
+
 import json
 import shutil
 import subprocess
+from dataclasses import dataclass
 from pathlib import Path
+from typing import override
 
 from chronicle.harvest.core import Importer
 from chronicle.timeline import Timeline
 
 
+@dataclass
 class ArcImporter(Importer):
-    """
-    Importer for data from the Arc iOS application.
+    """Importer for data from the Arc iOS application.
 
     See https://apps.apple.com/us/app/arc-app-location-activity/id1063151918
     """
 
-    def __init__(self, path: Path, cache_path: Path) -> None:
-        """
-        :param path: path to directory with exported Arc data (directory with
-            the name `Export` that contains directories `GPX` and `JSON`)
-        """
-        self.path: Path = path
-        self.cache_path: Path = cache_path / "arc"
+    path: Path
+    """Path to directory with exported Arc data (directory with the name
+    `Export` that contains directories `GPX` and `JSON`)."""
 
+    cache_path: Path
+    """Path to directory to cache data."""
+
+    @override
     def import_data(self, timeline: Timeline) -> None:
         self.cache_path.mkdir(exist_ok=True)
 
         for path in (self.path / "JSON" / "Daily").iterdir():
             new_path = self.cache_path / path.name
             shutil.copyfile(path, new_path)
-            subprocess.run(["gzip", "--decompress", "--force", new_path])
+            subprocess.run(
+                ["gzip", "--decompress", "--force", new_path], check=True
+            )
 
         for path in self.cache_path.iterdir():
             with path.open() as input_file:

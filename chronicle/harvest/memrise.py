@@ -1,12 +1,17 @@
+"""Harvest data from Memrise."""
+
 import re
 from collections import defaultdict
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from html.parser import HTMLParser
 from pathlib import Path
+from typing import override
 
 from chronicle.event.common import LearnEvent
 from chronicle.event.core import Event
 from chronicle.harvest.core import Importer
+from chronicle.objects.core import Object, Service
 from chronicle.time import Moment, Time, Timedelta
 from chronicle.timeline import Timeline
 from chronicle.value import Subject
@@ -41,13 +46,15 @@ TIME_PATTERN: str = "%Y-%m-%d %H:%M:%S"
 
 
 class MemriseHTMLParser(HTMLParser):
-    def __init__(self):
+    """Parser for Memrise HTML data."""
+
+    def __init__(self) -> None:
         super().__init__()
         self.in_learning_sessions: bool = False
         self.in_td: bool = False
         self.td: int = -1
-        self.current_data = []
-        self.data = []
+        self.current_data: list[str | None] = []
+        self.data: list[list[str | None]] = []
 
     def handle_starttag(
         self, tag: str, attrs: list[tuple[str, str | None]]
@@ -84,32 +91,38 @@ class MemriseHTMLParser(HTMLParser):
                 self.data.append(self.current_data)
 
 
+@dataclass
 class MemriseImporter(Importer):
     """Importer for Memrise data."""
 
-    def __init__(self, path: Path):
-        self.path: Path = path
+    path: Path
+    """Path to the file containing Memrise data."""
 
+    @override
     def import_data(self, timeline: Timeline) -> None:
-        with self.path.open() as input_file:
+        service: Object = timeline.objects.get_object("@memrise")
+        if not isinstance(service, Service):
+            raise ValueError("Memrise service not found.")
+
+        with self.path.open(encoding="utf-8") as input_file:
             data = input_file.read()
 
         parser = MemriseHTMLParser()
         parser.feed(data)
 
-        actions = defaultdict(int)
+        actions: dict[str, int] = defaultdict(int)
 
         for (
             course_name,
-            level_title,
+            _,  # Level title.
             start_time,
             completion_time,
             tests,
-            score,
+            _,  # Score.
         ) in parser.data:
             if not course_name or not start_time or not completion_time:
                 continue
-            course_name: str = (
+            course_name = (
                 course_name.replace("-", " ")
                 .replace("_", " ")
                 .replace("  ", " ")
@@ -144,13 +157,17 @@ class MemriseImporter(Importer):
                     timedelta(seconds=float(tests) * 16.0)
                 )
 
+            subject: Subject | None = Subject.from_string(course_name)
+            if not subject:
+                raise ValueError(f"Unknown course `{course_name}`.")
+
             event: Event = LearnEvent(
                 Time.from_moments(
                     Moment.from_datetime(start), Moment.from_datetime(end)
                 ),
-                subject=Subject.from_string(course_name),
-                service=timeline.objects.get_object("memrise"),
-                actions=tests,
+                subject=subject,
+                service=service,
+                actions=float(tests),
                 duration=duration,
             )
             timeline.events.append(event)

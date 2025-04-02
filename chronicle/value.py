@@ -1,6 +1,6 @@
 import re
 from dataclasses import dataclass
-from typing import Any, Callable, ClassVar, Literal
+from typing import Any, Callable, ClassVar, Literal, Self
 
 from chronicle.errors import ChronicleValueException
 from chronicle.time import INTERVAL_PATTERN, Timedelta
@@ -55,7 +55,7 @@ class Value:
     prefix: ClassVar[str] = None
 
     @classmethod
-    def from_string(cls, string: str) -> "Value":
+    def from_string(cls, string: str) -> Self:
         for i, pattern in enumerate(cls.patterns):
             if match := pattern.match(string):
                 return cls.extractors[i](match.group)

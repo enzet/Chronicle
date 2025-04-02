@@ -1,7 +1,7 @@
 import logging
 import re
 from dataclasses import dataclass
-from typing import ClassVar
+from typing import ClassVar, override
 
 from chronicle.argument import Arguments
 from chronicle.event.core import Event
@@ -69,6 +69,7 @@ class CookEvent(Event):
         "dish"
     )
 
+    @override
     def register_summary(self, summary: Summary) -> None:
         """Register unique dish."""
         if self.dish:
@@ -143,6 +144,7 @@ class LearnEvent(Event):
         .add_argument("actions", prefix="actions:")
     )
 
+    @override
     def register_summary(self, summary: Summary) -> None:
         if not self.subject:
             raise ChronicleValueException(f"Event {self} doesn't have subject.")
@@ -186,6 +188,7 @@ class WriteEvent(Event):
         .add_class_argument("tags", Tags)
     )
 
+    @override
     def register_summary(self, summary: Summary) -> None:
         if self.language:
             if not self.get_duration() and self.volume:
@@ -253,6 +256,7 @@ class SpeakEvent(Event):
         .add_class_argument("duration", Timedelta)
     )
 
+    @override
     def register_summary(self, summary: Summary) -> None:
         if self.language:
             summary.register_speak(self.get_duration(), self.language)
@@ -308,35 +312,25 @@ class ReviewEvent(Event):
 class IronEvent(Event):
     """Event representing ironing clothes."""
 
-    pass
-
 
 @dataclass
 class ResearchEvent(Event):
     """Event representing doing research."""
-
-    pass
 
 
 @dataclass
 class VoteEvent(Event):
     """Event representing voting."""
 
-    pass
-
 
 @dataclass
 class SiteDefectsEvent(Event):
     """Event representing finding site defects."""
 
-    pass
-
 
 @dataclass
 class VomitEvent(Event):
     """Event representing vomiting."""
-
-    pass
 
 
 @dataclass
@@ -458,10 +452,12 @@ class ProgramEvent(Event):
         .add_class_argument("tags", Tags)
     )
 
+    @override
     def register_summary(self, summary: Summary) -> None:
         if self.project:
             if "work" in self.project.tags:
-                summary.register_work(self.get_duration())
+                if duration := self.get_duration():
+                    summary.register_work(duration)
         else:
             logging.warning(
                 "Unknown project `%s` in `%s`.", self.project, self.source
@@ -473,8 +469,10 @@ class SleepEvent(Event):
 
     arguments: ClassVar[Arguments] = Arguments(["sleep"], "sleep")
 
+    @override
     def register_summary(self, summary: Summary) -> None:
-        summary.register_sleep(self.time.get_duration())
+        if duration := self.get_duration():
+            summary.register_sleep(duration)
 
     def get_color(self) -> str:
         return "#AACCCC"

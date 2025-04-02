@@ -1,7 +1,7 @@
 """Events related to sports and physical activity."""
 
 from dataclasses import dataclass
-from typing import ClassVar
+from typing import ClassVar, override
 
 from chronicle.argument import Arguments
 from chronicle.event.core import Event
@@ -149,6 +149,11 @@ class HighKneeEvent(SportEvent):
 
 @dataclass
 class CountableSportEvent(SportEvent):
+    """Event representing a countable sport activity.
+
+    Kind of activity one can count times of.
+    """
+
     count: int | None = None
     """The number of rounds."""
 
@@ -156,6 +161,7 @@ class CountableSportEvent(SportEvent):
         ["countable"], "countable"
     ).add_argument("count", loader=lambda value, _: int(value), is_insert=True)
 
+    @override
     def register_summary(self, summary: Summary) -> None:
         name: str = self.arguments.command
         if name == "abs":

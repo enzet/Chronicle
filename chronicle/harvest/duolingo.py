@@ -1,10 +1,15 @@
+"""Harvest data from Duolingo."""
+
 import csv
 from collections import defaultdict
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Iterator
 
 from chronicle.event.common import LearnEvent
 from chronicle.harvest.core import Importer
+from chronicle.objects.core import Object, Service
 from chronicle.time import Moment, Time, Timedelta
 from chronicle.timeline import Timeline
 from chronicle.value import Subject
@@ -47,11 +52,12 @@ def approximate_duration(xp: int, date: datetime) -> Timedelta:
             return Timedelta(delta=timedelta(seconds=xp * 20))
 
 
+@dataclass
 class DuolingoImporter(Importer):
     """Importer for Duolingo data."""
 
-    def __init__(self, file_path: Path):
-        self.file_path: Path = file_path
+    file_path: Path
+    """Path to the CSV file containing Duolingo data."""
 
     def import_data(self, timeline: Timeline) -> None:
         """Import Duolingo data from a CSV file.
@@ -60,8 +66,12 @@ class DuolingoImporter(Importer):
         date, other columns are XP values. First row is a header, containing
         course identifiers.
         """
-        with self.file_path.open() as input_file:
-            reader: csv.reader = csv.reader(input_file)
+        service: Object = timeline.objects.get_object("@duolingo")
+        if not isinstance(service, Service):
+            raise ValueError("Duolingo service not found.")
+
+        with self.file_path.open(encoding="utf-8") as input_file:
+            reader: Iterator[list[str]] = csv.reader(input_file)
             header: list[str] = [x.strip() for x in next(reader)]
 
             last_date: datetime | None = None
@@ -91,13 +101,13 @@ class DuolingoImporter(Importer):
                     course_value: int = int(value)
                     actions: int = course_value - last_values.get(course_id, 0)
                     if last_date and actions > 0:
-                        start: Moment | None = Moment.from_datetime(last_date)
-                        end: Moment | None = Moment.from_datetime(date)
+                        start: Moment = Moment.from_datetime(last_date)
+                        end: Moment = Moment.from_datetime(date)
                         time: Time = Time.from_moments(start, end)
                         event: LearnEvent = LearnEvent(
                             time,
                             subject=subject,
-                            service=timeline.objects.get_object("@duolingo"),
+                            service=service,
                             actions=actions,
                             duration=approximate_duration(actions, date),
                         )
@@ -108,14 +118,15 @@ class DuolingoImporter(Importer):
                 last_date = date
 
 
+@dataclass
 class DuomeImporter(Importer):
     """Importer for Duolingo data using Duome.
 
     See https://duome.eu
     """
 
-    def __init__(self, file_path: Path):
-        self.file_path: Path = file_path
+    file_path: Path
+    """Path to the file containing Duolingo data."""
 
     def import_data(self, timeline: Timeline) -> None:
         """Import Duolingo data from a file.
@@ -133,10 +144,13 @@ class DuomeImporter(Importer):
          Norwegian W 21 L 5 XP 390 +60 XP to next level
         ```
         """
+        service: Object = timeline.objects.get_object("@duolingo")
+        if not isinstance(service, Service):
+            raise ValueError("Duolingo service not found.")
 
         data: dict[str, list[tuple[datetime, int]]] = defaultdict(list)
 
-        with self.file_path.open() as input_file:
+        with self.file_path.open(encoding="utf-8") as input_file:
             for line in input_file.readlines():
                 line = line[:-1]
                 if not line:
@@ -155,10 +169,14 @@ class DuomeImporter(Importer):
             previous_value: int | None = None
 
             for date, value in values:
-                if previous_date and (value - previous_value) > 0:
+                if (
+                    previous_date
+                    and previous_value
+                    and (value - previous_value) > 0
+                ):
                     actions: int = value - previous_value
-                    start: Moment | None = Moment.from_datetime(previous_date)
-                    end: Moment | None = Moment.from_datetime(date)
+                    start: Moment = Moment.from_datetime(previous_date)
+                    end: Moment = Moment.from_datetime(date)
                     time: Time = Time.from_moments(start, end)
                     subject: Subject | None = None
                     for course in courses:
@@ -166,11 +184,11 @@ class DuomeImporter(Importer):
                             subject = course[2]
                             break
                     if not subject:
-                        raise Exception(f"Unknown course `{course_name}`.")
+                        raise ValueError(f"Unknown course `{course_name}`.")
                     event: LearnEvent = LearnEvent(
                         time,
                         subject=subject,
-                        service=timeline.objects.get_object("@duolingo"),
+                        service=service,
                         actions=actions,
                         duration=approximate_duration(actions, date),
                     )

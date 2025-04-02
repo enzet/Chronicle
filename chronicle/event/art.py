@@ -114,6 +114,7 @@ class ListenPodcastEvent(Event):
             return self.podcast.language
         return None
 
+    @override
     def register_summary(self, summary: Summary) -> None:
         language: Language | None = self.get_language()
 
@@ -230,12 +231,14 @@ class ReadEvent(Event):
 
     def get_language(self) -> Language:
         """Get language of the book."""
+
         if self.language:
             return self.language
         if self.book and self.book.language:
             return self.book.language
         raise ChronicleValueException(f"Event {self} has no language.")
 
+    @override
     def register_summary(self, summary: Summary) -> None:
         # Use language from the event or language of the book.
         language: Language
@@ -337,6 +340,7 @@ class StandupEvent(Event):
         .add_object_argument("place", Place)
     )
 
+    @override
     def register_summary(self, summary: Summary) -> None:
         summary.register_show(Standup(self.title, artist=self.artist))
 
@@ -390,6 +394,7 @@ class WatchEvent(Event):
         .add_class_argument("subject", Subject)
     )
 
+    @override
     def register_summary(self, summary: Summary) -> None:
         language: Language | None = (
             self.subtitles if self.subtitles else self.language
@@ -460,6 +465,7 @@ class ListenAudiobookEvent(Event):
         """Get language of the audiobook."""
         return self.audiobook.get_language() if self.audiobook else None
 
+    @override
     def register_summary(self, summary: Summary) -> None:
         """Register this audiobook event in the summary statistics."""
         if not self.interval and not self.volume:
@@ -520,6 +526,7 @@ class BalletEvent(Event):
         ["ballet"], "ballet"
     ).add_object_argument("ballet", Ballet)
 
+    @override
     def register_summary(self, summary: Summary) -> None:
         summary.register_show(self.ballet)
 
@@ -540,6 +547,7 @@ class ConcertEvent(Event):
         .add_argument("musician", prefix="by")
     )
 
+    @override
     def register_summary(self, summary: Summary) -> None:
         if self.concert:
             summary.register_show(self.concert)
@@ -558,6 +566,7 @@ class OperaEvent(Event):
         ["opera"], "opera"
     ).add_object_argument("opera", Opera)
 
+    @override
     def register_summary(self, summary: Summary) -> None:
         summary.register_show(self.opera)
 
