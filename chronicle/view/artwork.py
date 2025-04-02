@@ -1,17 +1,55 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
+import re
+from typing import Callable, Optional, Union
 from chronicle.event.art import (
     ListenAudiobookEvent,
     ListenPodcastEvent,
     ReadEvent,
+    WatchEvent,
 )
 from chronicle.event.core import Event
-from chronicle.objects.core import Book, Podcast
+from chronicle.objects.core import Book, Podcast, Video
 from chronicle.timeline import Timeline
+from chronicle.util import filter_by_year, empty_filter
 from rich.console import Console
 from rich.table import Table
 from rich import box
 from chronicle.value import Language, Volume
+
+
+def format_episodes(episodes: list[Union[int, str]]) -> str:
+    """Get string representation of episodes."""
+
+    integer_episodes: list[int] = []
+    other_episodes: list[str] = []
+
+    for episode in episodes:
+        if isinstance(episode, int) or episode.isdigit():
+            integer_episodes.append(int(episode))
+        else:
+            other_episodes.append(episode)
+
+    result: str = ""
+
+    if integer_episodes:
+        # If all episodes are numbers, mark played episodes with "×" sign.
+        min_episode: int = min(integer_episodes)
+        max_episode: int = max(integer_episodes)
+
+        result += f"[grey]{min_episode} -[/grey] "
+
+        result += "".join(
+            "×" if x in integer_episodes else "-"
+            for x in range(min_episode, max_episode + 1)
+        )
+        result += f" [grey]- {max_episode}[/grey]"
+
+    if other_episodes:
+        # If episodes are not numbers, just join them with commas.
+        result += ", " + ", ".join(sorted(other_episodes))
+
+    return result
 
 
 @dataclass
@@ -19,30 +57,6 @@ class PodcastViewer:
     """Viewer of podcasts."""
 
     timeline: Timeline
-
-    @staticmethod
-    def get_episodes(episodes: list[str]) -> str:
-        """Get string representation of episodes."""
-
-        if all(episode.isdigit() for episode in episodes):
-            # If all episodes are numbers, mark played episodes with "×" sign.
-            min_episode: int = min(int(episode) for episode in episodes)
-            max_episode: int = max(int(episode) for episode in episodes)
-
-            result: str = ""
-            result += f"{min_episode} - "
-
-            result += "".join(
-                "×" if str(x) in episodes else " "
-                for x in range(min_episode, max_episode + 1)
-            )
-            result += f" - {max_episode}"
-            return result
-        else:
-            # If episodes are not numbers, just join them with commas.
-            return ", ".join(
-                sorted(episodes, key=lambda x: int(x) if x.isdigit() else 0)
-            )
 
     def print_podcasts(self) -> None:
         """Print podcasts."""
@@ -52,7 +66,7 @@ class PodcastViewer:
         for event in sorted(
             self.timeline.events, key=lambda e: e.time.get_lower()
         ):
-            if isinstance(event, ListenPodcastEvent):
+            if isinstance(event, ListenPodcastEvent) and event.podcast:
                 podcasts[event.podcast].append(event)
 
         for podcast, events in podcasts.items():
@@ -66,13 +80,13 @@ class PodcastViewer:
                     seasons.items(), key=lambda x: x[0]
                 ):
                     Console().print(
-                        f"  Season {season}: {self.get_episodes(episodes)}"
+                        f"  Season {season}: {format_episodes(episodes)}"
                     )
             else:
                 episodes = [str(event.episode) for event in events]
                 Console().print(
                     f"[bold]{podcast.title}[/bold]: "
-                    f"{self.get_episodes(episodes)}"
+                    f"{format_episodes(episodes)}"
                 )
 
 
@@ -166,22 +180,79 @@ class BookViewer:
 
     languages: set[Language] = field(default_factory=set)
 
-    def print_books(self) -> None:
-        books: dict[Book, list[Event]] = defaultdict(list)
+    def print_finished_books(self, console, arguments) -> None:
+        if arguments.year == 0:
+            filter_ = empty_filter
+            title = "Finished books"
+        else:
+            filter_ = filter_by_year(arguments.year)
+            title = f"Books finished in {arguments.year}"
 
-        table: Table = Table(box=box.ROUNDED, title="Books")
-        table.add_column("Title", width=50)
-        table.add_column("Volumes")
+        summary = self.timeline.get_summary(filter_=filter_)
 
-        for event in sorted(
-            self.timeline.events, key=lambda e: e.time.get_lower()
+        rows: list[str] = []
+        for index, book in enumerate(
+            sorted(
+                summary.finished_books,
+                key=lambda x: int(x.volume) if x.volume else 0,
+                reverse=True,
+            )
         ):
+            rows.append(
+                [
+                    str(index + 1),
+                    book.title,
+                    str(int(book.volume)) if book.volume else "",
+                ]
+            )
+        match arguments.style:
+            case "minimal":
+                table_style = box.SIMPLE_HEAD
+            case "ascii":
+                table_style = box.ASCII
+            case _:
+                table_style = box.ROUNDED
+        table = Table(
+            box=table_style,
+            title=title,
+        )
+        table.add_column("")
+        table.add_column("Title")
+        table.add_column("Pages", justify="right")
+        for row in rows:
+            table.add_row(*row)
+
+        console.print()
+        console.print(table)
+        console.print()
+
+    def get_books(self, filter_: Callable) -> dict[Book, list[Event]]:
+        books: dict[Book, list[Event]] = defaultdict(list)
+        for event in self.timeline.get_events(filter_=filter_):
             if isinstance(event, ReadEvent) and event.book:
                 if not self.languages or event.get_language() in self.languages:
                     books[event.book].append(event)
             if isinstance(event, ListenAudiobookEvent) and event.audiobook.book:
                 if not self.languages or event.get_language() in self.languages:
                     books[event.audiobook.book].append(event)
+        return books
+
+    def print_books(self, console: Console, arguments) -> None:
+        if arguments.title:
+            pattern = re.compile(arguments.title)
+            filter_ = (
+                lambda x: isinstance(x, ReadEvent)
+                and x.book
+                and pattern.match(x.book.title)
+            )
+        else:
+            filter_ = empty_filter
+
+        table: Table = Table(box=box.ROUNDED, title="Books")
+        table.add_column("Title", width=50)
+        table.add_column("Volumes")
+
+        books: dict[Book, list[Event]] = self.get_books(filter_)
 
         for book, events in sorted(
             books.items(), key=lambda x: x[0].volume if x[0].volume else 0
@@ -204,5 +275,89 @@ class BookViewer:
                     for v in sorted(volumes, key=lambda v: v.from_)
                 ),
             )
+
+        Console().print(table)
+
+    def show_book_volume(self, arguments) -> None:
+        print(arguments)
+        books: dict[Book, list[Event]] = self.get_books(
+            lambda x: arguments.request.match(x.title)
+        )
+        for book, events in books.items():
+            if not book:
+                continue
+            volumes: set[Volume] = {
+                event.volume
+                for event in events
+                if event.volume
+                and event.volume.from_ is not None
+                and event.volume.to_ is not None
+            }
+            volumes = {normalize(volume, book) for volume in volumes}
+            volumes = union_volumes(volumes)
+            print(f"{book.title}: {volumes}")
+
+
+def get_sort_key(title: str) -> int:
+    """Remove article from title.
+
+    E.g. "The Matrix" -> "Matrix", "A Matrix" -> "Matrix".
+    """
+
+    for prefix in ["The ", "A ", "An ", "Le ", "La ", "Les ", "L'"]:
+        if title.startswith(prefix):
+            return title[len(prefix) :]
+
+    return title
+
+
+@dataclass
+class VideoViewer:
+    """Viewer of videos."""
+
+    timeline: Timeline
+
+    languages: set[Language] = field(default_factory=set)
+
+    def print_videos(self) -> None:
+        videos: dict[Video, list[Event]] = defaultdict(list)
+
+        table: Table = Table(box=box.ROUNDED, title="Videos")
+        table.add_column("Title")
+        table.add_column("Episodes")
+
+        for event in sorted(
+            self.timeline.events, key=lambda e: e.time.get_lower()
+        ):
+            if isinstance(event, WatchEvent) and event.video:
+                if not self.languages or event.get_language() in self.languages:
+                    videos[event.video].append(event)
+
+        for video, events in sorted(
+            videos.items(), key=lambda x: get_sort_key(x[0].title)
+        ):
+            seasons: dict[Optional[int], list[Union[int, str]]] = defaultdict(
+                list
+            )
+            for event in events:
+                if event.episode:
+                    seasons[event.season].append(event.episode)
+
+            if not seasons:
+                episodes_text = ""
+            elif len(seasons) > 0:
+                episodes_text = ""
+                for season, episodes in sorted(
+                    seasons.items(), key=lambda x: str(x[0])
+                ):
+                    print(video, episodes)
+                    if episodes_text:
+                        episodes_text += "\n"
+                    episodes_text += f"S {season}: {format_episodes(episodes)}"
+            else:
+                episodes = [str(event.episode) for event in events]
+                episodes_text = f"{format_episodes(episodes)}"
+
+            table.add_row(video.title, episodes_text)
 
         Console().print(table)
