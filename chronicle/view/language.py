@@ -1,6 +1,6 @@
 import argparse
 from collections import defaultdict
-from chronicle.objects.core import Service
+from chronicle.objects.core import Object, Service
 from chronicle.summary.core import Summary
 from chronicle.timeline import Timeline
 
@@ -8,7 +8,7 @@ from rich import box
 from rich.console import Console
 from rich.table import Table
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from chronicle.value import Language
 
@@ -32,23 +32,16 @@ class LanguageLearningViewer:
 
     timeline: Timeline
 
-    def process_command(self, command: str) -> None:
-        parser: argparse.ArgumentParser = argparse.ArgumentParser()
-        sub_parsers: argparse.ArgumentParser = parser.add_subparsers(
-            dest="command"
-        )
+    def process_command(self, arguments: argparse.Namespace) -> None:
+        """Process language command."""
 
-        sub_parsers.add_parser("table")
-
-        plot_parser: argparse.ArgumentParser = sub_parsers.add_parser("plot")
-        plot_parser.add_argument("--stack", action="store_true")
-
-        args = parser.parse_args(command.split())
-
-        # filter_ = Timeline.get_filter(
-        #     from_date=datetime.now() - timedelta(days=30), to_date=None
-        # )
-        filter_ = None
+        if arguments.interval == 0:
+            filter_ = None
+        else:
+            filter_ = Timeline.get_filter(
+                from_date=datetime.now() - timedelta(days=arguments.interval),
+                to_date=None,
+            )
         total_summary: Summary = self.timeline.get_summary(filter_)
 
         keys: set[Language] = (
@@ -59,15 +52,11 @@ class LanguageLearningViewer:
         )
         languages: set[Language] = {x for x in keys if x}
         excluded_languages: set[Language] = {
-            Language("ru"),
-            Language("uk"),
-            Language("be"),
-            Language("en"),
+            Language(x) for x in arguments.exclude_languages
         }
 
-        services: list[Service] = [
-            self.timeline.objects.get_object(x)
-            for x in ("emmio_service", "duolingo", "memrise")
+        services: list[Object] = [
+            self.timeline.objects.get_object(x) for x in arguments.services
         ]
         languages = {x for x in languages if x not in excluded_languages}
         xs, data, language_data = self.construct_data(
@@ -93,12 +82,22 @@ class LanguageLearningViewer:
             total__.append(s)
         data["total__"] = total__
 
-        match args.command:
+        match arguments.form:
             case "table":
-                self.print_table(languages, services, data, total_threshold=8.0)
+                self.print_table(
+                    languages,
+                    services,
+                    data,
+                    total_threshold=arguments.margin,
+                    style=arguments.style,
+                    colors=arguments.colors,
+                )
             case "plot":
                 self.plot_languages(
-                    xs, language_data, args.stack, total_threshold=8.0
+                    xs,
+                    language_data,
+                    arguments.stack,
+                    total_threshold=arguments.margin,
                 )
 
     def construct_data(
@@ -143,22 +142,25 @@ class LanguageLearningViewer:
                 else:
                     data[f"{language.code}_Learn"].append(0.0)
 
-                data[f"{language.code}_Listen"].append(
-                    summary.listen.get(language, 0.0) / 3600.0
-                )
-                language_total += summary.listen.get(language, 0.0) / 3600.0
-                data[f"{language.code}_Watch"].append(
-                    summary.watch.get(language, 0.0) / 3600.0
-                )
-                language_total += summary.watch.get(language, 0.0) / 3600.0
-                data[f"{language.code}_Read"].append(
-                    summary.read.get(language, 0.0) / 3600.0
-                )
-                language_total += summary.read.get(language, 0.0) / 3600.0
-                data[f"{language.code}_Write"].append(
-                    summary.write.get(language, 0.0) / 3600.0
-                )
-                language_total += summary.write.get(language, 0.0) / 3600.0
+                listen: float = summary.listen.get(language, 0.0) / 3600.0
+                data[f"{language.code}_Listen"].append(listen)
+                language_total += listen
+
+                watch: float = summary.watch.get(language, 0.0) / 3600.0
+                data[f"{language.code}_Watch"].append(watch)
+                language_total += watch
+
+                read: float = 0.0
+                read += summary.read.get(language, 0.0) / 3600.0
+                data[f"{language.code}_Read"].append(read)
+                language_total += read
+
+                write: float = 0.0
+                write += summary.write.get(language, 0.0) / 3600.0
+                write += summary.write_words.get(language, 0.0) * 2.0 / 3600.0
+                language_total += write
+                data[f"{language.code}_Write"].append(write)
+
                 data[f"{language.code}_Speak"].append(
                     summary.speak.get(language, 0.0) / 3600.0
                 )
@@ -204,23 +206,38 @@ class LanguageLearningViewer:
         services: list[Service],
         data,
         total_threshold: float = 0.0,
+        style: str = "normal",
+        colors: str = "light",
     ) -> None:
-        methods = ["Read", "Watch", "Listen", "Write", "Speak", "Learn"] + [
-            x.name for x in services
-        ]
+        methods: list[str] = [
+            "Read",
+            "Watch",
+            "Listen",
+            "Write",
+            "Speak",
+            "Learn",
+        ] + [x.name for x in services]
 
         total: float = 0
 
+        if style == "minimal":
+            table_style = box.SIMPLE_HEAD
+        elif style == "ascii":
+            table_style = box.ASCII
+        else:
+            table_style = box.ROUNDED
+
         table: Table = Table(
-            box=box.ROUNDED, title="Hours spent on language learning"
+            box=table_style, title="Hours spent on language learning"
         )
-        table.add_column("")
+
+        table.add_column("Language")
         for method in methods:
             table.add_column(method, justify="right")
         table.add_column("Total", justify="right")
 
-        rows = []
         max_: float = 0.0
+        rows: list[str] = []
 
         for language in languages:
             row: list[str] = [language.to_string()]
@@ -229,11 +246,11 @@ class LanguageLearningViewer:
                 value: float = data[language.code + "_" + method][-1]
                 if value:
                     max_ = max(max_, value)
-                    row.append(f"{value:.0f}")
+                    row.append(f"{value:.1f}")
                     row_total += value
                 else:
                     row.append("")
-            row.append(f"{row_total:.0f}")
+            row.append(f"{row_total:.1f}")
             if row_total > total_threshold:
                 rows.append(row)
             total += row_total
@@ -246,21 +263,24 @@ class LanguageLearningViewer:
         rows = sorted(rows, key=lambda x: -float(x[-1]))
 
         # TODO: refactor or remove. It's just makes output more colorful.
-        for row in rows:
-            for index, value in enumerate(row[1:]):
-                if value:
-                    h = hex(255 - int(min(float(value), max_) / max_ * 255))[2:]
-                    row[index + 1] = f"[on #FFFF{h:02}]{value}[/]"
+        if colors == "light":
+            for row in rows:
+                for index, value in enumerate(row[1:]):
+                    if value:
+                        h = hex(
+                            255 - int(min(float(value), max_) / max_ * 255)
+                        )[2:]
+                        row[index + 1] = f"[on #FFFF{h:02}]{value}[/]"
 
         for row in rows:
             table.add_row(*row)
 
         table.add_row(
             "[bold]Total[/bold]",
-            *[f"[bold]{totals[method]:.0f}[/bold]" for method in methods],
-            f"[bold]{total:.0f}[/bold]",
+            *[f"[bold]{totals[method]:.1f}[/bold]" for method in methods],
+            f"[bold]{total:.1f}[/bold]",
         )
 
         print()
-        Console().print(table)
+        Console().print(table, justify="center")
         print()
