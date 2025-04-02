@@ -1,8 +1,9 @@
-from datetime import datetime, timedelta
 import json
-from pathlib import Path
 import re
+from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Any
+
 from chronicle.event.art import (
     ListenAudiobookEvent,
     ListenMusicEvent,
@@ -16,7 +17,6 @@ from chronicle.objects.core import Audiobook, Book, Podcast, Video
 from chronicle.time import Context, Moment, Time, Timedelta
 from chronicle.timeline import Timeline
 from chronicle.value import ChronicleValueException, Interval, Language, Volume
-
 
 OLD_TIME_FORMAT: str = "%d.%m.%Y %H:%M"
 
@@ -167,8 +167,7 @@ class OldImporter(Importer):
                         volume = Volume(value=structure["size"])
                     elif "from" in structure and "to" in structure:
                         volume = Volume(
-                            from_=structure["from"],
-                            to_=structure["to"],
+                            from_=structure["from"], to_=structure["to"]
                         )
                     else:
                         return None

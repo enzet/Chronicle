@@ -6,6 +6,21 @@ from typing import ClassVar
 
 from chronicle.argument import Arguments
 from chronicle.event.core import Event
+from chronicle.objects.core import (
+    Audiobook,
+    Ballet,
+    Book,
+    Concert,
+    Objects,
+    Opera,
+    Place,
+    Podcast,
+    Service,
+    Standup,
+    Video,
+)
+from chronicle.summary.core import Summary
+from chronicle.time import Timedelta
 from chronicle.value import (
     AudiobookVolume,
     ChronicleValueException,
@@ -16,21 +31,6 @@ from chronicle.value import (
     Subject,
     Volume,
 )
-from chronicle.objects.core import (
-    Ballet,
-    Book,
-    Concert,
-    Opera,
-    Place,
-    Service,
-    Standup,
-    Video,
-    Objects,
-    Audiobook,
-    Podcast,
-)
-from chronicle.summary.core import Summary
-from chronicle.time import Timedelta
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"

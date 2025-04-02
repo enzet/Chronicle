@@ -125,10 +125,10 @@ class Subject(Value):
     subject: list[str]
 
     patterns: ClassVar[list[re.Pattern]] = [
-        re.compile(r"\/(?P<subjects>[a-z0-9_/]+)"),
+        re.compile(r"\/(?P<subjects>[a-z0-9_/]+)")
     ]
     extractors: ClassVar[list[Callable]] = [
-        lambda groups: Subject(groups("subjects").split("/")),
+        lambda groups: Subject(groups("subjects").split("/"))
     ]
 
     def is_language(self) -> bool:
@@ -457,7 +457,7 @@ class AudiobookVolume:
     """
 
     patterns: ClassVar[list[re.Pattern]] = [
-        re.compile(r"(?P<from>\d+(\.\d*)?)/(?P<to>\d+(\.\d*)?)%"),
+        re.compile(r"(?P<from>\d+(\.\d*)?)/(?P<to>\d+(\.\d*)?)%")
     ]
 
     extractors: ClassVar[list[Callable]] = [
@@ -466,7 +466,7 @@ class AudiobookVolume:
             to_=float(groups("to")),
             measure="percent",
             of=100.0,
-        ),
+        )
     ]
 
     def __hash__(self) -> int:

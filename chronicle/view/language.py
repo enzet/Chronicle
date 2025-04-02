@@ -1,28 +1,19 @@
 import argparse
 from collections import defaultdict
-from chronicle.objects.core import Object, Service
-from chronicle.summary.core import Summary
-from chronicle.timeline import Timeline
+from dataclasses import dataclass
+from datetime import datetime, timedelta
 
 from rich import box
 from rich.console import Console
 from rich.table import Table
 
-from datetime import datetime, timedelta
-
+from chronicle.objects.core import Object, Service
+from chronicle.summary.core import Summary
+from chronicle.timeline import Timeline
 from chronicle.value import Language
 
-from dataclasses import dataclass
-
-
-DARK_COLOR_SCHEME = {
-    "background": "#000000",
-    "accent": "#EEEEEE",
-}
-LIGHT_COLOR_SCHEME = {
-    "background": "#FFFFFF",
-    "accent": "#000000",
-}
+DARK_COLOR_SCHEME = {"background": "#000000", "accent": "#EEEEEE"}
+LIGHT_COLOR_SCHEME = {"background": "#FFFFFF", "accent": "#000000"}
 COLOR_SCHEME = DARK_COLOR_SCHEME
 
 

@@ -1,6 +1,6 @@
+import re
 from dataclasses import dataclass
 from typing import ClassVar
-import re
 
 from chronicle.argument import Arguments
 from chronicle.objects.core import Thing

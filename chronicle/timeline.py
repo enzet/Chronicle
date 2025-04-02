@@ -1,25 +1,25 @@
 import logging
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
 from re import Pattern, compile
 from typing import Callable
 
 import matplotlib.pyplot as plt
-from rich.table import Table
 from rich import box
-from dataclasses import dataclass
+from rich.table import Table
 
+from chronicle.errors import ChronicleValueException
 from chronicle.event.common import PayEvent, SleepEvent
+from chronicle.event.core import Event
 from chronicle.event.place import PlaceEvent
 from chronicle.event.sport import MoveEvent, SportEvent
-from chronicle.summary.core import Summary
 from chronicle.event.transport import TransportEvent
 from chronicle.objects.clothes import Clothes
-from chronicle.time import Context, Time, MalformedTime, humanize_delta
-from chronicle.objects.core import Medication, Thing, Objects
-from chronicle.event.core import Event
+from chronicle.objects.core import Medication, Objects, Thing
 from chronicle.serialize import fill
-from chronicle.errors import ChronicleValueException
+from chronicle.summary.core import Summary
+from chronicle.time import Context, MalformedTime, Time, humanize_delta
 
 PYDANTIC: bool = False
 

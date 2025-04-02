@@ -7,13 +7,12 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
-from chronicle.errors import ChronicleObjectNotFoundException
-from chronicle.value import Interval, Tags
-
 from chronicle.argument import Arguments
+from chronicle.errors import ChronicleObjectNotFoundException
 from chronicle.objects.core import Objects
 from chronicle.summary.core import Summary
 from chronicle.time import Time, Timedelta
+from chronicle.value import Interval, Tags
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"

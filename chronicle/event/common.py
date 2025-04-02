@@ -5,6 +5,9 @@ from typing import ClassVar
 
 from chronicle.argument import Arguments
 from chronicle.event.core import Event
+from chronicle.objects.core import Object, Person, Project, Service
+from chronicle.summary.core import Summary
+from chronicle.time import Timedelta
 from chronicle.value import (
     ChronicleValueException,
     Cost,
@@ -14,10 +17,6 @@ from chronicle.value import (
     Tags,
     Volume,
 )
-from chronicle.objects.core import Object, Person, Project, Service
-from chronicle.summary.core import Summary
-from chronicle.time import Timedelta
-
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
@@ -383,10 +382,7 @@ class DrinkEvent(Event):
         .add_argument(
             "amount",
             patterns=[re.compile(r"(\d*\.\d*)l"), re.compile(r"(\d*)ml")],
-            extractors=[
-                lambda x: float(x(1)),
-                lambda x: float(x(1)) / 1000,
-            ],
+            extractors=[lambda x: float(x(1)), lambda x: float(x(1)) / 1000],
             command_printer=lambda x: f"{x}l",
         )
     )

@@ -1,6 +1,7 @@
-from dataclasses import dataclass, field
 import re
+from dataclasses import dataclass, field
 from typing import ClassVar
+
 from chronicle.argument import Arguments
 from chronicle.event.core import Event
 from chronicle.objects.core import Person, Place, Service
@@ -21,11 +22,9 @@ class TransportEvent(Event):
         Arguments(["transport"], "transport")
         .add_argument(
             "places",
-            patterns=[
-                re.compile(r"@[a-zA-Z0-9_]+(/@[a-zA-Z0-9_]+)+"),
-            ],
+            patterns=[re.compile(r"@[a-zA-Z0-9_]+(/@[a-zA-Z0-9_]+)+")],
             extractors=[
-                lambda groups: [Place(x) for x in groups(0).split("/")],
+                lambda groups: [Place(x) for x in groups(0).split("/")]
             ],
         )
         .add_argument(

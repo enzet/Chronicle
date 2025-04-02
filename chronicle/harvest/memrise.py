@@ -7,10 +7,9 @@ from pathlib import Path
 from chronicle.event.common import LearnEvent
 from chronicle.event.core import Event
 from chronicle.harvest.core import Importer
-from chronicle.time import Time, Moment, Timedelta
+from chronicle.time import Moment, Time, Timedelta
 from chronicle.timeline import Timeline
 from chronicle.value import Subject
-
 
 LANGUAGE_NAMES: dict[str, tuple[str, ...]] = {
     "/writing/armn": ("армянский алфавит",),
@@ -147,8 +146,7 @@ class MemriseImporter(Importer):
 
             event: Event = LearnEvent(
                 Time.from_moments(
-                    Moment.from_datetime(start),
-                    Moment.from_datetime(end),
+                    Moment.from_datetime(start), Moment.from_datetime(end)
                 ),
                 subject=Subject.from_string(course_name),
                 service=timeline.objects.get_object("memrise"),

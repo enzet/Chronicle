@@ -7,7 +7,7 @@ import logging
 from enum import Enum
 from pathlib import Path
 from textwrap import dedent
-from typing import Callable, Any
+from typing import Any, Callable
 
 import urllib3
 

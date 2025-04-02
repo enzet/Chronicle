@@ -3,12 +3,13 @@ from dataclasses import dataclass
 from types import UnionType
 from typing import Any
 
+from chronicle.event.art import Language  # noqa: F401
+from chronicle.event.common import Cost  # noqa: F401
+
 # Do not delete: these imports add classes to `globals`.
 from chronicle.time import Timedelta  # noqa: F401
-from chronicle.event.art import Language  # noqa: F401
 from chronicle.value import ChronicleValueException  # noqa: F401
 from chronicle.value import Interval  # noqa: F401
-from chronicle.event.common import Cost  # noqa: F401
 
 
 def construct_types(event_class, field_: str) -> list:

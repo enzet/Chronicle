@@ -195,12 +195,7 @@ class Moment:
     @classmethod
     def from_datetime(cls, date: datetime) -> "Moment":
         moment = Moment(
-            date.year,
-            date.month,
-            date.day,
-            date.hour,
-            date.minute,
-            date.second,
+            date.year, date.month, date.day, date.hour, date.minute, date.second
         )
         return moment
 
@@ -242,7 +237,7 @@ class Timedelta:
             delta=timedelta(
                 seconds=(float(groups("h")) if groups("h") else 0.0) * 3600.0
                 + float(groups("m")) * 60.0
-                + float(groups("s")),
+                + float(groups("s"))
             )
         )
     ]

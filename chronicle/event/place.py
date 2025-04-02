@@ -1,6 +1,6 @@
+import re
 from dataclasses import dataclass, field
 from typing import ClassVar
-import re
 
 from chronicle.argument import Arguments
 from chronicle.event.core import Event

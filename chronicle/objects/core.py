@@ -4,25 +4,26 @@ from dataclasses import dataclass, field
 from datetime import timedelta
 from pathlib import Path
 from typing import ClassVar, Self
+
 from colour import Color
 
 from chronicle.argument import Arguments
 from chronicle.errors import (
-    ChronicleObjectNotFoundException,
     ChronicleCodeException,
+    ChronicleObjectNotFoundException,
 )
+from chronicle.time import Moment, Timedelta
 from chronicle.value import (
-    Birthday,
     OSM,
+    Birthday,
     ChronicleValueException,
-    Language,
     Cost,
+    Language,
     ProgrammingLanguage,
     Subject,
     Tags,
     WikidataId,
 )
-from chronicle.time import Moment, Timedelta
 from chronicle.wikidata import (
     Property,
     WikidataItem,
@@ -267,10 +268,7 @@ class Person(Object):
         return cls(None, name=value)
 
 
-SERVICE_NAMES = {
-    "duolingo": "Duolingo",
-    "memrise": "Memrise",
-}
+SERVICE_NAMES = {"duolingo": "Duolingo", "memrise": "Memrise"}
 
 
 @dataclass

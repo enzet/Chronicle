@@ -1,7 +1,12 @@
+import re
 from collections import defaultdict
 from dataclasses import dataclass, field
-import re
 from typing import Callable, Optional, Union
+
+from rich import box
+from rich.console import Console
+from rich.table import Table
+
 from chronicle.event.art import (
     ListenAudiobookEvent,
     ListenPodcastEvent,
@@ -11,10 +16,7 @@ from chronicle.event.art import (
 from chronicle.event.core import Event
 from chronicle.objects.core import Book, Podcast, Video
 from chronicle.timeline import Timeline
-from chronicle.util import filter_by_year, empty_filter
-from rich.console import Console
-from rich.table import Table
-from rich import box
+from chronicle.util import empty_filter, filter_by_year
 from chronicle.value import Language, Volume
 
 
@@ -156,11 +158,7 @@ def union_volumes(volumes: set[Volume]) -> set[Volume]:
                     to_ = current.to_
                 volumes.remove(other)
                 merged_volume: Volume = Volume(
-                    None,
-                    from_,
-                    to_,
-                    measure=current.measure,
-                    of=current.of,
+                    None, from_, to_, measure=current.measure, of=current.of
                 )
                 volumes.add(merged_volume)
                 merged = True
@@ -212,10 +210,7 @@ class BookViewer:
                 table_style = box.ASCII
             case _:
                 table_style = box.ROUNDED
-        table = Table(
-            box=table_style,
-            title=title,
-        )
+        table = Table(box=table_style, title=title)
         table.add_column("")
         table.add_column("Title")
         table.add_column("Pages", justify="right")

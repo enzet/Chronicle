@@ -1,18 +1,17 @@
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 from textwrap import dedent
 
-from chronicle.event.core import Event, Objects
-from chronicle.event.common import SleepEvent
 from chronicle.event.art import (
     ListenAudiobookEvent,
     ListenMusicEvent,
     ListenPodcastEvent,
 )
-from chronicle.value import Interval, Language, ProgrammingLanguage
-from chronicle.event.common import ProgramEvent
+from chronicle.event.common import ProgramEvent, SleepEvent
+from chronicle.event.core import Event, Objects
 from chronicle.objects.core import Audiobook, Book, Project
 from chronicle.time import Context, Timedelta
-from chronicle.timeline import Timeline, CommandParser
+from chronicle.timeline import CommandParser, Timeline
+from chronicle.value import Interval, Language, ProgrammingLanguage
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
@@ -125,10 +124,7 @@ def test_short_time() -> None:
     parser: CommandParser = CommandParser()
     timeline: Timeline = parser.timeline
     timeline.objects = Objects(
-        {
-            "idiot": book,
-            "idiot_audio": Audiobook("idiot_audio", book=book),
-        }
+        {"idiot": book, "idiot_audio": Audiobook("idiot_audio", book=book)}
     )
     parser.context = Context(current_date=datetime(2022, 1, 2))
     parser.parse_command("13:00 audiobook @idiot_audio")
@@ -162,10 +158,7 @@ def test_file() -> None:
 
 
 def test_file_sleep() -> None:
-    commands: list[str] = [
-        "2000-01-01",
-        "00:00/08:00 sleep",
-    ]
+    commands: list[str] = ["2000-01-01", "00:00/08:00 sleep"]
     parser: CommandParser = CommandParser()
     parser.parse_commands(commands)
 

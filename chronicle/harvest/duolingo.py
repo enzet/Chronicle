@@ -1,13 +1,13 @@
-from collections import defaultdict
 import csv
+from collections import defaultdict
 from datetime import datetime, timedelta
 from pathlib import Path
+
 from chronicle.event.common import LearnEvent
-from chronicle.value import Subject
 from chronicle.harvest.core import Importer
 from chronicle.time import Moment, Time, Timedelta
 from chronicle.timeline import Timeline
-
+from chronicle.value import Subject
 
 courses: list[tuple[str, str, Subject]] = [
     ("en", "English", Subject(["language", "en"])),

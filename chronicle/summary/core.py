@@ -1,10 +1,10 @@
-from collections import defaultdict, Counter
+from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import timedelta
 
-from chronicle.value import Language, Subject
 from chronicle.objects.core import Book, Object, Service
 from chronicle.time import format_delta
+from chronicle.value import Language, Subject
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"

@@ -3,9 +3,9 @@ from datetime import datetime
 from pathlib import Path
 
 from chronicle.event.sport import MoveEvent
-from chronicle.timeline import Timeline
-from chronicle.time import Time, Moment
 from chronicle.harvest.core import Importer
+from chronicle.time import Moment, Time
+from chronicle.timeline import Timeline
 
 
 class AppleHealthImporter(Importer):

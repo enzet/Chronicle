@@ -4,16 +4,11 @@ import sys
 from pathlib import Path
 
 from chronicle.harvest.old import (
-    OldMovieImporter,
     OldImporter,
+    OldMovieImporter,
     OldPodcastImporter,
 )
-
-from chronicle.timeline import (
-    SportViewer,
-    Timeline,
-    CommandParser,
-)
+from chronicle.timeline import CommandParser, SportViewer, Timeline
 from chronicle.view.objects import ObjectsHtmlViewer
 
 __author__ = "Sergey Vartanov"
@@ -97,9 +92,7 @@ def main():
         ),
     )
     view_language_parser.add_argument(
-        "--stack",
-        action="store_true",
-        help="stack data (only for plot)",
+        "--stack", action="store_true", help="stack data (only for plot)"
     )
     view_language_parser.add_argument(
         "--margin",

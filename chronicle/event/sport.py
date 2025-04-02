@@ -5,9 +5,9 @@ from typing import ClassVar
 
 from chronicle.argument import Arguments
 from chronicle.event.core import Event
-from chronicle.value import Distance, Kilocalories
-from chronicle.time import Timedelta
 from chronicle.summary.core import Summary
+from chronicle.time import Timedelta
+from chronicle.value import Distance, Kilocalories
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"

@@ -1,11 +1,6 @@
 from datetime import datetime
 
-from chronicle.time import (
-    Time,
-    parse_delta,
-    INTERVAL_PATTERN,
-    DELTA_PATTERN,
-)
+from chronicle.time import DELTA_PATTERN, INTERVAL_PATTERN, Time, parse_delta
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
