@@ -415,6 +415,14 @@ class WatchEvent(Event):
         # Estimate movie length to be 2 hours.
         return 2.0 * 60.0 * 60.0
 
+    def to_string(self) -> str:
+        result: str = f"watch {self.video.title}"
+        if self.season:
+            result += f" S {self.season}"
+        if self.episode:
+            result += f" E {self.episode}"
+        return result
+
 
 @dataclass
 class ListenAudiobookEvent(Event):
