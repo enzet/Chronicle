@@ -310,7 +310,7 @@ class Arguments:
                         text += string
             except AttributeError:
                 logging.error(
-                    f"Cannot print command for {argument.key} of {value}."
+                    "Cannot print command for %s of %s.", argument.key, value
                 )
         return text
 
@@ -331,7 +331,7 @@ class Arguments:
                     if string:
                         text += " " + string
             else:
-                logging.error(f"No {argument.key} of {event}.")
+                logging.error("No %s of %s.", argument.key, event)
         return text
 
     def replace(self, prefixes: list[str], command: str) -> "Arguments":

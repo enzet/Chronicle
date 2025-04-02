@@ -58,7 +58,7 @@ class Event:
         try:
             return cls(time=time, source=(command, parsed), **parsed)
         except TypeError as e:
-            logging.error(f"Cannot construct class {cls} from {parsed}.")
+            logging.error("Cannot construct class %s from %s.", cls, parsed)
             raise e
 
     def register_summary(self, summary: Summary) -> None:

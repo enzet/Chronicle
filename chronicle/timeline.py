@@ -47,7 +47,7 @@ def type_to_class(type_: str, ending: str) -> type[Event] | None:
     if class_name in globals():
         return globals()[class_name]
 
-    logging.error(f"No such class: `{class_name}`.")
+    logging.error("No such class: `%s`.", class_name)
     return None
 
 
@@ -129,9 +129,9 @@ class Timeline:
         ):  # FIXME: remove this, it's temporary mark for comment-out.
             return
         if "type" not in event_data:
-            logging.error(f"No type in event data {event_data}")
+            logging.error("No type in event data %s.", event_data)
         if "time" not in event_data:
-            logging.error(f"No time in event data {event_data}")
+            logging.error("No time in event data %s.", event_data)
         if event_data["type"].endswith("__"):
             return
 
@@ -139,7 +139,7 @@ class Timeline:
         if event_class:
             time: Time = Time.from_string(event_data["time"], context)
             if time.get_lower() is None:
-                logging.error(f"Bad time for {event_data}.")
+                logging.error("Bad time for %s.", event_data)
                 return
             event: Event = event_class(time)
             fill(event_data, event_class, event)
@@ -225,7 +225,7 @@ class Timeline:
                 commands.append(event.to_command())
                 last_date = date
             except MalformedTime:
-                logging.error(f"Bad time for {event}.")
+                logging.error("Bad time for %s.", event)
 
         return commands
 

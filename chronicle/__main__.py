@@ -154,7 +154,7 @@ def main() -> None:
     if arguments.input:
         for file_name in arguments.input:
             if file_name.endswith(".chr"):
-                logging.info(f"Importing data from `{file_name}`.")
+                logging.info("Importing data from `%s`.", file_name)
                 parser: CommandParser = CommandParser(timeline)
                 with Path(file_name).open() as input_file:
                     for line in input_file.readlines():
@@ -165,13 +165,13 @@ def main() -> None:
                 importer = VcfImporter(Path(file_name))
                 importer.import_data(timeline)
             else:
-                logging.critical(f"Unknown format of file `{file_name}`.")
+                logging.critical("Unknown format of file `%s`.", file_name)
                 sys.exit(1)
 
     if arguments.import_arc:
         from chronicle.harvest.arc import ArcImporter
 
-        logging.info(f"Importing Arc data from `{arguments.import_arc}`.")
+        logging.info("Importing Arc data from `%s`.", arguments.import_arc)
         ArcImporter(Path(arguments.import_arc), cache_path).import_data(
             timeline
         )
@@ -180,40 +180,40 @@ def main() -> None:
         from chronicle.harvest.memrise import MemriseImporter
 
         logging.info(
-            f"Importing Memrise data from `{arguments.import_memrise}`."
+            "Importing Memrise data from `%s`.", arguments.import_memrise
         )
         MemriseImporter(Path(arguments.import_memrise)).import_data(timeline)
 
     if arguments.import_duome:
         from chronicle.harvest.duolingo import DuomeImporter
 
-        logging.info(f"Importing Duome data from `{arguments.import_duome}`.")
+        logging.info("Importing Duome data from `%s`.", arguments.import_duome)
         DuomeImporter(Path(arguments.import_duome)).import_data(timeline)
 
     if arguments.import_duolingo:
         from chronicle.harvest.duolingo import DuolingoImporter
 
         logging.info(
-            f"Importing Duolingo data from `{arguments.import_duolingo}`."
+            "Importing Duolingo data from `%s`.", arguments.import_duolingo
         )
         DuolingoImporter(Path(arguments.import_duolingo)).import_data(timeline)
 
     if arguments.import_old:
         logging.info(
-            f"Importing events from old format `{arguments.import_old}`."
+            "Importing events from old format `%s`.", arguments.import_old
         )
         OldImporter(Path(arguments.import_old)).import_data(timeline)
 
     if arguments.import_old_movie:
         logging.info(
-            f"Importing movies from old format `{arguments.import_old_movie}`."
+            "Importing movies from old format `%s`.", arguments.import_old_movie
         )
         OldMovieImporter(Path(arguments.import_old_movie)).import_data(timeline)
 
     if arguments.import_old_podcast:
         logging.info(
-            "Importing podcasts from old format "
-            f"`{arguments.import_old_podcast}`."
+            "Importing podcasts from old format `%s`.",
+            arguments.import_old_podcast,
         )
         OldPodcastImporter(Path(arguments.import_old_podcast)).import_data(
             timeline

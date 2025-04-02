@@ -148,7 +148,7 @@ def get_data(cache_path: Path, function: Callable, argument: str) -> bytes:
     if cache_path.exists():
         with cache_path.open("rb") as input_file:
             return input_file.read()
-    logging.info(f"Request {cache_path}.")
+    logging.info("Request %s.", cache_path)
     data: bytes = function(argument)
     with cache_path.open("wb") as output_file:
         output_file.write(data)

@@ -464,7 +464,7 @@ class ProgramEvent(Event):
                 summary.register_work(self.get_duration())
         else:
             logging.warning(
-                f"Unknown project `{self.project}` in `{self.source}`."
+                "Unknown project `%s` in `%s`.", self.project, self.source
             )
 
 

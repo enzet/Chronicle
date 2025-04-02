@@ -23,7 +23,7 @@ def construct_types(event_class, field_: str) -> list:
         value_class = event_class.__dict__["__dataclass_fields__"][field_].type
     else:
         logging.error(
-            f"`{event_class.__name__}` doesn't have `{field_}` field."
+            "`%s` doesn't have `%s` field.", event_class.__name__, field_
         )
         return []
 
@@ -54,15 +54,21 @@ def fill(data: dict, class_, object_):
                     object_.__setattr__(key, value_class(value))
                 except TypeError:
                     logging.error(
-                        f"Cannot convert field `{key}` with value "
-                        f"`{value}` (`{type(value).__name__}`) to "
-                        f"`{value_class.__name__}`."
+                        "Cannot convert field `%s` with value `%s` (`%s`) to "
+                        "`%s`.",
+                        key,
+                        value,
+                        type(value).__name__,
+                        value_class.__name__,
                     )
                 except ValueError:
                     logging.error(
-                        f"Cannot convert field `{key}` with value "
-                        f"`{value}` (`{type(value).__name__}`) to "
-                        f"`{value_class.__name__}`."
+                        "Cannot convert field `%s` with value `%s` (`%s`) to "
+                        "`%s`.",
+                        key,
+                        value,
+                        type(value).__name__,
+                        value_class.__name__,
                     )
                 break
             else:
@@ -70,9 +76,12 @@ def fill(data: dict, class_, object_):
                     object_.__setattr__(key, value_class.from_json(value))
                 except AttributeError:
                     logging.error(
-                        f"Cannot convert field `{key}` with value "
-                        f"`{value}` (`{type(value).__name__}`) to "
-                        f"`{value_class.__name__}`."
+                        "Cannot convert field `%s` with value `%s` (`%s`) to "
+                        "`%s`.",
+                        key,
+                        value,
+                        type(value).__name__,
+                        value_class.__name__,
                     )
                 break
 
