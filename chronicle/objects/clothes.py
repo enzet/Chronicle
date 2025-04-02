@@ -1,3 +1,5 @@
+"""Clothes objects."""
+
 import re
 from dataclasses import dataclass
 from typing import ClassVar
@@ -8,8 +10,13 @@ from chronicle.objects.core import Thing
 
 @dataclass
 class Clothes(Thing):
+    """Clothes."""
+
     art: str | None = None
+    """Article number."""
+
     size: str | None = None
+    """Size."""
 
     arguments: ClassVar[Arguments] = (
         Thing.arguments.replace(["clothes"], "clothes")

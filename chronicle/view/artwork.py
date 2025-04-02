@@ -1,3 +1,4 @@
+import argparse
 import re
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -178,7 +179,11 @@ class BookViewer:
 
     languages: set[Language] = field(default_factory=set)
 
-    def print_finished_books(self, console, arguments) -> None:
+    def print_finished_books(
+        self, console: Console, arguments: argparse.Namespace
+    ) -> None:
+        """Print finished books."""
+
         if arguments.year == 0:
             filter_ = empty_filter
             title = "Finished books"

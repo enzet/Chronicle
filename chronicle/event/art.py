@@ -2,7 +2,7 @@
 
 import re
 from dataclasses import dataclass, field
-from typing import ClassVar
+from typing import ClassVar, override
 
 from chronicle.argument import Arguments
 from chronicle.event.core import Event
@@ -56,9 +56,12 @@ class ListenEvent(Event):
         .add_class_argument("language", Language)
     )
 
+    @override
     def register_summary(self, summary: Summary) -> None:
         if self.language:
-            summary.register_listen(self.get_duration(), self.language)
+            duration: float | None = self.get_duration()
+            if duration:
+                summary.register_listen(duration, self.language)
 
 
 @dataclass
@@ -97,7 +100,7 @@ class ListenPodcastEvent(Event):
         )
     )
 
-    def get_duration(self) -> float:
+    def get_duration(self) -> float | None:
         """Get duration of the listening session in seconds."""
         if self.interval:
             return self.interval.get_duration()

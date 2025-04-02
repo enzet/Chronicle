@@ -1,3 +1,5 @@
+"""Chronicle entry point."""
+
 import argparse
 import logging
 import sys
@@ -15,7 +17,9 @@ __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
 
 
-def main():
+def main() -> None:
+    """Chronicle entry point."""
+
     argument_parser: argparse.ArgumentParser = argparse.ArgumentParser(
         "Chronicle"
     )
@@ -133,7 +137,7 @@ def main():
     view_podcasts_parser = view_sub_parsers.add_parser("podcasts")
     view_podcasts_parser.add_argument("--title", default=None, type=str)
 
-    arguments = argument_parser.parse_args(sys.argv[1:])
+    arguments: argparse.Namespace = argument_parser.parse_args(sys.argv[1:])
 
     if arguments.logging == "info":
         logging.basicConfig(level=logging.INFO)
@@ -292,4 +296,4 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

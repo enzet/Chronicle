@@ -1,3 +1,5 @@
+"""Argument parsing utilities."""
+
 import copy
 import logging
 import re
@@ -14,7 +16,9 @@ __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
 
 
-def default_pretty_printer(value) -> str:
+def default_pretty_printer(value: Any) -> str:
+    """Default pretty printer for arguments."""
+
     if isinstance(value, str):
         return value
     if isinstance(value, float):
@@ -32,10 +36,15 @@ def default_loader(value: str, objects) -> Any:
 
 @dataclass
 class Argument:
-    key: str
-    description: str | None = None
+    """Argument."""
 
-    loader: Callable[[Any], Any] = default_loader
+    key: str
+    """Argument key."""
+
+    description: str | None = None
+    """Argument description."""
+
+    loader: Callable[[Any], Any] | None = default_loader
     """Value loader."""
 
     prefix: str | None = None
@@ -48,13 +57,18 @@ class Argument:
     """Functions that extract values from a pattern matchers."""
 
     pretty_printer: Callable = default_pretty_printer
+    """Pretty printer."""
 
-    command_printer: Callable = lambda x: x.to_command()
+    command_printer: Callable | None = lambda x: x.to_command()
+    """Command printer."""
 
     html_printer: Callable = lambda x: x.to_string()
+    """HTML printer."""
 
 
-def one_pattern_argument(name, class_, index: int = 0):
+def one_pattern_argument(name: str, class_: type, index: int = 0) -> Argument:
+    """Create an argument with one pattern."""
+
     return Argument(
         name,
         patterns=class_.patterns,
@@ -63,6 +77,8 @@ def one_pattern_argument(name, class_, index: int = 0):
 
 
 class Arguments:
+    """Arguments parser."""
+
     def __init__(self, prefixes: list[str], command: str) -> None:
         self.prefixes: list[str] = prefixes
         self.command: str = command
@@ -86,7 +102,7 @@ class Arguments:
         current_loader = main.loader if main else None
         current: str = ""
 
-        def load_current() -> Any:
+        def load_current() -> None:
             result[current_key] = current_loader(current, objects)
 
         for index in range(len(tokens)):
@@ -158,10 +174,12 @@ class Arguments:
         loader: Callable[[Any, Any], Any] = lambda x, _: x,
         extractors: list[Callable[[Any], Any]] | None = None,
         pretty_printer: Callable = default_pretty_printer,
-        command_printer: Callable = None,
+        command_printer: Callable | None = None,
         html_printer: Callable = lambda o, v: v.to_string(o),
         is_insert: bool = False,
     ) -> "Arguments":
+        """Add argument to a parser."""
+
         argument: Argument = Argument(
             key,
             description,
@@ -246,7 +264,7 @@ class Arguments:
         self.arguments.append(argument)
         return self
 
-    def to_string(self, value):
+    def to_string(self, value) -> str:
         text = self.command
         for argument in self.arguments:
             if hasattr(value, argument.key) and getattr(value, argument.key):
