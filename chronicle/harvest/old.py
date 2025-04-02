@@ -1,3 +1,5 @@
+"""Importer for old Chronicle format."""
+
 import json
 import re
 from datetime import datetime, timedelta
@@ -13,7 +15,7 @@ from chronicle.event.art import (
 )
 from chronicle.event.core import Event
 from chronicle.harvest.core import Importer
-from chronicle.objects.core import Audiobook, Book, Podcast, Video
+from chronicle.objects.core import Audiobook, Book, Object, Podcast, Video
 from chronicle.time import Context, Moment, Time, Timedelta
 from chronicle.timeline import Timeline
 from chronicle.value import ChronicleValueException, Interval, Language, Volume
@@ -31,7 +33,7 @@ class OldImporter(Importer):
         objects = timeline.objects
 
         with self.file_path.open() as input_file:
-            structure: dict[str, Any] = json.load(input_file)
+            structure: list[dict[str, Any]] = json.load(input_file)
 
         for data in structure:
             if "_" in data and data["_"] == "_":
@@ -57,13 +59,17 @@ class OldImporter(Importer):
 
             event: Event | None = None
 
+            title: str
+            language: Language
+            book: Book | None
+
             if data["type"] == "listen":
                 if data.get("kind") in ("music111", "song111", None):
                     data["kind"] = "music"
-                    event: ListenMusicEvent = ListenMusicEvent(time=time)
+                    event = ListenMusicEvent(time=time)
 
                 elif data["kind"] == "podcast":
-                    title: str = data["title"]
+                    title = data["title"]
                     language = Language(data["language"])
                     assert "from" in data and "to" in data
                     interval = Interval.from_json(
@@ -73,15 +79,15 @@ class OldImporter(Importer):
                     podcast = Podcast(
                         id=podcast_id, title=title, language=language
                     )
-                    for object in timeline.objects.objects.values():
+                    for object_ in timeline.objects.objects.values():
                         if (
-                            isinstance(object, Podcast)
-                            and object.title == podcast.title
+                            isinstance(object_, Podcast)
+                            and object_.title == podcast.title
                         ):
-                            podcast = object
+                            podcast = object_
                             break
                     objects.set_object(podcast_id, podcast)
-                    event: ListenPodcastEvent = ListenPodcastEvent(
+                    event = ListenPodcastEvent(
                         time=time,
                         podcast=podcast,
                         interval=interval,
@@ -90,7 +96,7 @@ class OldImporter(Importer):
                     )
 
                 elif data["kind"] == "audiobook111":
-                    title: str = data["title"]
+                    title = data["title"]
                     language = Language(data["language"])
                     book_id: str = title
                     data["audiobook_id"] = book_id
@@ -98,9 +104,7 @@ class OldImporter(Importer):
                     audiobook = Audiobook(id="audio_" + book_id, book=book)
                     objects.set_object(book_id, book)
                     objects.set_object("audio_" + book_id, audiobook)
-                    event: ListenAudiobookEvent = ListenAudiobookEvent(
-                        time=time, audiobook=audiobook
-                    )
+                    event = ListenAudiobookEvent(time=time, audiobook=audiobook)
 
             elif data["type"] == "watch":
                 if "movie_id" not in data and "title" in data:
@@ -138,13 +142,13 @@ class OldImporter(Importer):
             elif data["type"] == "read":
                 book = None
                 if "book_id" not in data and "title" in data:
-                    for object in timeline.objects.objects.values():
+                    for object_ in timeline.objects.objects.values():
                         if (
-                            isinstance(object, Book)
-                            and object.title == data["title"]
+                            isinstance(object_, Book)
+                            and object_.title == data["title"]
                         ):
-                            book = object
-                            book_id = object.id
+                            book = object_
+                            book_id = object_.id
                             break
                     else:
                         book_id = data["title"]
@@ -159,10 +163,16 @@ class OldImporter(Importer):
                             )
                             objects.set_object(book_id, book)
                         else:
-                            book = objects.get_object(book_id)
+                            book_object: Object = objects.get_object(book_id)
+                            if not isinstance(book_object, Book):
+                                raise ValueError(
+                                    f"Expected book, got `{book_object}`."
+                                )
+                            book = book_object
+
                     data["book_id"] = book_id
 
-                def get_volume(structure: dict[str, Any]) -> Volume:
+                def get_volume(structure: dict[str, Any]) -> Volume | None:
                     if "size" in structure:
                         volume = Volume(value=structure["size"])
                     elif "from" in structure and "to" in structure:
@@ -205,8 +215,6 @@ class OldImporter(Importer):
             if event:
                 timeline.events.append(event)
 
-            pass
-
 
 class OldMovieImporter(Importer):
     """Importer for movies from old Chronicle format."""
@@ -221,16 +229,17 @@ class OldMovieImporter(Importer):
         language_pattern: re.Pattern = re.compile(r"(?P<language>..)\[\]")
 
         with self.file_path.open() as input_file:
-            structure: dict[str, Any] = json.load(input_file)
+            structure: list[dict[str, Any]] = json.load(input_file)
 
         for data in structure:
             if "_" in data and data["_"] == "_":
                 continue
 
+            time: Time
             if "date" not in data or not data["date"]:
-                time: Time = Time.from_string("1990-01-01", Context())
+                time = Time.from_string("1990-01-01", Context())
             else:
-                time: Time = Time.from_string(data["date"], Context())
+                time = Time.from_string(data["date"], Context())
             time.is_assumed = True
 
             if "title" not in data:
@@ -282,7 +291,7 @@ class OldPodcastImporter(Importer):
 
     def import_data(self, timeline: Timeline) -> None:
         with self.file_path.open() as input_file:
-            structure: dict[str, Any] = json.load(input_file)["sessions"]
+            structure: list[dict[str, Any]] = json.load(input_file)["sessions"]
 
         for data in structure:
             time: Time = Time.from_string(data["date"], Context())
@@ -294,12 +303,12 @@ class OldPodcastImporter(Importer):
                 title=data["title"],
                 language=Language(data["language"]),
             )
-            for object in timeline.objects.objects.values():
+            for object_ in timeline.objects.objects.values():
                 if (
-                    isinstance(object, Podcast)
-                    and object.title == podcast.title
+                    isinstance(object_, Podcast)
+                    and object_.title == podcast.title
                 ):
-                    podcast = object
+                    podcast = object_
                     break
             event: ListenPodcastEvent = ListenPodcastEvent(
                 time=time,
