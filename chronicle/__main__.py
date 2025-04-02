@@ -69,6 +69,77 @@ def main():
         help="import data from Duolingo",
         metavar="<CSV file path>",
     )
+
+    sub_parsers = argument_parser.add_subparsers(dest="command")
+    view_parser = sub_parsers.add_parser("view")
+    view_parser.add_argument("--style", default="normal")
+    view_parser.add_argument(
+        "--colors", default="light", choices=["light", "dark", "no"]
+    )
+
+    view_sub_parsers = view_parser.add_subparsers(dest="sub_command")
+
+    view_language_parser = view_sub_parsers.add_parser("language")
+    view_language_parser.add_argument(
+        "--form",
+        type=str,
+        choices=["table", "plot"],
+        help="form of data: table or plot",
+    )
+    view_language_parser.add_argument(
+        "--interval",
+        type=int,
+        default=0,
+        metavar="<days>",
+        help=(
+            "if interval is not zero, then only events from the last interval "
+            "days will be shown"
+        ),
+    )
+    view_language_parser.add_argument(
+        "--stack",
+        action="store_true",
+        help="stack data (only for plot)",
+    )
+    view_language_parser.add_argument(
+        "--margin",
+        type=float,
+        metavar="<hours>",
+        default=0.0,
+        help=(
+            "show only languages with more than margin hours of total learning"
+        ),
+    )
+    view_language_parser.add_argument(
+        "--exclude-languages",
+        type=str,
+        nargs="+",
+        default=[],
+        help="exclude languages from the list of languages",
+    )
+    view_language_parser.add_argument(
+        "--services",
+        type=str,
+        nargs="+",
+        default=[],
+        help=(
+            "identifiers of services of learning event to show separately, "
+            "e.g. `duolingo`"
+        ),
+    )
+
+    view_sub_parsers.add_parser("objects")
+
+    view_books_parser = view_sub_parsers.add_parser("books")
+    view_books_parser.add_argument("--year", default=0, type=int)
+    view_books_parser.add_argument("--title", default=None, type=str)
+    view_books_parser.add_argument(
+        "--finished", default=False, action="store_true"
+    )
+
+    view_podcasts_parser = view_sub_parsers.add_parser("podcasts")
+    view_podcasts_parser.add_argument("--title", default=None, type=str)
+
     arguments = argument_parser.parse_args(sys.argv[1:])
 
     if arguments.logging == "info":
@@ -152,27 +223,49 @@ def main():
         )
 
     def process_command(command: str) -> None:
-        if command == "timeline":
+        from rich.console import Console
+
+        console: Console = Console(highlight=False)
+
+        if command == "view":
+            if arguments.sub_command == "language":
+                from chronicle.view.language import LanguageLearningViewer
+
+                LanguageLearningViewer(timeline).process_command(arguments)
+
+            elif arguments.sub_command == "objects":
+                output_path: Path = Path("output.html")
+                ObjectsHtmlViewer(timeline).write_html(output_path)
+
+            elif arguments.sub_command == "books":
+                from chronicle.view.artwork import BookViewer
+
+                if arguments.finished:
+                    BookViewer(timeline).print_finished_books(
+                        console, arguments
+                    )
+                else:
+                    BookViewer(timeline).print_books(console, arguments)
+
+            elif arguments.sub_command == "podcasts":
+                from chronicle.view.artwork import PodcastViewer
+
+                PodcastViewer(timeline).print_podcasts()
+
+        elif command == "timeline":
             timeline.print()
         elif command == "summary":
             print(timeline.get_summary())
-        elif command == "language":
-            from chronicle.view.language import LanguageLearningViewer
+        elif command == "shows":
+            from chronicle.view.show import ShowViewer
 
-            LanguageLearningViewer(timeline).process_command(
-                arguments.sub_command
-            )
-        elif command == "objects_html":
-            output_path: Path = Path("output.html")
-            ObjectsHtmlViewer(timeline).write_html(output_path)
-        elif command == "podcasts":
-            from chronicle.view.artwork import PodcastViewer
+            ShowViewer(timeline).process_command(arguments.sub_command)
 
-            PodcastViewer(timeline).print_podcasts()
-        elif command == "books":
-            from chronicle.view.artwork import BookViewer
+        elif command == "movies":
+            from chronicle.view.artwork import VideoViewer
 
-            BookViewer(timeline).print_books()
+            VideoViewer(timeline).print_videos()
+
         elif command == "expired":
             from rich.console import Console
 
