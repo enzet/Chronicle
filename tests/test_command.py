@@ -1,3 +1,5 @@
+"""Tests for command."""
+
 from datetime import datetime, timedelta
 from textwrap import dedent
 
@@ -30,6 +32,7 @@ def test_listen_podcast() -> None:
     assert len(timeline) == 1
     event: Event = timeline.events[0]
     assert isinstance(event, ListenPodcastEvent)
+    assert event.podcast
     assert event.podcast.title == "Inner French"
     assert event.episode == "5"
     assert event.interval == Interval(
@@ -46,6 +49,7 @@ def test_book() -> None:
     objects = parser.timeline.objects.objects
 
     assert len(objects) == 1
+    assert isinstance(objects["idiot"], Book)
     assert objects["idiot"].title == "Idiot"
     assert objects["idiot"].language == Language("ru")
 
@@ -81,6 +85,8 @@ def test_listen_audiobook() -> None:
     assert len(timeline) == 1
     event: Event = timeline.events[0]
     assert isinstance(event, ListenAudiobookEvent)
+    assert event.audiobook
+    assert event.audiobook.book
     assert event.audiobook.book.title == "Idiot"
     assert event.speed == 1.25
     assert event.interval == Interval(
@@ -108,6 +114,8 @@ def test_listen_audiobook_hour_interval() -> None:
 
 
 def test_sleep() -> None:
+    """Test sleeping event."""
+
     parser: CommandParser = CommandParser()
     parser.parse_command("2022-01-01T00:00:00/2022-01-01T08:00:00 sleep")
     timeline: Timeline = parser.timeline
@@ -134,11 +142,14 @@ def test_short_time() -> None:
     assert isinstance(event, ListenAudiobookEvent)
 
     assert event.to_string() == "listen to audiobook Idiot"
+    assert event.time.start
     assert event.time.start == event.time.end
     assert event.time.start.hour == 13
 
 
 def test_file() -> None:
+    """Test file command."""
+
     commands: list[str] = [
         "book idiot = Idiot .ru",
         "audiobook idiot_audio = @idiot",
@@ -152,12 +163,15 @@ def test_file() -> None:
     event: Event = parser.timeline.events[0]
     assert isinstance(event, ListenAudiobookEvent)
     assert event.to_string() == "listen to audiobook Idiot"
+    assert event.time.start
     assert event.time.start == event.time.end
     assert event.time.start.year == 2000
     assert event.time.start.hour == 13
 
 
 def test_file_sleep() -> None:
+    """Test file command with sleeping event."""
+
     commands: list[str] = ["2000-01-01", "00:00/08:00 sleep"]
     parser: CommandParser = CommandParser()
     parser.parse_commands(commands)
@@ -170,6 +184,8 @@ def test_file_sleep() -> None:
 
 
 def test_dump_command() -> None:
+    """Test command dumping."""
+
     commands: list[str] = [
         "book idiot = Idiot 600.0p .ru",
         "",
@@ -184,6 +200,8 @@ def test_dump_command() -> None:
 
 
 def test_program() -> None:
+    """Test timeline with programming event."""
+
     commands: list[str] = dedent(
         """
         project @linux = Linux .c

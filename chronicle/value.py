@@ -1,3 +1,5 @@
+"""Argument value."""
+
 import re
 from dataclasses import dataclass
 from typing import Any, Callable, ClassVar, Literal, Self
@@ -52,10 +54,16 @@ WRITING_SYSTEM_NAMES = {
 class Value:
     """Base class for all values."""
 
-    prefix: ClassVar[str] = None
+    prefix: ClassVar[str | None] = None
+
+    patterns: ClassVar[list[re.Pattern]] = []
+
+    extractors: ClassVar[list[Callable[[re.Match], Self]]] = []
 
     @classmethod
     def from_string(cls, string: str) -> Self:
+        """Create value from string representation."""
+
         for i, pattern in enumerate(cls.patterns):
             if match := pattern.match(string):
                 return cls.extractors[i](match.group)
@@ -68,6 +76,7 @@ class WikidataId(Value):
     """Wikidata entity identifier."""
 
     id: int
+    """Wikidata entity identifier (without `Q` prefix)."""
 
     patterns: ClassVar[list[re.Pattern]] = [re.compile(r"Q\d+")]
     extractors: ClassVar[list[Callable]] = [lambda groups: int(groups(0)[1:])]
@@ -87,31 +96,38 @@ class Language:
         lambda groups: Language(groups("code"))
     ]
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Verify that the language code is valid."""
+
         if self.code not in LANGUAGES:
             raise ChronicleValueException(
                 f"Unknown language code: `{self.code}`."
             )
 
     @classmethod
-    def from_json(cls, code: str) -> "Language":
+    def from_json(cls, code: str) -> Self:
+        """Create language from JSON."""
         return cls(code)
 
     def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, Language):
+            raise ValueError(f"Cannot compare `{self}` with `{other}`.")
         return self.code == other.code
 
     def to_string(self) -> str:
         """Get English name of the language or return code."""
+
         if self.code in LANGUAGES:
             return LANGUAGES[self.code][0]
 
         return self.code
 
     def get_color(self) -> str:
+        """Get color of the language."""
         return LANGUAGES[self.code][1]
 
     def to_command(self) -> str:
+        """Get command representation of the language."""
         return f".{self.code}"
 
     def __hash__(self) -> int:
@@ -132,9 +148,11 @@ class Subject(Value):
     ]
 
     def is_language(self) -> bool:
+        """Check if the subject is a language."""
         return self.subject[0] == "language"
 
     def get_language(self) -> Language | None:
+        """Get language from the subject."""
         if self.is_language() and len(self.subject) > 1:
             return Language(self.subject[1])
         return None
@@ -143,6 +161,7 @@ class Subject(Value):
         return hash("/".join(self.subject))
 
     def to_string(self) -> str:
+        """Get string representation of the subject."""
         return "/".join(self.subject)
 
 

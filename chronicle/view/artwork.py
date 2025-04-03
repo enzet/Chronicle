@@ -18,7 +18,7 @@ from chronicle.event.core import Event
 from chronicle.objects.core import Book, Podcast, Video
 from chronicle.timeline import Timeline
 from chronicle.util import empty_filter, filter_by_year
-from chronicle.value import Language, Volume
+from chronicle.value import AudiobookVolume, Language, Volume
 
 
 def format_episodes(episodes: list[Union[int, str]]) -> str:
@@ -93,13 +93,15 @@ class PodcastViewer:
                 )
 
 
-def normalize(volume: Volume, book: Book) -> Volume:
+def normalize(
+    volume: Volume | AudiobookVolume, book: Book
+) -> Volume | AudiobookVolume:
     """Normalize volume."""
 
     if volume.measure == "percent":
         return volume
 
-    if volume.of:
+    if volume.from_ and volume.to_ and volume.of:
         return Volume(
             None,
             volume.from_ / volume.of * 100,
@@ -108,7 +110,12 @@ def normalize(volume: Volume, book: Book) -> Volume:
             of=100,
         )
 
-    if volume.measure == "pages" and book.volume:
+    if (
+        volume.measure == "pages"
+        and volume.from_
+        and volume.to_
+        and book.volume
+    ):
         return Volume(
             None,
             volume.from_ / book.volume * 100,
@@ -126,17 +133,19 @@ def equals(a: float | None, b: float | None) -> bool:
     return abs(a - b) < 0.1
 
 
-def union_volumes(volumes: set[Volume]) -> set[Volume]:
+def union_volumes(
+    volumes: set[Volume | AudiobookVolume],
+) -> set[Volume | AudiobookVolume]:
     """Glue volumes if they are consecutive.
 
     E.g. for two reading volumes [25, 30] and [30, 40] create one volume [25,
     40].
     """
 
-    result: set[Volume] = set()
+    result: set[Volume | AudiobookVolume] = set()
 
     while volumes:
-        current: Volume = volumes.pop()
+        current: Volume | AudiobookVolume = volumes.pop()
         merged: bool = False
 
         for other in volumes:
@@ -215,10 +224,12 @@ class BookViewer:
                 table_style = box.ASCII
             case _:
                 table_style = box.ROUNDED
-        table = Table(box=table_style, title=title)
+
+        table: Table = Table(box=table_style, title=title)
         table.add_column("")
         table.add_column("Title")
         table.add_column("Pages", justify="right")
+
         for row in rows:
             table.add_row(*row)
 
@@ -226,25 +237,42 @@ class BookViewer:
         console.print(table)
         console.print()
 
-    def get_books(self, filter_: Callable) -> dict[Book, list[Event]]:
-        books: dict[Book, list[Event]] = defaultdict(list)
+    def get_books(
+        self, filter_: Callable
+    ) -> dict[Book, list[ReadEvent | ListenAudiobookEvent]]:
+        """Get books."""
+
+        books: dict[Book, list[ReadEvent | ListenAudiobookEvent]] = defaultdict(
+            list
+        )
         for event in self.timeline.get_events(filter_=filter_):
             if isinstance(event, ReadEvent) and event.book:
                 if not self.languages or event.get_language() in self.languages:
                     books[event.book].append(event)
-            if isinstance(event, ListenAudiobookEvent) and event.audiobook.book:
+            if (
+                isinstance(event, ListenAudiobookEvent)
+                and event.audiobook
+                and event.audiobook.book
+            ):
                 if not self.languages or event.get_language() in self.languages:
                     books[event.audiobook.book].append(event)
         return books
 
-    def print_books(self, console: Console, arguments) -> None:
+    def print_books(
+        self, console: Console, arguments: argparse.Namespace
+    ) -> None:
+        """Print books."""
+
         if arguments.title:
             pattern = re.compile(arguments.title)
-            filter_ = (
-                lambda x: isinstance(x, ReadEvent)
-                and x.book
-                and pattern.match(x.book.title)
-            )
+
+            def filter_(event: Event) -> bool:
+                return (
+                    isinstance(event, ReadEvent)
+                    and event.book
+                    and pattern.match(event.book.title)
+                )
+
         else:
             filter_ = empty_filter
 
@@ -252,14 +280,16 @@ class BookViewer:
         table.add_column("Title", width=50)
         table.add_column("Volumes")
 
-        books: dict[Book, list[Event]] = self.get_books(filter_)
+        books: dict[
+            Book, list[ReadEvent | ListenAudiobookEvent]
+        ] = self.get_books(filter_)
 
         for book, events in sorted(
             books.items(), key=lambda x: x[0].volume if x[0].volume else 0
         ):
             if not book:
                 continue
-            volumes: set[Volume] = {
+            volumes: set[Volume | AudiobookVolume] = {
                 event.volume
                 for event in events
                 if event.volume
@@ -272,21 +302,22 @@ class BookViewer:
                 book.title,
                 ", ".join(
                     v.to_string()
-                    for v in sorted(volumes, key=lambda v: v.from_)
+                    for v in sorted(volumes, key=lambda v: v.from_ or 0)
                 ),
             )
 
-        Console().print(table)
+        console.print(table)
 
-    def show_book_volume(self, arguments) -> None:
-        print(arguments)
-        books: dict[Book, list[Event]] = self.get_books(
-            lambda x: arguments.request.match(x.title)
-        )
+    def show_book_volume(self, arguments: argparse.Namespace) -> None:
+        """Show book volume."""
+
+        books: dict[
+            Book, list[ReadEvent | ListenAudiobookEvent]
+        ] = self.get_books(lambda x: arguments.request.match(x.title))
         for book, events in books.items():
             if not book:
                 continue
-            volumes: set[Volume] = {
+            volumes: set[Volume | AudiobookVolume] = {
                 event.volume
                 for event in events
                 if event.volume
@@ -298,12 +329,11 @@ class BookViewer:
             print(f"{book.title}: {volumes}")
 
 
-def get_sort_key(title: str) -> int:
+def get_sort_key(title: str) -> str:
     """Remove article from title.
 
     E.g. "The Matrix" -> "Matrix", "A Matrix" -> "Matrix".
     """
-
     for prefix in ["The ", "A ", "An ", "Le ", "La ", "Les ", "L'"]:
         if title.startswith(prefix):
             return title[len(prefix) :]
@@ -319,8 +349,10 @@ class VideoViewer:
 
     languages: set[Language] = field(default_factory=set)
 
-    def print_videos(self) -> None:
-        videos: dict[Video, list[Event]] = defaultdict(list)
+    def print_videos(self, console: Console) -> None:
+        """Print videos."""
+
+        videos: dict[Video, list[WatchEvent]] = defaultdict(list)
 
         table: Table = Table(box=box.ROUNDED, title="Videos")
         table.add_column("Title")
@@ -330,11 +362,11 @@ class VideoViewer:
             self.timeline.events, key=lambda e: e.time.get_lower()
         ):
             if isinstance(event, WatchEvent) and event.video:
-                if not self.languages or event.get_language() in self.languages:
+                if not self.languages or event.language in self.languages:
                     videos[event.video].append(event)
 
         for video, events in sorted(
-            videos.items(), key=lambda x: get_sort_key(x[0].title)
+            videos.items(), key=lambda x: get_sort_key(x[0].title or "")
         ):
             seasons: dict[Optional[int], list[Union[int, str]]] = defaultdict(
                 list
@@ -360,4 +392,4 @@ class VideoViewer:
 
             table.add_row(video.title, episodes_text)
 
-        Console().print(table)
+        console.print(table)

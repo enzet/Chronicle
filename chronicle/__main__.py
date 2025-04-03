@@ -5,6 +5,8 @@ import logging
 import sys
 from pathlib import Path
 
+from rich.console import Console
+
 from chronicle.harvest.old import (
     OldImporter,
     OldMovieImporter,
@@ -220,8 +222,6 @@ def main() -> None:
         )
 
     def process_command(command: str) -> None:
-        from rich.console import Console
-
         console: Console = Console(highlight=False)
 
         if command == "view":
@@ -261,19 +261,13 @@ def main() -> None:
         elif command == "movies":
             from chronicle.view.artwork import VideoViewer
 
-            VideoViewer(timeline).print_videos()
+            VideoViewer(timeline).print_videos(Console())
 
         elif command == "expired":
-            from rich.console import Console
-
             Console().print(timeline.get_expired())
         elif command == "dishes":
-            from rich.console import Console
-
             Console().print(timeline.get_dishes())
         elif command == "objects":
-            from rich.console import Console
-
             Console().print(timeline.get_objects())
         elif command == "sport":
             SportViewer(timeline).plot_sport()

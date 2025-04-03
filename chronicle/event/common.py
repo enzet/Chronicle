@@ -204,8 +204,6 @@ class WriteEvent(Event):
 class BedEvent(Event):
     """Event representing going to bed."""
 
-    pass
-
 
 @dataclass
 class BuyEvent(Event):

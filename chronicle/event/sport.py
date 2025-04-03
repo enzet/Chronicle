@@ -39,10 +39,10 @@ class MoveEvent(SportEvent):
 
     arguments: ClassVar[Arguments] = (
         Arguments(["move"], "move")
-        .add_argument("duration", Timedelta)
+        .add_class_argument("duration", Timedelta)
         .add_class_argument("distance", Distance)
-        .add_argument("pace", Timedelta)
-        .add_argument("kilocalories", Kilocalories)
+        .add_class_argument("pace", Timedelta)
+        .add_class_argument("kilocalories", Kilocalories)
     )
 
 

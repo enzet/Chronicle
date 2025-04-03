@@ -1,3 +1,5 @@
+"""Tests for tokens."""
+
 from dataclasses import dataclass
 
 

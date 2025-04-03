@@ -1,7 +1,7 @@
 import logging
 from dataclasses import dataclass
 from types import UnionType
-from typing import Any
+from typing import Any, Self
 
 from chronicle.event.art import Language  # noqa: F401
 from chronicle.event.common import Cost  # noqa: F401
@@ -89,7 +89,9 @@ def fill(data: dict, class_, object_):
 @dataclass
 class Serializable:
     @classmethod
-    def from_json(cls, data: Any) -> "Serializable":
+    def from_json(cls, data: Any) -> Self:
+        """Create object from JSON."""
+
         object_ = cls()
         if isinstance(data, dict):
             fill(data, cls, object_)

@@ -331,7 +331,7 @@ class Arguments:
                     if string:
                         text += " " + string
             else:
-                logging.error("No %s of %s.", argument.key, event)
+                logging.error("No {argument.key} of {event}.")
         return text
 
     def replace(self, prefixes: list[str], command: str) -> "Arguments":

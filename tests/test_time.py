@@ -1,3 +1,5 @@
+"""Tests for time."""
+
 from datetime import datetime
 
 from chronicle.time import DELTA_PATTERN, INTERVAL_PATTERN, Time, parse_delta
@@ -14,7 +16,7 @@ def check(
     hour: float,
     minute: float,
     second: float,
-):
+) -> None:
     assert moment
     assert moment.year == year
     assert moment.month == month
@@ -115,7 +117,7 @@ def test_second() -> None:
     check(time.start.get_upper(), 2000, 1, 1, 12, 10, 20)
 
 
-def test_parse_delta():
+def test_parse_delta() -> None:
     """Test delta parsing with minutes and seconds."""
 
     assert parse_delta("00:00").seconds == 0
@@ -123,7 +125,7 @@ def test_parse_delta():
     assert parse_delta("10:00").seconds == 10 * 60
 
 
-def test_parse_delta_with_hours():
+def test_parse_delta_with_hours() -> None:
     """Test delta parsing with hours, minutes, and seconds."""
 
     assert parse_delta("1:00:00").seconds == 60 * 60

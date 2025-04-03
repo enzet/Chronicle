@@ -121,7 +121,8 @@ class ListenPodcastEvent(Event):
         if not language:
             raise ChronicleValueException(f"Event `{self}` has no language.")
 
-        summary.register_listen(self.get_duration(), language)
+        if duration := self.get_duration():
+            summary.register_listen(duration, language)
 
 
 @dataclass
@@ -143,7 +144,7 @@ class ListenMusicEvent(Event):
     language: Language | None = None
     """Language of the lyrics."""
 
-    def get_language(self, _: Objects) -> Language:
+    def get_language(self, _: Objects) -> Language | None:
         """Get language of the music."""
         return self.language
 
@@ -155,7 +156,7 @@ class ListenMusicEvent(Event):
         .add_class_argument("language", Language)
     )
 
-    def get_duration(self) -> float:
+    def get_duration(self) -> float | None:
         """Get duration of the listening session in seconds."""
         if self.interval:
             return self.interval.get_duration()
@@ -264,7 +265,7 @@ class ReadEvent(Event):
             "screens",
             "slides",
         ):
-            coef = 1.0
+            coef: float = 1.0
             if self.volume.measure in (
                 "screens",
                 "slides",
@@ -402,7 +403,11 @@ class WatchEvent(Event):
         if language:
             summary.register_watch(self.get_duration(), language)
 
-        subject = self.subject if self.subject else self.video.subject
+        subject: Subject | None = None
+        if self.subject:
+            subject = self.subject
+        elif self.video and self.video.subject:
+            subject = self.video.subject
         if subject:
             summary.register_learn(self.get_duration(), subject, self.service)
 
@@ -424,7 +429,9 @@ class WatchEvent(Event):
         return 2.0 * 60.0 * 60.0
 
     def to_string(self) -> str:
-        result: str = f"watch {self.video.title}"
+        result: str = "watch"
+        if self.video and self.video.title:
+            result += f" {self.video.title}"
         if self.season:
             result += f" S {self.season}"
         if self.episode:
@@ -504,6 +511,8 @@ class ListenAudiobookEvent(Event):
             self.volume
             and self.volume.measure == "percent"
             and self.volume.to_ == 100.0
+            and self.audiobook
+            and self.audiobook.book
         ):
             summary.register_finished_book(self.audiobook.book)
 
@@ -528,7 +537,8 @@ class BalletEvent(Event):
 
     @override
     def register_summary(self, summary: Summary) -> None:
-        summary.register_show(self.ballet)
+        if self.ballet:
+            summary.register_show(self.ballet)
 
 
 @dataclass
@@ -568,7 +578,8 @@ class OperaEvent(Event):
 
     @override
     def register_summary(self, summary: Summary) -> None:
-        summary.register_show(self.opera)
+        if self.opera:
+            summary.register_show(self.opera)
 
 
 @dataclass
