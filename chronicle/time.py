@@ -1,3 +1,5 @@
+"""Time utilities."""
+
 import random
 import re
 from dataclasses import dataclass
@@ -6,7 +8,7 @@ from datetime import datetime, timedelta
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
 
-from typing import Callable, ClassVar, Optional
+from typing import Callable, ClassVar, Optional, Self
 
 DELTA_PATTERN_TEXT: str = r"(\d+:)?\d?\d:\d\d"
 DELTA_PATTERN_TEXT_GROUPS: str = r"((?P<h>\d+):)?(?P<m>\d?\d):(?P<s>\d\d)"
@@ -19,19 +21,20 @@ INTERVAL_PATTERN: re.Pattern = re.compile(
 
 @dataclass
 class Context:
+    """Context for time parsing."""
+
     current_date: datetime | None = None
 
 
 @dataclass
 class Moment:
-    """
-    Point in time with some certainty.
+    """Point in time with some certainty.
 
     For example,
-        - `1912` means time period from 1 January 1912 to 1 January 1913,
-        - `1912-01` means time period from 1 January 1912 to 1 February 1912.
-        - `1912-01-01` means time period from 1 January 1912 00:00 to 2 January
-          1912 00:00.
+      - `1912` means time period from 1 January 1912 to 1 January 1913,
+      - `1912-01` means time period from 1 January 1912 to 1 February 1912.
+      - `1912-01-01` means time period from 1 January 1912 00:00 to 2 January
+        1912 00:00.
     """
 
     year: int | None = None
@@ -42,8 +45,10 @@ class Moment:
     second: float | None = None
 
     @classmethod
-    def from_pseudo_edtf(cls, code: str) -> "Moment":
-        moment: "Moment" = cls()
+    def from_pseudo_edtf(cls, code: str) -> Self:
+        """Create moment from pseudo EDTF code."""
+
+        moment: Self = cls()
 
         date: str
         time: str
@@ -71,12 +76,15 @@ class Moment:
         return moment
 
     @classmethod
-    def from_string(cls, code: str, context: Context | None = None) -> "Moment":
-        moment: "Moment" = cls()
+    def from_string(cls, code: str, context: Context | None = None) -> Self:
+        """Create moment from string representation."""
+
+        moment: Self = cls()
+        date_parts: list[str]
 
         if "T" in code:
             date, time = code.split("T")
-            date_parts: list[str] = date.split("-")
+            date_parts = date.split("-")
 
             moment.year = int(date_parts[0])
             if len(date_parts) > 1:
@@ -90,7 +98,7 @@ class Moment:
             moment.day = context.current_date.day
         else:
             time = None
-            date_parts: list[str] = code.split("-")
+            date_parts = code.split("-")
             moment.year = int(date_parts[0])
             if len(date_parts) > 1:
                 moment.month = int(date_parts[1])
@@ -123,8 +131,19 @@ class Moment:
             second=int(self.second) if self.second is not None else 0,
         )
 
-    def __lt__(self, other: "Moment"):
-        return self.get_lower() < other.get_lower()  # FIXME
+    def __lt__(self, other: object) -> bool:
+        """Compare two moments."""
+
+        if not isinstance(other, Moment):
+            raise ValueError(f"Cannot compare `{self}` with `{other}`.")
+
+        if not (lower := self.get_lower()):
+            return False
+
+        if not (other_lower := other.get_lower()):
+            return True
+
+        return lower < other_lower
 
     def get_upper(self) -> datetime | None:
         """Compute upper bound of the moment."""
@@ -140,7 +159,8 @@ class Moment:
                 return datetime(year=self.year, month=self.month + 1, day=1)
             return datetime(year=self.year + 1, month=1, day=1)
 
-        lower: datetime = self.get_lower()
+        if not (lower := self.get_lower()):
+            return None
 
         if self.hour is None:
             return lower + timedelta(days=1)
@@ -154,6 +174,8 @@ class Moment:
         return lower
 
     def to_pseudo_edtf(self) -> str:
+        """Get string representation of the moment in EDTF format."""
+
         return (
             f"{self.year}"
             + (f"-{self.month:02d}" if self.month else "")
@@ -164,6 +186,8 @@ class Moment:
         )
 
     def to_pseudo_edtf_time(self) -> str:
+        """Get string representation of the moment in EDTF time format."""
+
         if self.hour is None:
             return (
                 f"{self.year}"
@@ -177,6 +201,8 @@ class Moment:
         )
 
     def to_string(self) -> str:
+        """Get string representation of the moment."""
+
         return (
             f"{self.year}"
             + (f".{self.month:02d}" if self.month else "")
@@ -193,42 +219,22 @@ class Moment:
         return self.to_string()
 
     @classmethod
-    def from_datetime(cls, date: datetime) -> "Moment":
-        moment = Moment(
+    def from_datetime(cls, date: datetime) -> Self:
+        """Create moment from datetime."""
+        return cls(
             date.year, date.month, date.day, date.hour, date.minute, date.second
         )
-        return moment
 
 
 class MalformedTime(Exception):
-    pass
+    """Exception raised when time is malformed."""
 
 
 @dataclass
 class Timedelta:
+    """Time delta."""
+
     delta: timedelta = timedelta()
-
-    def __sub__(self, other: "Timedelta") -> "Timedelta":
-        return Timedelta(self.delta - other.delta)
-
-    def total_seconds(self) -> float:
-        return self.delta.total_seconds()
-
-    @classmethod
-    def from_json(cls, code: str) -> Optional["Timedelta"]:
-        if not code:
-            return None
-        return cls(parse_delta(code))
-
-    @classmethod
-    def from_delta(cls, delta: timedelta) -> "Timedelta":
-        return cls(delta)
-
-    def to_json(self) -> str:
-        return format_delta(self.delta)
-
-    def to_string(self) -> str:
-        return format_delta(self.delta)
 
     patterns: ClassVar[list[re.Pattern]] = [DELTA_PATTERN_GROUPS]
 
@@ -241,6 +247,40 @@ class Timedelta:
             )
         )
     ]
+
+    def __sub__(self, other: object) -> Self:
+        """Subtract two time deltas."""
+
+        if not isinstance(other, Timedelta):
+            raise ValueError(f"Cannot subtract `{other}` from `{self}`.")
+
+        return Timedelta(self.delta - other.delta)
+
+    def total_seconds(self) -> float:
+        """Get total number of seconds."""
+
+        return self.delta.total_seconds()
+
+    @classmethod
+    def from_json(cls, code: str) -> Optional["Timedelta"]:
+        """Create time delta from JSON string."""
+
+        if not code:
+            return None
+        return cls(parse_delta(code))
+
+    @classmethod
+    def from_delta(cls, delta: timedelta) -> Self:
+        """Create time delta from timedelta."""
+        return cls(delta)
+
+    def to_json(self) -> str:
+        """Get JSON representation of the time delta."""
+        return format_delta(self.delta)
+
+    def to_string(self) -> str:
+        """Get string representation of the time delta."""
+        return format_delta(self.delta)
 
 
 class Time:
@@ -267,22 +307,28 @@ class Time:
         return self.get_lower() < other.get_lower()
 
     @classmethod
-    def from_moments(cls, start_moment: Moment, end_moment: Moment) -> "Time":
-        time: "Time" = cls("")
+    def from_moments(cls, start_moment: Moment, end_moment: Moment) -> Self:
+        """Create time from two moments."""
+
+        time: Self = cls("")
         time.start = start_moment
         time.end = end_moment
         return time
 
     @classmethod
-    def from_moment(cls, moment: Moment) -> "Time":
-        time: "Time" = cls("")
+    def from_moment(cls, moment: Moment) -> Self:
+        """Create time from a moment."""
+
+        time: Self = cls("")
         time.start = moment
         time.end = moment
         return time
 
     @classmethod
-    def from_string(cls, code: str, context: Context | None = None) -> "Time":
-        time: "Time" = cls("")
+    def from_string(cls, code: str, context: Context | None = None) -> Self:
+        """Create time from string."""
+
+        time: Self = cls("")
 
         if "/" in code:
             start_, end_ = code.split("/")
@@ -300,7 +346,9 @@ class Time:
         return self.to_pseudo_edtf()
 
     def to_pseudo_edtf(self) -> str:
-        if self.start == self.end:
+        """Get string representation of the time in EDTF format."""
+
+        if self.start and self.start == self.end:
             return self.start.to_pseudo_edtf()
         return (
             (self.start.to_pseudo_edtf() if self.start else "")
@@ -309,7 +357,9 @@ class Time:
         )
 
     def to_string(self) -> str:
-        if self.start == self.end:
+        """Get string representation of the time."""
+
+        if self.start and self.start == self.end:
             return self.start.to_string()
 
         return (
@@ -321,8 +371,10 @@ class Time:
     def __repr__(self) -> str:
         return self.to_string()
 
-    def to_pseudo_edtf_time(self):
-        if self.start == self.end:
+    def to_pseudo_edtf_time(self) -> str:
+        """Get string representation of the time in EDTF time format."""
+
+        if self.start and self.start == self.end:
             return self.start.to_pseudo_edtf_time()
 
         return (
@@ -332,6 +384,8 @@ class Time:
         )
 
     def get_duration(self) -> float | None:
+        """Get duration of the time."""
+
         if not self.start or not self.end:
             return 0  # FIXME
 
@@ -341,57 +395,71 @@ class Time:
         return (self.end.get_lower() - self.start.get_lower()).total_seconds()
 
     def get_lower(self) -> datetime:
-        if self.start:
-            return self.start.get_lower()
-        elif self.end:
-            return self.end.get_lower()
+        """Get lower bound of the time."""
+
+        if self.start and (lower := self.start.get_lower()):
+            return lower
+        if self.end and (lower := self.end.get_lower()):
+            return lower
 
         raise MalformedTime()
 
     def get_upper(self) -> datetime:
-        if self.end:
-            return self.end.get_upper()
-        elif self.start:
-            # return self.start.get_upper()
-            return datetime.now()
+        """Get upper bound of the time."""
+
+        if self.end and (upper := self.end.get_upper()):
+            return upper
+        if self.start and (upper := self.start.get_upper()):
+            return upper
 
         raise MalformedTime()
 
     def get_moment(self) -> datetime:
-        if self.start and self.end:
-            return (
-                self.start.get_lower()
-                + (self.end.get_lower() - self.start.get_lower()) / 2
-            )
-        elif self.start:
-            return self.start.get_lower()
-        elif self.end:
-            return self.end.get_lower()
+        """Get moment of the time: one of the bounds, or middle point."""
+
+        if (
+            self.start
+            and self.end
+            and (start := self.start.get_lower())
+            and (end := self.end.get_lower())
+        ):
+            return start + (end - start) / 2
+        if self.start and (moment := self.start.get_lower()):
+            return moment
+        if self.end and (moment := self.end.get_lower()):
+            return moment
 
         raise MalformedTime()
 
     def get_random(self) -> datetime:
-        if self.start and self.end:
-            return (
-                self.start.get_lower()
-                + (self.end.get_lower() - self.start.get_lower())
-                * random.random()
-            )
-        elif self.start:
-            return self.start.get_lower()
-        elif self.end:
-            return self.end.get_lower()
+        """Get random moment from the time."""
+
+        if (
+            self.start
+            and self.end
+            and (start := self.start.get_lower())
+            and (end := self.end.get_lower())
+        ):
+            return start + (end - start) * random.random()
+        if self.start and (moment := self.start.get_random()):
+            return moment
+        if self.end and (moment := self.end.get_random()):
+            return moment
 
         raise MalformedTime()
 
 
 def parse_delta(string_delta: str) -> timedelta:
     """Parse time delta from a string representation."""
+
     if string_delta.count(":") == 2:
         hour, minute, second = (int(x) for x in string_delta.split(":"))
     elif string_delta.count(":") == 1:
         hour = 0
         minute, second = (int(x) for x in string_delta.split(":"))
+    else:
+        raise MalformedTime()
+
     return timedelta(seconds=hour * 3600 + minute * 60 + second)
 
 
@@ -412,21 +480,28 @@ def format_delta(delta: timedelta) -> str:
 
 
 def humanize_delta(delta: timedelta) -> str:
+    """Get human-readable representation of a time delta."""
+
     if delta.days > 365 * 2:
         return f"{delta.days // 365} years"
-    elif delta.days > 365:
+    if delta.days > 365:
         return "1 year"
-    else:
-        return f"{delta.days} days"
+    return f"{delta.days} days"
 
 
 def start_of_day(time: datetime) -> datetime:
+    """Get start of the day."""
+
     return datetime(year=time.year, month=time.month, day=time.day)
 
 
 def start_of_month(time: datetime) -> datetime:
+    """Get start of the month."""
+
     return datetime(year=time.year, month=time.month, day=1)
 
 
 def start_of_year(time: datetime) -> datetime:
+    """Get start of the year."""
+
     return datetime(year=time.year, month=1, day=1)
