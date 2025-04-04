@@ -4,12 +4,11 @@ import copy
 import logging
 import re
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any, Callable, Self
 
 from chronicle.errors import (
     ChronicleAmbiguousArgumentError,
     ChronicleArgumentError,
-    ChronicleObjectNotFoundException,
 )
 
 __author__ = "Sergey Vartanov"
@@ -177,7 +176,7 @@ class Arguments:
         command_printer: Callable | None = None,
         html_printer: Callable = lambda o, v: v.to_string(o),
         is_insert: bool = False,
-    ) -> "Arguments":
+    ) -> Self:
         """Add argument to a parser."""
 
         argument: Argument = Argument(
@@ -197,12 +196,12 @@ class Arguments:
             self.arguments.append(argument)
         return self
 
-    def __add__(self, other: "Arguments") -> "Arguments":
+    def __add__(self, other: Self) -> Self:
         for argument in other.arguments:
             self.add(argument)
         return self
 
-    def add_class_argument(self, name: str, class_: type) -> "Arguments":
+    def add_class_argument(self, name: str, class_: type) -> Self:
         """Add argument using value class.
 
         Value class should specify patterns and extractors. E.g. language.
@@ -227,7 +226,7 @@ class Arguments:
 
     def add_object_argument(
         self, name: str, class_: type, is_insert: bool = False
-    ) -> "Arguments":
+    ) -> Self:
         """Add argument using object class.
 
         Value of this argument is a link to an object or a simple description
@@ -237,10 +236,7 @@ class Arguments:
         def object_loader(value: str, objects):
             """Get an existing object or create a new one."""
             if value.startswith("@"):
-                try:
-                    return objects.get_object(value)
-                except ChronicleObjectNotFoundException:
-                    raise
+                return objects.get_object(value)
             new_object = class_.from_value(value)
             objects.set_object(value, new_object)
             return new_object
@@ -265,7 +261,9 @@ class Arguments:
         return self
 
     def to_string(self, value) -> str:
-        text = self.command
+        """Get text representation of arguments."""
+
+        text: str = self.command
         for argument in self.arguments:
             if hasattr(value, argument.key) and getattr(value, argument.key):
                 string: str = argument.pretty_printer(
@@ -275,8 +273,10 @@ class Arguments:
                     text += " " + string
         return text
 
-    def to_html(self, objects, value):
-        text = self.command
+    def to_html(self, objects, value) -> str:
+        """Get HTML representation of arguments."""
+
+        text: str = self.command
         for argument in self.arguments:
             if hasattr(value, argument.key) and getattr(value, argument.key):
                 string: str = argument.html_printer(
@@ -286,8 +286,9 @@ class Arguments:
                     text += " " + string
         return text
 
-    def to_object_command(self, value):
+    def to_object_command(self, value) -> str:
         """Convert entity with arguments to normalized command."""
+
         text: str = ""
         for argument in self.arguments:
             if not hasattr(value, argument.key) or not getattr(
@@ -314,8 +315,10 @@ class Arguments:
                 )
         return text
 
-    def to_command(self, event):
-        text = event.time.to_pseudo_edtf_time() + " " + self.prefixes[0]
+    def to_command(self, event) -> str:
+        """Get command representation of event."""
+
+        text: str = event.time.to_pseudo_edtf_time() + " " + self.prefixes[0]
         for argument in self.arguments:
             if hasattr(event, argument.key):
                 if getattr(event, argument.key):

@@ -634,6 +634,8 @@ class Objects:
         self.objects[id_] = new_object
 
     def get_commands(self) -> list[str]:
+        """Get text representation of object commands."""
+
         commands: list[str] = []
         for id_, object_ in self.objects.items():
             commands.append(
@@ -641,7 +643,9 @@ class Objects:
             )
         return commands
 
-    def fill_movie(self, object_: Video, cache_path: Path):
+    def fill_movie(self, object_: Video, cache_path: Path) -> None:
+        """Fill Wikidata ID and other data for a movie."""
+
         object_data: dict = json.loads(
             get_data(
                 cache_path / f"moving_image_{object_.title}@en.json",
@@ -688,7 +692,9 @@ class Objects:
             index = int(input()) - 1
             object_.wikidata_id = items[index].wikidata_id
 
-    def fill(self, cache_path: Path):
+    def fill(self, cache_path: Path) -> None:
+        """Fill data for all objects."""
+
         for object_ in self.objects.values():
             if isinstance(object_, Video):
                 if object_.wikidata_id:

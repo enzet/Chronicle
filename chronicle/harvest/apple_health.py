@@ -27,18 +27,19 @@ class AppleHealthImporter(Importer):
         with self.file_path.open(encoding="utf-8") as input_file:
             data: dict = json.load(input_file)["data"]
 
-        if metrics := data.get("metrics"):
-            for metric in metrics:
-                if metric["name"] == "walking_running_distance":
-                    for element in metric["data"]:
-                        moment = Moment.from_datetime(
-                            datetime.strptime(
-                                element["date"], "%Y-%m-%d %H:%M:%S %z"
-                            )
+        if not (metrics := data.get("metrics")):
+            return
+
+        for metric in metrics:
+            if metric["name"] == "walking_running_distance":
+                for element in metric["data"]:
+                    moment: Moment = Moment.from_datetime(
+                        datetime.strptime(
+                            element["date"], "%Y-%m-%d %H:%M:%S %z"
                         )
-                        timeline.events.append(
-                            MoveEvent(
-                                time=Time.from_moment(moment),
-                                distance=element["qty"] * 1000,
-                            )
-                        )
+                    )
+                    event: MoveEvent = MoveEvent(
+                        time=Time.from_moment(moment),
+                        distance=element["qty"] * 1000,
+                    )
+                    timeline.events.append(event)

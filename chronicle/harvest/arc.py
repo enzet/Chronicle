@@ -59,3 +59,7 @@ class ArcImporter(Importer):
                             timeline_item["endDate"],
                             timeline_item["activityType"],
                         )
+
+                    # FIXME: implement.
+
+                    # There is also "activityType" in `timeline_item`.

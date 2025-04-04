@@ -1,3 +1,5 @@
+"""Comute events."""
+
 import re
 from dataclasses import dataclass, field
 from typing import ClassVar
