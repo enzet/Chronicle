@@ -1,5 +1,11 @@
 """Argument parsing utilities."""
 
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from chronicle.objects.core import Objects
+
 import copy
 import logging
 import re
@@ -29,7 +35,8 @@ def default_pretty_printer(value: Any) -> str:
     return value.to_string()
 
 
-def default_loader(value: str, objects) -> Any:
+def default_loader(value: Any, _: Objects) -> Any:
+    """Default loader for arguments."""
     return value
 
 
@@ -43,7 +50,7 @@ class Argument:
     description: str | None = None
     """Argument description."""
 
-    loader: Callable[[Any], Any] | None = default_loader
+    loader: Callable[[Any, Objects], Any] | None = default_loader
     """Value loader."""
 
     prefix: str | None = None
@@ -83,7 +90,7 @@ class Arguments:
         self.command: str = command
         self.arguments: list[Argument] = []
 
-    def parse(self, tokens: list[str], objects) -> dict[str, Any]:
+    def parse(self, tokens: list[str], objects: Objects) -> dict[str, Any]:
         """Parse arguments from command."""
 
         # Event may have no arguments.
@@ -98,7 +105,9 @@ class Arguments:
         result: dict[str, str] = {}
 
         current_key: str | None = main.key if main else None
-        current_loader = main.loader if main else None
+        current_loader: Callable[[Any, Objects], Any] | None = (
+            main.loader if main else None
+        )
         current: str = ""
 
         def load_current() -> None:
@@ -233,7 +242,7 @@ class Arguments:
         of an object.
         """
 
-        def object_loader(value: str, objects):
+        def object_loader(value: str, objects: Objects) -> Any:
             """Get an existing object or create a new one."""
             if value.startswith("@"):
                 return objects.get_object(value)
@@ -260,7 +269,7 @@ class Arguments:
         self.arguments.append(argument)
         return self
 
-    def to_string(self, value) -> str:
+    def to_string(self, value: Any) -> str:
         """Get text representation of arguments."""
 
         text: str = self.command
