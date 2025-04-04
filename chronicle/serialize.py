@@ -1,18 +1,19 @@
 import logging
-from dataclasses import dataclass
 from types import UnionType
-from typing import Any, Self
 
 from chronicle.event.art import Language  # noqa: F401
 from chronicle.event.common import Cost  # noqa: F401
 
 # Do not delete: these imports add classes to `globals`.
+from chronicle.event.core import Event
 from chronicle.time import Timedelta  # noqa: F401
 from chronicle.value import ChronicleValueException  # noqa: F401
 from chronicle.value import Interval  # noqa: F401
 
 
-def construct_types(event_class, field_: str) -> list:
+def construct_types(event_class: type[Event], field_: str) -> list:
+    """Construct types for a field."""
+
     if field_ in ["from", "to"]:
         field_ += "_"
 
@@ -44,7 +45,9 @@ def construct_types(event_class, field_: str) -> list:
     return [value_class]
 
 
-def fill(data: dict, class_, object_):
+def fill(data: dict, class_: type[Event], object_: Event) -> None:
+    """Fill object from data."""
+
     for key, value in data.items():
         if key in ["type", "time", "id"] or key.startswith("__"):
             continue
@@ -84,25 +87,3 @@ def fill(data: dict, class_, object_):
                         value_class.__name__,
                     )
                 break
-
-
-@dataclass
-class Serializable:
-    @classmethod
-    def from_json(cls, data: Any) -> Self:
-        """Create object from JSON."""
-
-        object_ = cls()
-        if isinstance(data, dict):
-            fill(data, cls, object_)
-        else:
-            # Should be implemented in subclass.
-            raise NotImplementedError(
-                f"`from_json` is not implemented for `{cls.__name__}`, type "
-                f"is `{type(data)}`"
-            )
-
-        return object_
-
-    def to_json(self) -> Any:
-        raise NotImplementedError()

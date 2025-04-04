@@ -1,8 +1,10 @@
+"""Viewer for books, podcasts, and videos."""
+
 import argparse
 import re
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Callable, Optional, Union
+from typing import Callable, Union
 
 from rich import box
 from rich.console import Console
@@ -73,10 +75,14 @@ class PodcastViewer:
                 podcasts[event.podcast].append(event)
 
         for podcast, events in podcasts.items():
-            seasons = defaultdict(list)
+            seasons: dict[int, list[int | str]] = defaultdict(list)
             for event in events:
                 if event.season:
-                    seasons[event.season].append(event.episode)
+                    if event.episode:
+                        seasons[event.season].append(event.episode)
+                    else:
+                        seasons[event.season].append("")
+            episodes: list[int | str]
             if len(seasons) > 1:
                 Console().print(f"[bold]{podcast.title}[/bold]:")
                 for season, episodes in sorted(
@@ -130,6 +136,9 @@ def normalize(
 def equals(a: float | None, b: float | None) -> bool:
     """Check if two values are equal."""
 
+    if a is None or b is None:
+        return a is None and b is None
+
     return abs(a - b) < 0.1
 
 
@@ -141,7 +150,6 @@ def union_volumes(
     E.g. for two reading volumes [25, 30] and [30, 40] create one volume [25,
     40].
     """
-
     result: set[Volume | AudiobookVolume] = set()
 
     while volumes:
@@ -368,12 +376,12 @@ class VideoViewer:
         for video, events in sorted(
             videos.items(), key=lambda x: get_sort_key(x[0].title or "")
         ):
-            seasons: dict[Optional[int], list[Union[int, str]]] = defaultdict(
-                list
-            )
+            seasons: dict[int | None, list[int | str]] = defaultdict(list)
             for event in events:
                 if event.episode:
                     seasons[event.season].append(event.episode)
+
+            episodes: list[int | str]
 
             if not seasons:
                 episodes_text = ""

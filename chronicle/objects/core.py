@@ -9,6 +9,7 @@ from colour import Color
 
 from chronicle.argument import Arguments
 from chronicle.errors import (
+    ChronicleArgumentError,
     ChronicleCodeException,
     ChronicleObjectNotFoundException,
 )
@@ -606,6 +607,8 @@ class Objects:
         raise ChronicleObjectNotFoundException(object_id)
 
     def parse_command(self, command: str, tokens: list[str]) -> None:
+        """Parse object from its declaration command."""
+
         prefix: str = tokens[0]
         id_: str = tokens[1]
         if id_.startswith("@"):
@@ -616,12 +619,19 @@ class Objects:
                 f"Class for objects with prefix `{prefix}` not found."
             )
 
-        data = self.prefix_to_class[prefix].arguments.parse(tokens[3:], self)
+        object_class: type[Object] = self.prefix_to_class[prefix]
+        try:
+            data = object_class.arguments.parse(tokens[3:], self)
+        except ChronicleArgumentError as error:
+            raise ChronicleValueException(
+                f"Error parsing command `{command}`: {error}."
+            ) from error
+
         # Create new object.
-        new_object = self.prefix_to_class[prefix](id_, **data)
+        new_object = object_class(id_, **data)
+
         # Register new object.
         self.objects[id_] = new_object
-        return
 
     def get_commands(self) -> list[str]:
         commands: list[str] = []
