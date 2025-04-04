@@ -288,9 +288,9 @@ class BookViewer:
         table.add_column("Title", width=50)
         table.add_column("Volumes")
 
-        books: dict[
-            Book, list[ReadEvent | ListenAudiobookEvent]
-        ] = self.get_books(filter_)
+        books: dict[Book, list[ReadEvent | ListenAudiobookEvent]] = (
+            self.get_books(filter_)
+        )
 
         for book, events in sorted(
             books.items(), key=lambda x: x[0].volume if x[0].volume else 0
@@ -319,9 +319,9 @@ class BookViewer:
     def show_book_volume(self, arguments: argparse.Namespace) -> None:
         """Show book volume."""
 
-        books: dict[
-            Book, list[ReadEvent | ListenAudiobookEvent]
-        ] = self.get_books(lambda x: arguments.request.match(x.title))
+        books: dict[Book, list[ReadEvent | ListenAudiobookEvent]] = (
+            self.get_books(lambda x: arguments.request.match(x.title))
+        )
         for book, events in books.items():
             if not book:
                 continue

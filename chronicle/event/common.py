@@ -1,3 +1,5 @@
+"""Common events."""
+
 import logging
 import re
 from dataclasses import dataclass
@@ -190,14 +192,14 @@ class WriteEvent(Event):
 
     @override
     def register_summary(self, summary: Summary) -> None:
-        if self.language:
-            if not self.get_duration() and self.volume:
-                if self.volume.measure == "words":
-                    summary.register_write_words(
-                        self.volume.value, self.language
-                    )
-            else:
-                summary.register_write(self.get_duration(), self.language)
+        if not self.language:
+            return
+
+        if not self.get_duration() and self.volume:
+            if self.volume.measure == "words" and self.volume.value:
+                summary.register_write_words(self.volume.value, self.language)
+        elif duration := self.get_duration():
+            summary.register_write(duration, self.language)
 
 
 @dataclass
@@ -256,8 +258,8 @@ class SpeakEvent(Event):
 
     @override
     def register_summary(self, summary: Summary) -> None:
-        if self.language:
-            summary.register_speak(self.get_duration(), self.language)
+        if self.language and (duration := self.get_duration()):
+            summary.register_speak(duration, self.language)
 
 
 @dataclass
@@ -342,8 +344,6 @@ class DrawEvent(Event):
 @dataclass
 class PainEvent(Event):
     """Event representing experiencing pain."""
-
-    pass
 
 
 @dataclass

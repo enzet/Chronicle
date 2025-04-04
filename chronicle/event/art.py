@@ -242,6 +242,7 @@ class ReadEvent(Event):
     @override
     def register_summary(self, summary: Summary) -> None:
         # Use language from the event or language of the book.
+
         language: Language
         if self.language:
             language = self.language
@@ -256,8 +257,13 @@ class ReadEvent(Event):
 
         # Compute pages.
         pages: float | None = None
-        if self.volume and self.volume.get_ratio() and self.book.volume:
-            pages = self.volume.get_ratio() * self.book.volume
+        if (
+            self.volume
+            and (ratio := self.volume.get_ratio())
+            and self.book
+            and self.book.volume
+        ):
+            pages = ratio * self.book.volume
 
         if self.volume and self.volume.measure in (
             "four_inches_pages",
@@ -343,7 +349,8 @@ class StandupEvent(Event):
 
     @override
     def register_summary(self, summary: Summary) -> None:
-        summary.register_show(Standup(self.title, artist=self.artist))
+        id_: str = self.title or self.artist or "standup"
+        summary.register_show(Standup(id_, artist=self.artist))
 
 
 @dataclass
@@ -418,8 +425,8 @@ class WatchEvent(Event):
             return self.interval.get_duration()
         if self.duration:
             return self.duration.total_seconds()
-        if not self.time.is_assumed:
-            return self.time.get_duration()
+        if not self.time.is_assumed and (duration := self.time.get_duration()):
+            return duration
 
         # Estimate episode length to be 40 minutes.
         if self.episode or self.season:

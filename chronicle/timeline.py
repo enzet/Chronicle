@@ -17,7 +17,6 @@ from chronicle.event.sport import MoveEvent, SportEvent
 from chronicle.event.transport import TransportEvent
 from chronicle.objects.clothes import Clothes
 from chronicle.objects.core import Medication, Objects, Thing
-from chronicle.serialize import fill
 from chronicle.summary.core import Summary
 from chronicle.time import Context, MalformedTime, Time, humanize_delta
 
@@ -98,56 +97,6 @@ class Timeline:
     def __len__(self) -> int:
         """Number of events."""
         return len(self.events)
-
-    def parse_data(self, data: dict) -> None:
-        """Parse data.
-
-        It is assumed that `data` has `objects` and `events` lists.
-        """
-        context: Context = Context()
-        if "objects" in data:
-            for object_type in data["objects"]:
-                for object_id, object_data in data["objects"][
-                    object_type
-                ].items():
-                    object_data["id"] = object_id
-                    self.parse_object_data(object_data, object_type)
-        if "events" in data:
-            for event_data in data["events"]:
-                self.parse_event_data(event_data, context)
-
-    def parse_object_data(self, object_data: dict, object_type: str):
-        object_class = type_to_class(object_type, "")
-        if object_class:
-            object_ = object_class()
-            fill(object_data, object_class, object_)
-            self.objects.set_object(object_data["id"], object_)
-
-    def parse_event_data(self, event_data: dict, context: Context) -> None:
-        if (
-            "_" in event_data
-        ):  # FIXME: remove this, it's temporary mark for comment-out.
-            return
-        if "type" not in event_data:
-            logging.error("No type in event data %s.", event_data)
-        if "time" not in event_data:
-            logging.error("No time in event data %s.", event_data)
-        if event_data["type"].endswith("__"):
-            return
-
-        event_class = type_to_class(event_data["type"], "Event")
-        if event_class:
-            time: Time = Time.from_string(event_data["time"], context)
-            if time.get_lower() is None:
-                logging.error("Bad time for %s.", event_data)
-                return
-            event: Event = event_class(time)
-            fill(event_data, event_class, event)
-            self.events.append(event)
-        else:
-            ChronicleValueException(
-                f'No class for event type `{event_data["type"]}`.'
-            )
 
     def parse_event_command(
         self,
