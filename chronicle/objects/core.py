@@ -321,6 +321,8 @@ class Card(Thing):
 
 @dataclass
 class Pen(Thing):
+    """Pen or other writing instrument."""
+
     arguments: ClassVar[Arguments] = Thing.arguments.replace(["pen"], "pen")
 
 
