@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+if [ -d ".venv" ]; then
+    source .venv/bin/activate
+else
+    echo "No virtual environment found."
+    exit 1
+fi
+
 python_files="chronicle tests"
 
 echo "Checking code format with Black..."
@@ -17,3 +24,4 @@ flake8 \
     --ignore=ANN002,ANN003,ANN101,ANN102,E203,F403,F405,W503 \
     ${python_files} \
     || { echo "FAIL"; exit 1; }
+
