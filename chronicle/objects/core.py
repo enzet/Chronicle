@@ -1,3 +1,5 @@
+"""Objects that can be used in events."""
+
 import json
 import re
 from dataclasses import dataclass, field
@@ -74,6 +76,7 @@ class Object:
 
     @classmethod
     def from_value(cls, value: str) -> Self:
+        """Create an object from a string value."""
         return cls(None)
 
     arguments: ClassVar[Arguments] = Arguments(
@@ -81,6 +84,7 @@ class Object:
     ).add_class_argument("tags", Tags)
 
     def to_command(self) -> str:
+        """Get command representation of an object."""
         return self.arguments.to_object_command(self)
 
     prefix: ClassVar[str] = None
@@ -162,7 +166,10 @@ class Place(Object):
 
 @dataclass
 class ArtObject(Object):
+    """An artwork."""
+
     name: str | None = None
+    """Name of the artwork."""
 
     arguments: ClassVar[Arguments] = Arguments(
         ["art_object"], "art_object"
@@ -171,7 +178,10 @@ class ArtObject(Object):
 
 @dataclass
 class Country(Object):
+    """A country."""
+
     name: str | None = None
+    """Name of the country."""
 
     arguments: ClassVar[Arguments] = Arguments(
         ["country"], "country"
@@ -180,6 +190,8 @@ class Country(Object):
 
 @dataclass
 class Airport(Place):
+    """An airport."""
+
     arguments: ClassVar[Arguments] = Place.arguments.replace(
         ["airport"], "airport"
     )
@@ -187,6 +199,8 @@ class Airport(Place):
 
 @dataclass
 class ArtCenter(Place):
+    """An art center."""
+
     arguments: ClassVar[Arguments] = Place.arguments.replace(
         ["art_center"], "art_center"
     )
@@ -194,16 +208,22 @@ class ArtCenter(Place):
 
 @dataclass
 class Bank(Place):
+    """A bank."""
+
     arguments: ClassVar[Arguments] = Place.arguments.replace(["bank"], "bank")
 
 
 @dataclass
 class Cafe(Place):
+    """A cafe or some other place for having a meal."""
+
     arguments: ClassVar[Arguments] = Place.arguments.replace(["cafe"], "cafe")
 
 
 @dataclass
 class Clinic(Place):
+    """A clinic, a hospital, or some other place for medical treatment."""
+
     arguments: ClassVar[Arguments] = Place.arguments.replace(
         ["clinic"], "clinic"
     )
@@ -211,26 +231,36 @@ class Clinic(Place):
 
 @dataclass
 class Club(Place):
+    """A club."""
+
     arguments: ClassVar[Arguments] = Place.arguments.replace(["club"], "club")
 
 
 @dataclass
 class Home(Place):
+    """A place of permanent or temporary residence."""
+
     arguments: ClassVar[Arguments] = Place.arguments.replace(["home"], "home")
 
 
 @dataclass
 class Park(Place):
+    """A park."""
+
     arguments: ClassVar[Arguments] = Place.arguments.replace(["park"], "park")
 
 
 @dataclass
 class Shop(Place):
+    """A shop."""
+
     arguments: ClassVar[Arguments] = Place.arguments.replace(["shop"], "shop")
 
 
 @dataclass
 class Station(Place):
+    """A railway station."""
+
     arguments: ClassVar[Arguments] = Place.arguments.replace(
         ["station"], "station"
     )
@@ -238,6 +268,8 @@ class Station(Place):
 
 @dataclass
 class University(Place):
+    """A university."""
+
     arguments: ClassVar[Arguments] = Place.arguments.replace(
         ["university"], "university"
     )
@@ -294,7 +326,10 @@ class Service(Object):
 
 @dataclass
 class Medication(Thing):
+    """A medication."""
+
     title: str | None = None
+    """Name of the medication."""
 
     arguments: ClassVar[Arguments] = (
         Arguments(["medication"], "medication").add_argument("title")
@@ -313,6 +348,8 @@ class Notebook(Thing):
 
 @dataclass
 class Card(Thing):
+    """A bank card."""
+
     arguments: ClassVar[Arguments] = Thing.arguments.replace(["card"], "card")
 
 
@@ -328,11 +365,15 @@ class Pen(Thing):
 
 @dataclass
 class Cup(Thing):
+    """A cup."""
+
     arguments: ClassVar[Arguments] = Thing.arguments.replace(["cup"], "cup")
 
 
 @dataclass
 class Device(Thing):
+    """Some device."""
+
     arguments: ClassVar[Arguments] = Thing.arguments.replace(
         ["device"], "device"
     )
@@ -340,6 +381,8 @@ class Device(Thing):
 
 @dataclass
 class Glasses(Thing):
+    """Glasses."""
+
     arguments: ClassVar[Arguments] = Thing.arguments.replace(
         ["glasses"], "glasses"
     )
@@ -347,6 +390,8 @@ class Glasses(Thing):
 
 @dataclass
 class Headphones(Thing):
+    """Headphones."""
+
     arguments: ClassVar[Arguments] = Thing.arguments.replace(
         ["headphones"], "headphones"
     )
@@ -354,6 +399,8 @@ class Headphones(Thing):
 
 @dataclass
 class Computer(Thing):
+    """A computer, laptop or desktop."""
+
     arguments: ClassVar[Arguments] = Thing.arguments.replace(
         ["computer"], "computer"
     )
@@ -361,16 +408,22 @@ class Computer(Thing):
 
 @dataclass
 class Pack(Thing):
+    """A pack, a bag, or some other container."""
+
     arguments: ClassVar[Arguments] = Thing.arguments.replace(["pack"], "pack")
 
 
 @dataclass
 class Phone(Thing):
+    """A phone, a smartphone, or some other device for communication."""
+
     arguments: ClassVar[Arguments] = Thing.arguments.replace(["phone"], "phone")
 
 
 @dataclass
 class Watch(Thing):
+    """A watch, a wristwatch, or some other device for telling time."""
+
     arguments: ClassVar[Arguments] = Thing.arguments.replace(["watch"], "watch")
 
 
@@ -381,11 +434,15 @@ class Ink(Thing):
 
 @dataclass
 class Cable(Thing):
+    """A cable, a wire, or some other device for connecting devices."""
+
     arguments: ClassVar[Arguments] = Thing.arguments.replace(["cable"], "cable")
 
 
 @dataclass
 class BookObject(Thing):
+    """A physical printed book."""
+
     arguments: ClassVar[Arguments] = Thing.arguments.replace(
         ["book_object"], "book_object"
     )
@@ -393,6 +450,8 @@ class BookObject(Thing):
 
 @dataclass
 class Document(Thing):
+    """A document printed on paper."""
+
     arguments: ClassVar[Arguments] = Thing.arguments.replace(
         ["document"], "document"
     )
@@ -400,6 +459,8 @@ class Document(Thing):
 
 @dataclass
 class Video(ArtObject):
+    """Video, and artwork, not physical object as DVD."""
+
     title: str | None = None
     """Title of the video."""
 
@@ -590,6 +651,8 @@ class Objects:
 
     @staticmethod
     def get_classes(class_: type) -> list:
+        """Get all subclasses of a class."""
+
         classes: list = [class_]
         if class_.__subclasses__():
             for subclass in class_.__subclasses__():

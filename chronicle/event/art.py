@@ -158,6 +158,7 @@ class ListenMusicEvent(Event):
 
     def get_duration(self) -> float | None:
         """Get duration of the listening session in seconds."""
+
         if self.interval:
             return self.interval.get_duration()
         return self.time.get_duration()

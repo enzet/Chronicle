@@ -29,8 +29,11 @@ class Clothes(Thing):
 class Coat(Clothes):
     """An outer garment worn over other clothes."""
 
-    color: str
-    size: str
+    color: str | None = None
+    """Color of the coat."""
+
+    size: str | None = None
+    """Size of the coat."""
 
     arguments: ClassVar[Arguments] = Clothes.arguments.replace(["coat"], "coat")
 
@@ -44,7 +47,7 @@ class Hat(Clothes):
 
 @dataclass
 class Jacket(Clothes):
-    """A jacket is a light jacket worn over other clothes."""
+    """Jacket, a light jacket worn over other clothes."""
 
     arguments: ClassVar[Arguments] = Clothes.arguments.replace(
         ["jacket"], "jacket"
@@ -53,6 +56,8 @@ class Jacket(Clothes):
 
 @dataclass
 class Pants(Clothes):
+    """Pants, a type of clothing worn on the lower body."""
+
     arguments: ClassVar[Arguments] = Clothes.arguments.replace(
         ["pants"], "pants"
     )
@@ -60,6 +65,8 @@ class Pants(Clothes):
 
 @dataclass
 class Shoes(Clothes):
+    """Shoes, a type of footwear worn on the feet."""
+
     arguments: ClassVar[Arguments] = Clothes.arguments.replace(
         ["shoes"], "shoes"
     )
@@ -76,7 +83,7 @@ class Socks(Clothes):
 
 @dataclass
 class Sweater(Clothes):
-    """A warm, knitted garment worn on the body."""
+    """Sweater, a warm, knitted garment worn on the body."""
 
     arguments: ClassVar[Arguments] = Clothes.arguments.replace(
         ["sweater"], "sweater"
@@ -85,7 +92,7 @@ class Sweater(Clothes):
 
 @dataclass
 class TShirt(Clothes):
-    """A short-sleeved shirt."""
+    """T-shirt, a short-sleeved shirt."""
 
     arguments: ClassVar[Arguments] = Clothes.arguments.replace(
         ["t_shirt"], "t_shirt"
@@ -94,7 +101,7 @@ class TShirt(Clothes):
 
 @dataclass
 class Underpants(Clothes):
-    """Underwear worn on the body."""
+    """Underpants, underwear worn on the body."""
 
     arguments: ClassVar[Arguments] = Clothes.arguments.replace(
         ["underpants"], "underpants"
@@ -103,6 +110,6 @@ class Underpants(Clothes):
 
 @dataclass
 class Belt(Clothes):
-    """A strip of material worn around the waist."""
+    """Belt, a strip of material worn around the waist."""
 
     arguments: ClassVar[Arguments] = Clothes.arguments.replace(["belt"], "belt")

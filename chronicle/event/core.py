@@ -74,9 +74,11 @@ class Event:
         return self.arguments.to_string(self)
 
     def to_html(self, objects: Objects) -> str:
+        """Get HTML representation of an event."""
         return self.arguments.to_html(objects, self)
 
     def to_command(self) -> str:
+        """Get command representation of an event."""
         return self.arguments.to_command(self)
 
     def get_color(self) -> str:
