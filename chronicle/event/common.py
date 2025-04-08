@@ -85,14 +85,9 @@ class CleanEvent(Event):
     object_: Object | None = None
     """Object that was cleaned."""
 
-    tags: Tags | None = None
-    """Tags of the object that was cleaned."""
-
-    arguments: ClassVar[Arguments] = (
-        Arguments(["clean", "wash"], "clean")
-        .add_object_argument("object_", Object)
-        .add_class_argument("tags", Tags)
-    )
+    arguments: ClassVar[Arguments] = Arguments(
+        ["clean", "wash"], "clean"
+    ).add_object_argument("object_", Object)
 
 
 @dataclass
@@ -177,9 +172,6 @@ class WriteEvent(Event):
     person: Person | None = None
     """Person you were writing to."""
 
-    tags: Tags | None = None
-    """User-defined tags."""
-
     arguments: ClassVar[Arguments] = (
         Arguments(["write"], "write")
         .add_argument("title")
@@ -187,7 +179,6 @@ class WriteEvent(Event):
         .add_class_argument("duration", Timedelta)
         .add_class_argument("volume", Volume)
         .add_object_argument("person", Person)
-        .add_class_argument("tags", Tags)
     )
 
     @override

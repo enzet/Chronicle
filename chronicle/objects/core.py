@@ -428,11 +428,6 @@ class Watch(Thing):
 
 
 @dataclass
-class Ink(Thing):
-    arguments: ClassVar[Arguments] = Thing.arguments.replace(["ink"], "ink")
-
-
-@dataclass
 class Cable(Thing):
     """A cable, a wire, or some other device for connecting devices."""
 
