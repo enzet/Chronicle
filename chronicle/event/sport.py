@@ -98,14 +98,10 @@ class WarmUpEvent(SportEvent):
 class StretchEvent(SportEvent):
     """Event representing stretching."""
 
-    pass
-
 
 @dataclass
 class CyclingEvent(SportEvent):
     """Event representing cycling."""
-
-    pass
 
 
 @dataclass

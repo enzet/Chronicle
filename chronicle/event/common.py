@@ -404,6 +404,7 @@ class PayEvent(Event):
         )
     )
 
+    @override
     def get_color(self) -> str:
         return "#FF0000"
 
@@ -463,6 +464,7 @@ class SleepEvent(Event):
         if duration := self.get_duration():
             summary.register_sleep(duration)
 
+    @override
     def get_color(self) -> str:
         return "#AACCCC"
 

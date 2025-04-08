@@ -436,6 +436,7 @@ class WatchEvent(Event):
         # Estimate movie length to be 2 hours.
         return 2.0 * 60.0 * 60.0
 
+    @override
     def to_string(self) -> str:
         result: str = "watch"
         if self.video and self.video.title:

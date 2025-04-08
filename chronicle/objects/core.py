@@ -5,7 +5,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import timedelta
 from pathlib import Path
-from typing import ClassVar, Self
+from typing import ClassVar, Self, override
 
 from colour import Color
 
@@ -503,11 +503,16 @@ class Podcast(Object):
     is_adapted: bool = False
     """Whether the podcast uses simplified language for educational purposes."""
 
+    @override
     def __hash__(self) -> int:
         return super().__hash__()
 
+    @override
     def to_string(self) -> str:
-        return self.title
+        if self.title:
+            return self.title
+
+        return "Podcast"
 
     @classmethod
     def from_value(cls, value: str) -> Self:
@@ -552,9 +557,10 @@ class Book(Object):
     year: int | None = None
     """Year of the first publication of the book (not its translation)."""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         assert self.volume is None or isinstance(self.volume, float)
 
+    @override
     def __hash__(self) -> int:
         if self.title and self.author:
             return hash(self.title + "/" + self.author)
@@ -563,6 +569,7 @@ class Book(Object):
 
         return 0
 
+    @override
     def to_string(self) -> str:
         if self.title:
             return self.title
@@ -603,8 +610,12 @@ class Audiobook(Object):
     reader: str | None = None
     """Name of the reader of the audiobook."""
 
+    @override
     def to_string(self) -> str:
-        return self.book.to_string()
+        if self.book:
+            return self.book.to_string()
+
+        return "Audiobook"
 
     @classmethod
     def from_value(cls, value: str) -> Self:

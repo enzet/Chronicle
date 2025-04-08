@@ -5,7 +5,7 @@ This file describes events and some common attributes that events may have.
 
 import logging
 from dataclasses import dataclass, field
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Self
 
 from chronicle.argument import Arguments
 from chronicle.errors import ChronicleObjectNotFoundException
@@ -36,7 +36,7 @@ class Event:
     tags: set[str] = field(default_factory=set)
     """Arbitrary user tag set for an event."""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         assert self.time
 
     arguments: ClassVar[Arguments] = Arguments(
@@ -46,7 +46,9 @@ class Event:
     @classmethod
     def parse_command(
         cls, time: Time, command: str, tokens: list[str], objects: Objects
-    ) -> "Event":
+    ) -> Self:
+        """Create an event from a command."""
+
         arguments: Arguments = cls.arguments
         try:
             parsed = arguments.parse(tokens, objects)
@@ -82,7 +84,15 @@ class Event:
         return self.arguments.to_command(self)
 
     def get_color(self) -> str:
-        return "#000000"
+        """Get color of an event."""
+
+        if hasattr(self, "color"):
+            color: str = getattr(self, "color")
+            return color
+
+        # Default event color is gray, to be seen on the white and on the
+        # black background.
+        return "#888888"
 
     def get_duration(self) -> float | None:
         """Get event duration in seconds.
