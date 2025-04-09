@@ -19,6 +19,7 @@ from chronicle.objects.clothes import Clothes
 from chronicle.objects.core import Medication, Objects, Thing
 from chronicle.summary.core import Summary
 from chronicle.time import Context, MalformedTime, Time, humanize_delta
+from chronicle.util import empty_filter
 
 PYDANTIC: bool = False
 
@@ -36,38 +37,36 @@ def type_to_class(type_: str, ending: str) -> type[Event] | None:
 
     E.g. `push_ups` into `PushUpsEvent`, or `_` into `StatusEvent`.
     """
+    class_name: str
     if type_ == "_":
         class_name = "Status" + ending
     else:
-        class_name: str = (
+        class_name = (
             "".join((x[0].upper() + x[1:]) for x in type_.split("_")) + ending
         )
 
     if class_name in globals():
-        return globals()[class_name]
+        type_: type = globals()[class_name]
+        if issubclass(type_, Event):
+            return type_
+        else:
+            logging.error(
+                "Class `%s` is not a subclass of `Event`.", class_name
+            )
+            return None
 
     logging.error("No such class: `%s`.", class_name)
     return None
 
 
 def smooth(data: list[float | None], size: int) -> list[float]:
+    """Smooth data."""
+
     replaced: list[float] = [0 if x is None else x for x in data]
     new_data: list[float] = []
     for index in range(len(data)):
         new_data.append(sum(replaced[index - size + 1 : index + 1]) / size)
     return new_data
-
-
-class MalformedData(Exception):
-    def __init__(self, data: dict, key: str | None = None):
-        self.data: dict = data
-        self.key: str | None = key
-
-    def __repr__(self):
-        if self.key:
-            return f"Data is malformed: {self.data[self.key]}"
-        else:
-            return f"Data is malformed: {self.data}"
 
 
 class Timeline:
@@ -162,6 +161,8 @@ class Timeline:
             )
 
     def get_commands(self) -> list[str]:
+        """Get commands for objects and events of the whole timeline."""
+
         commands: list[str] = []
 
         commands += self.objects.get_commands()
@@ -181,13 +182,16 @@ class Timeline:
     @staticmethod
     def get_filter(
         from_date: datetime | None, to_date: datetime | None
-    ) -> Callable:
+    ) -> Callable[[Event], bool]:
+        """Get filter for events."""
+
         if from_date and to_date:
             return lambda event: from_date <= event.time.get_moment() < to_date
-        elif from_date:
+        if from_date:
             return lambda event: from_date <= event.time.get_moment()
-        elif to_date:
+        if to_date:
             return lambda event: event.time.get_moment() < to_date
+        return empty_filter
 
     def get_summary(self, filter_: Callable | None = None) -> Summary:
         """Get summary for events."""
@@ -234,7 +238,7 @@ class Timeline:
         interval_events: list[Event]
 
         while point < max_time:
-            interval_events: list[Event] = []
+            interval_events = []
             while sorted_events[index].time.get_lower() < get_next(point):
                 interval_events.append(sorted_events[index])
                 index += 1
@@ -256,6 +260,8 @@ class Timeline:
     def get_events_by_day(
         self, filter_: Callable | None = None
     ) -> list[tuple[datetime, list[Event], Summary]]:
+        """Get events by day."""
+
         def get_first(point: datetime) -> datetime:
             return datetime(point.year, point.month, point.day)
 
@@ -267,6 +273,8 @@ class Timeline:
     def get_events_by_month(
         self, filter_: Callable
     ) -> list[tuple[datetime, list[Event], Summary]]:
+        """Get events by month."""
+
         def get_first(point: datetime) -> datetime:
             return datetime(point.year, point.month, 1)
 
@@ -278,6 +286,8 @@ class Timeline:
         return self.get_events_by(get_first, get_next, filter_)
 
     def get_expired(self) -> Table:
+        """Get expired objects."""
+
         table: Table = Table(box=box.ROUNDED)
         table.add_column("Object")
         table.add_column("Expired in", justify="right")
@@ -314,6 +324,8 @@ class Timeline:
         return table
 
     def get_objects_html(self, image_directory: Path) -> str:
+        """Get HTML for objects."""
+
         table: str = "<div class='object-container'>"
 
         for id_, object_ in self.objects.objects.items():

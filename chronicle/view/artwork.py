@@ -210,7 +210,7 @@ class BookViewer:
 
         summary = self.timeline.get_summary(filter_=filter_)
 
-        rows: list[str] = []
+        rows: list[tuple[str, str, str]] = []
         for index, book in enumerate(
             sorted(
                 summary.finished_books,
@@ -219,11 +219,11 @@ class BookViewer:
             )
         ):
             rows.append(
-                [
+                (
                     str(index + 1),
-                    book.title,
+                    book.title or "",
                     str(int(book.volume)) if book.volume else "",
-                ]
+                )
             )
         match arguments.style:
             case "minimal":
@@ -277,8 +277,10 @@ class BookViewer:
             def filter_(event: Event) -> bool:
                 return (
                     isinstance(event, ReadEvent)
-                    and event.book
-                    and pattern.match(event.book.title)
+                    and bool(event.book)
+                    and bool(
+                        pattern.match(event.book.title if event.book else "")
+                    )
                 )
 
         else:
