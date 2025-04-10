@@ -1,13 +1,11 @@
-"""
-Wikidata-specific data.
-"""
+"""Wikidata-specific data."""
 
 import json
 import logging
 from enum import Enum
 from pathlib import Path
 from textwrap import dedent
-from typing import Any, Callable
+from typing import Any, Callable, Self
 
 import urllib3
 
@@ -16,18 +14,26 @@ __email__ = "me@enzet.ru"
 
 
 class Item(Enum):
+    """Wikidata item, main documentary unit of Wikidata."""
+
     FILM = 11424
     TELEVISION_SERIES = 5398426
     MOVING_IMAGE = 10301427
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Q{self.value}"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Q{self.value}"
 
 
 class Property(Enum):
+    """Wikidata property.
+
+    Describes the data value of a statement and can be thought of as a category
+    of data, for example, "color" for the data value "blue".
+    """
+
     INSTANCE_OF = 31
     DIRECTOR = 57
     GENRE = 136
@@ -41,10 +47,10 @@ class Property(Enum):
     DISTRIBUTED_BY = 750
     TITLE = 1476
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"P{self.value}"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"P{self.value}"
 
 
@@ -58,7 +64,12 @@ class WikidataItem:
         self.claims: dict = self.data["claims"]
 
     @classmethod
-    def from_id(cls, wikidata_id: int, cache_path: Path):
+    def from_id(cls, wikidata_id: int, cache_path: Path) -> Self:
+        """Create Wikidata item from ID.
+
+        :param wikidata_id: ID of the Wikidata item with "Q" prefix
+        :param cache_path: path to the cache file
+        """
         return cls(
             wikidata_id,
             json.loads(
@@ -77,9 +88,13 @@ class WikidataItem:
 
     def get_label(self, language: str = "en") -> str:
         """Get label of item."""
-        return self.labels[language]["value"]
+
+        value: str = self.labels[language]["value"]
+        return value
 
     def get_claim(self, property_: Property, cache_path: Path) -> list[Any]:
+        """Get claim of item by property."""
+
         if str(property_) not in self.claims:
             return []
         claims: list[dict] = self.claims[str(property_)]
@@ -95,7 +110,11 @@ class WikidataItem:
 
         return result
 
-    def __eq__(self, other: "WikidataItem") -> bool:
+    def __eq__(self, other: object) -> bool:
+        """Check whether two Wikidata items are equal."""
+
+        if not isinstance(other, WikidataItem):
+            return False
         return self.wikidata_id == other.wikidata_id
 
     def __hash__(self) -> int:
@@ -103,7 +122,8 @@ class WikidataItem:
 
 
 def get_movie(title: str) -> str:
-    """
+    """Get movie by title.
+
     Get a SPARQL query for every moving image (movie, animation, or TV series)
     with the specified title.
     """
@@ -125,19 +145,33 @@ def request_sparql(query: str) -> bytes:
 
     :param query: SPARQL query
     """
-    return urllib3.PoolManager().request(
-        "GET",
-        "https://query.wikidata.org/sparql",
-        {"format": "json", "query": query},
-    ).data  # fmt: skip
+    data: bytes = (
+        urllib3.PoolManager()
+        .request(
+            "GET",
+            "https://query.wikidata.org/sparql",
+            {"format": "json", "query": query},
+        )
+        .data
+    )
+    return data
 
 
 def get_wikidata_item(wikidata_id: str) -> bytes:
-    """Get Wikidata item structure."""
-    return urllib3.PoolManager().request(
-        "GET",
-        f"https://www.wikidata.org/wiki/Special:EntityData/Q{wikidata_id}.json",
-    ).data  # fmt: skip
+    """Get Wikidata item structure.
+
+    :param wikidata_id: ID of the Wikidata item with "Q" prefix
+    """
+    data: bytes = (
+        urllib3.PoolManager()
+        .request(
+            "GET",
+            "https://www.wikidata.org/wiki/Special:EntityData/"
+            f"Q{wikidata_id}.json",
+        )
+        .data
+    )
+    return data
 
 
 def get_data(cache_path: Path, function: Callable, argument: str) -> bytes:
