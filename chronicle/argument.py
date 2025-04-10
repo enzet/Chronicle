@@ -114,8 +114,8 @@ class Arguments:
         def load_current() -> None:
             result[current_key] = current_loader(current, objects)
 
-        for index in range(len(tokens)):
-            token: str = tokens[index]
+        for token in tokens:
+
             detected: Argument | None = None
 
             for argument in self.arguments:
@@ -174,32 +174,9 @@ class Arguments:
 
         return result
 
-    def add_argument(
-        self,
-        key: str,
-        description: str | None = None,
-        prefix: str | None = None,
-        patterns: list[re.Pattern] | None = None,
-        loader: Callable[[Any, Any], Any] = lambda x, _: x,
-        extractors: list[Callable[[Any], Any]] | None = None,
-        pretty_printer: Callable = default_pretty_printer,
-        command_printer: Callable | None = None,
-        html_printer: Callable = lambda o, v: v.to_string(o),
-        is_insert: bool = False,
-    ) -> Self:
+    def add(self, argument: Argument, is_insert: bool = False) -> Self:
         """Add argument to a parser."""
 
-        argument: Argument = Argument(
-            key,
-            description,
-            prefix=prefix,
-            patterns=patterns,
-            loader=loader,
-            extractors=extractors,
-            pretty_printer=pretty_printer,
-            command_printer=command_printer,
-            html_printer=html_printer,
-        )
         if is_insert:
             self.arguments.insert(0, argument)
         else:
@@ -264,10 +241,6 @@ class Arguments:
             self.arguments.insert(0, argument)
         else:
             self.arguments.append(argument)
-        return self
-
-    def add(self, argument: Argument) -> "Arguments":
-        self.arguments.append(argument)
         return self
 
     def to_string(self, value: Any) -> str:

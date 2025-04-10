@@ -4,7 +4,7 @@ import re
 from dataclasses import dataclass, field
 from typing import ClassVar, override
 
-from chronicle.argument import Arguments
+from chronicle.argument import Argument, Arguments
 from chronicle.event.core import Event
 from chronicle.objects.core import (
     Audiobook,
@@ -51,7 +51,7 @@ class ListenEvent(Event):
 
     arguments: ClassVar[Arguments] = (
         Arguments(["listen"], "listen")
-        .add_argument("title")
+        .add(Argument("title"))
         .add_class_argument("duration", Timedelta)
         .add_class_argument("language", Language)
     )
@@ -93,10 +93,12 @@ class ListenPodcastEvent(Event):
         .add_class_argument("episode", Episode)
         .add_class_argument("interval", Interval)
         .add_class_argument("duration", Timedelta)
-        .add_argument(
-            "speed",
-            patterns=[re.compile(r"x(\d+(\.\d*))")],
-            extractors=[lambda groups: float(groups(2))],
+        .add(
+            Argument(
+                "speed",
+                patterns=[re.compile(r"x(\d+(\.\d*))")],
+                extractors=[lambda groups: float(groups(2))],
+            )
         )
     )
 
@@ -150,9 +152,9 @@ class ListenMusicEvent(Event):
 
     arguments: ClassVar[Arguments] = (
         Arguments(["music", "song"], "listen music")
-        .add_argument("title")
-        .add_argument("artist", prefix="by")
-        .add_argument("album", prefix="on")
+        .add(Argument("title"))
+        .add(Argument("artist", prefix="by"))
+        .add(Argument("album", prefix="on"))
         .add_class_argument("language", Language)
     )
 
@@ -179,7 +181,7 @@ class ListenLectureEvent(Event):
 
     arguments: ClassVar[Arguments] = (
         Arguments(["listen lecture"], "listen lecture")
-        .add_argument("title")
+        .add(Argument("title"))
         .add_class_argument("language", Language)
     )
 
@@ -342,8 +344,8 @@ class StandupEvent(Event):
 
     arguments: ClassVar[Arguments] = (
         Arguments(["standup"], "standup")
-        .add_argument("title")
-        .add_argument("artist", prefix="by")
+        .add(Argument("title"))
+        .add(Argument("artist", prefix="by"))
         .add_class_argument("language", Language)
         .add_object_argument("place", Place)
     )
@@ -389,11 +391,13 @@ class WatchEvent(Event):
         Arguments(["watch"], "watch")
         .add_object_argument("video", Video)
         .add_class_argument("language", Language)
-        .add_argument(
-            "subtitles",
-            patterns=[re.compile("_(..)")],
-            extractors=[lambda groups: Language(groups(1))],
-            command_printer=lambda x: f"_{x}",
+        .add(
+            Argument(
+                "subtitles",
+                patterns=[re.compile("_(..)")],
+                extractors=[lambda groups: Language(groups(1))],
+                command_printer=lambda x: f"_{x}",
+            )
         )
         .add_class_argument("season", Season)
         .add_object_argument("service", Service)
@@ -469,11 +473,13 @@ class ListenAudiobookEvent(Event):
         .add_object_argument("audiobook", Audiobook)
         .add_class_argument("interval", Interval)
         .add_class_argument("volume", AudiobookVolume)
-        .add_argument(
-            "speed",
-            loader=lambda value, _: float(value),
-            patterns=[re.compile(r"x(\d*\.\d*)")],
-            command_printer=lambda x: f"x{x}",
+        .add(
+            Argument(
+                "speed",
+                loader=lambda value, _: float(value),
+                patterns=[re.compile(r"x(\d*\.\d*)")],
+                command_printer=lambda x: f"x{x}",
+            )
         )
     )
 
@@ -563,7 +569,7 @@ class ConcertEvent(Event):
     arguments: ClassVar[Arguments] = (
         Arguments(["concert"], "concert")
         .add_object_argument("concert", Concert)
-        .add_argument("musician", prefix="by")
+        .add(Argument("musician", prefix="by"))
     )
 
     @override
@@ -603,6 +609,6 @@ class DrawEvent(Event):
 
     arguments: ClassVar[Arguments] = (
         Arguments(["draw"], "draw")
-        .add_argument("project")
+        .add(Argument("project"))
         .add_object_argument("service", Service)
     )

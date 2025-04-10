@@ -4,7 +4,7 @@ import re
 from dataclasses import dataclass
 from typing import ClassVar
 
-from chronicle.argument import Arguments
+from chronicle.argument import Argument, Arguments
 from chronicle.objects.core import Thing
 
 
@@ -20,8 +20,8 @@ class Clothes(Thing):
 
     arguments: ClassVar[Arguments] = (
         Thing.arguments.replace(["clothes"], "clothes")
-        .add_argument("art", prefix="art:")
-        .add_argument("size", patterns=[re.compile(r"^(X+S|S|M|L|X+L)$")])
+        .add(Argument("art", prefix="art:"))
+        .add(Argument("size", patterns=[re.compile(r"^(X+S|S|M|L|X+L)$")]))
     )
 
 

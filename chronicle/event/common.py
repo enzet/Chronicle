@@ -5,7 +5,7 @@ import re
 from dataclasses import dataclass
 from typing import ClassVar, override
 
-from chronicle.argument import Arguments
+from chronicle.argument import Argument, Arguments
 from chronicle.event.core import Event
 from chronicle.objects.core import Object, Person, Project, Service
 from chronicle.summary.core import Summary
@@ -31,8 +31,8 @@ class DoEvent(Event):
     description: str | None = None
     """Description of what was done."""
 
-    arguments: ClassVar[Arguments] = Arguments(["do"], "do").add_argument(
-        "description"
+    arguments: ClassVar[Arguments] = Arguments(["do"], "do").add(
+        Argument("description")
     )
 
 
@@ -45,7 +45,7 @@ class MedicationEvent(Event):
 
     arguments: ClassVar[Arguments] = Arguments(
         ["medication"], "medication"
-    ).add_argument("medication")
+    ).add(Argument("medication"))
 
 
 @dataclass
@@ -57,7 +57,7 @@ class AppointmentEvent(Event):
 
     arguments: ClassVar[Arguments] = Arguments(
         ["appointment"], "appointment"
-    ).add_argument("description")
+    ).add(Argument("description"))
 
 
 @dataclass
@@ -67,8 +67,8 @@ class CookEvent(Event):
     dish: str | None = None
     """Name of the dish that was cooked."""
 
-    arguments: ClassVar[Arguments] = Arguments(["cook"], "cook").add_argument(
-        "dish"
+    arguments: ClassVar[Arguments] = Arguments(["cook"], "cook").add(
+        Argument("dish")
     )
 
     @override
@@ -97,8 +97,8 @@ class CutEvent(Event):
     object_: str | None = None
     """Object that was cut."""
 
-    arguments: ClassVar[Arguments] = Arguments(["cut"], "cut").add_argument(
-        "object_"
+    arguments: ClassVar[Arguments] = Arguments(["cut"], "cut").add(
+        Argument("object_")
     )
 
 
@@ -112,8 +112,8 @@ class EatEvent(Event):
     kilocalories: float | None = None
     """Number of kilocalories in the meal."""
 
-    arguments: ClassVar[Arguments] = Arguments(["eat"], "eat").add_argument(
-        "meal"
+    arguments: ClassVar[Arguments] = Arguments(["eat"], "eat").add(
+        Argument("meal")
     )
 
 
@@ -138,7 +138,7 @@ class LearnEvent(Event):
         .add_class_argument("subject", Subject)
         .add_object_argument("service", Service)
         .add_class_argument("duration", Timedelta)
-        .add_argument("actions", prefix="actions:")
+        .add(Argument("actions", prefix="actions:"))
     )
 
     @override
@@ -174,7 +174,7 @@ class WriteEvent(Event):
 
     arguments: ClassVar[Arguments] = (
         Arguments(["write"], "write")
-        .add_argument("title")
+        .add(Argument("title"))
         .add_class_argument("language", Language)
         .add_class_argument("duration", Timedelta)
         .add_class_argument("volume", Volume)
@@ -213,8 +213,8 @@ class BuyEvent(Event):
 
     arguments: ClassVar[Arguments] = (
         Arguments(["buy"], "buy")
-        .add_argument("object_")
-        .add_argument("for_", prefix="for")
+        .add(Argument("object_"))
+        .add(Argument("for_", prefix="for"))
         .add_class_argument("cost", Cost)
     )
 
@@ -226,8 +226,8 @@ class PlayEvent(Event):
     game: str | None = None
     """Name of the game played."""
 
-    arguments: ClassVar[Arguments] = Arguments(["play"], "play").add_argument(
-        "game"
+    arguments: ClassVar[Arguments] = Arguments(["play"], "play").add(
+        Argument("game")
     )
 
 
@@ -263,8 +263,8 @@ class CallEvent(Event):
     video: str | None = None
     """Type of video call: either `camera` or `screen`."""
 
-    arguments: ClassVar[Arguments] = Arguments(["call"], "call").add_argument(
-        "with_", prefix="to"
+    arguments: ClassVar[Arguments] = Arguments(["call"], "call").add(
+        Argument("with_", prefix="to")
     )
 
 
@@ -282,8 +282,8 @@ class TryEvent(Event):
     item: str | None = None
     """Item that was tried on."""
 
-    arguments: ClassVar[Arguments] = Arguments(["try"], "try").add_argument(
-        "item"
+    arguments: ClassVar[Arguments] = Arguments(["try"], "try").add(
+        Argument("item")
     )
 
 
@@ -294,9 +294,9 @@ class ReviewEvent(Event):
     project: str | None = None
     """Project being reviewed."""
 
-    arguments: ClassVar[Arguments] = Arguments(
-        ["review"], "review"
-    ).add_argument("project")
+    arguments: ClassVar[Arguments] = Arguments(["review"], "review").add(
+        Argument("project")
+    )
 
 
 @dataclass
@@ -344,8 +344,8 @@ class ShaveEvent(Event):
     object_: str | None = None
     """What was shaved."""
 
-    arguments: ClassVar[Arguments] = Arguments(["shave"], "shave").add_argument(
-        "object_"
+    arguments: ClassVar[Arguments] = Arguments(["shave"], "shave").add(
+        Argument("object_")
     )
 
 
@@ -361,12 +361,17 @@ class DrinkEvent(Event):
 
     arguments: ClassVar[Arguments] = (
         Arguments(["drink"], "drink")
-        .add_argument("liquid")
-        .add_argument(
-            "amount",
-            patterns=[re.compile(r"(\d*\.\d*)l"), re.compile(r"(\d*)ml")],
-            extractors=[lambda x: float(x(1)), lambda x: float(x(1)) / 1000],
-            command_printer=lambda x: f"{x}l",
+        .add(Argument("liquid"))
+        .add(
+            Argument(
+                "amount",
+                patterns=[re.compile(r"(\d*\.\d*)l"), re.compile(r"(\d*)ml")],
+                extractors=[
+                    lambda x: float(x(1)),
+                    lambda x: float(x(1)) / 1000,
+                ],
+                command_printer=lambda x: f"{x}l",
+            )
         )
     )
 
@@ -382,7 +387,9 @@ class StatusEvent(Event):
     """Body temperature in Celsius."""
 
     arguments: ClassVar[Arguments] = (
-        Arguments(["_"], "_").add_argument("weight").add_argument("temperature")
+        Arguments(["_"], "_")
+        .add(Argument("weight"))
+        .add(Argument("temperature"))
     )
 
 
@@ -398,9 +405,9 @@ class PayEvent(Event):
 
     arguments: ClassVar[Arguments] = (
         Arguments(["pay"], "pay")
-        .add_argument("goods", prefix="for")
-        .add_argument(
-            "cost", command_printer=lambda x: f"{x.value}{x.currency}"
+        .add(Argument("goods", prefix="for"))
+        .add(
+            Argument("cost", command_printer=lambda x: f"{x.value}{x.currency}")
         )
     )
 
@@ -432,10 +439,12 @@ class ProgramEvent(Event):
     arguments: ClassVar[Arguments] = (
         Arguments(["program"], "program")
         .add_object_argument("project", Project, is_insert=True)
-        .add_argument(
-            "task",
-            patterns=[re.compile(r"#([0-9A-Za-z!#_-]+)")],
-            command_printer=lambda x: f"#{x}",
+        .add(
+            Argument(
+                "task",
+                patterns=[re.compile(r"#([0-9A-Za-z!#_-]+)")],
+                command_printer=lambda x: f"#{x}",
+            )
         )
         .add_class_argument("language", ProgrammingLanguage)
         .add_class_argument("duration", Timedelta)

@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import ClassVar, override
 
-from chronicle.argument import Arguments
+from chronicle.argument import Argument, Arguments
 from chronicle.event.core import Event
 from chronicle.summary.core import Summary
 from chronicle.time import Timedelta
@@ -113,7 +113,7 @@ class KickScooterEvent(SportEvent):
 
     arguments: ClassVar[Arguments] = Arguments(
         ["kick_scooter"], "kick_scooter"
-    ).add_argument("service", prefix="using")
+    ).add(Argument("service", prefix="using"))
 
 
 @dataclass
@@ -155,7 +155,7 @@ class CountableSportEvent(SportEvent):
 
     arguments: ClassVar[Arguments] = SportEvent.arguments.replace(
         ["countable"], "countable"
-    ).add_argument("count", loader=lambda value, _: int(value), is_insert=True)
+    ).add(Argument("count", loader=lambda value, _: int(value)), is_insert=True)
 
     @override
     def register_summary(self, summary: Summary) -> None:

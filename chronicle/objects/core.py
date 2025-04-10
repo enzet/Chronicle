@@ -9,7 +9,7 @@ from typing import ClassVar, Self, override
 
 from colour import Color
 
-from chronicle.argument import Arguments
+from chronicle.argument import Argument, Arguments
 from chronicle.errors import (
     ChronicleArgumentError,
     ChronicleCodeException,
@@ -120,29 +120,37 @@ class Thing(Object):
 
     arguments: ClassVar[Arguments] = (
         Arguments(["thing"], "thing")
-        .add_argument("name")
-        .add_argument("link", patterns=[re.compile(r"(https?://[^ ]*)")])
+        .add(Argument("name"))
+        .add(Argument("link", patterns=[re.compile(r"(https?://[^ ]*)")]))
         .add_class_argument("cost", Cost)
-        .add_argument(
-            "expired",
-            prefix="exp:",
-            loader=lambda value, _: Moment.from_string(value),
+        .add(
+            Argument(
+                "expired",
+                prefix="exp:",
+                loader=lambda value, _: Moment.from_string(value),
+            )
         )
-        .add_argument(
-            "since",
-            prefix="since:",
-            loader=lambda value, _: Moment.from_string(value),
+        .add(
+            Argument(
+                "since",
+                prefix="since:",
+                loader=lambda value, _: Moment.from_string(value),
+            )
         )
-        .add_argument("temperature", prefix="temp:")
-        .add_argument(
-            "retired",
-            patterns=[re.compile("retired")],
-            extractors=[lambda _: True],
+        .add(Argument("temperature", prefix="temp:"))
+        .add(
+            Argument(
+                "retired",
+                patterns=[re.compile("retired")],
+                extractors=[lambda _: True],
+            )
         )
-        .add_argument(
-            "color",
-            patterns=[COLOR_PATTERN],
-            loader=lambda value, _: Color(value),
+        .add(
+            Argument(
+                "color",
+                patterns=[COLOR_PATTERN],
+                loader=lambda value, _: Color(value),
+            )
         )
     )
 
@@ -159,7 +167,7 @@ class Place(Object):
 
     arguments: ClassVar[Arguments] = (
         Arguments(["place"], "place")
-        .add_argument("name")
+        .add(Argument("name"))
         .add_class_argument("osm", OSM)
     )
 
@@ -173,7 +181,7 @@ class ArtObject(Object):
 
     arguments: ClassVar[Arguments] = Arguments(
         ["art_object"], "art_object"
-    ).add_argument("name")
+    ).add(Argument("name"))
 
 
 @dataclass
@@ -183,9 +191,9 @@ class Country(Object):
     name: str | None = None
     """Name of the country."""
 
-    arguments: ClassVar[Arguments] = Arguments(
-        ["country"], "country"
-    ).add_argument("name")
+    arguments: ClassVar[Arguments] = Arguments(["country"], "country").add(
+        Argument("name")
+    )
 
 
 @dataclass
@@ -291,8 +299,8 @@ class Person(Object):
     prefix: ClassVar[str] = "with"
     arguments: ClassVar[Arguments] = (
         Arguments(["person"], "person")
-        .add_argument("name")
-        .add_argument("telegram", prefix="tg:")
+        .add(Argument("name"))
+        .add(Argument("telegram", prefix="tg:"))
         .add_class_argument("birthday", Birthday)
     )
 
@@ -311,9 +319,9 @@ class Service(Object):
     name: str | None = None
     """Name of the service."""
 
-    arguments: ClassVar[Arguments] = Arguments(
-        ["service"], "service"
-    ).add_argument("name")
+    arguments: ClassVar[Arguments] = Arguments(["service"], "service").add(
+        Argument("name")
+    )
     prefix: ClassVar[str] = "using"
 
     def __hash__(self) -> int:
@@ -332,7 +340,7 @@ class Medication(Thing):
     """Name of the medication."""
 
     arguments: ClassVar[Arguments] = (
-        Arguments(["medication"], "medication").add_argument("title")
+        Arguments(["medication"], "medication").add(Argument("title"))
         + Thing.arguments
     )
 
@@ -473,7 +481,7 @@ class Video(ArtObject):
 
     arguments: ClassVar[Arguments] = (
         Arguments(["video"], "video")
-        .add_argument("title")
+        .add(Argument("title"))
         .add_class_argument("language", Language)
         .add_class_argument("wikidata_id", WikidataId)
         .add_class_argument("subject", Subject)
@@ -520,7 +528,7 @@ class Podcast(Object):
 
     arguments: ClassVar[Arguments] = (
         Arguments(["podcast"], "podcast")
-        .add_argument("title")
+        .add(Argument("title"))
         .add_class_argument("language", Language)
         .add_class_argument("wikidata_id", WikidataId)
     )
@@ -582,12 +590,14 @@ class Book(Object):
 
     arguments: ClassVar[Arguments] = (
         Arguments(["book"], "book")
-        .add_argument("title", command_printer=str)
-        .add_argument(
-            "volume",
-            patterns=[re.compile(r"(\d*\.\d*)p")],
-            extractors=[lambda groups: float(groups(1))],
-            command_printer=lambda x: str(x) + "p",
+        .add(Argument("title", command_printer=str))
+        .add(
+            Argument(
+                "volume",
+                patterns=[re.compile(r"(\d*\.\d*)p")],
+                extractors=[lambda groups: float(groups(1))],
+                command_printer=lambda x: str(x) + "p",
+            )
         )
         .add_class_argument("language", Language)
         .add_class_argument("wikidata_id", WikidataId)
@@ -631,7 +641,7 @@ class Audiobook(Object):
         .add_object_argument("book", Book)
         .add_class_argument("duration", Timedelta)
         .add_class_argument("language", Language)
-        .add_argument("reader")
+        .add(Argument("reader"))
     )
 
 
@@ -791,7 +801,7 @@ class Project(Object):
 
     arguments: ClassVar[Arguments] = (
         Arguments(["project"], "project")
-        .add_argument("title")
+        .add(Argument("title"))
         .add_class_argument("language", ProgrammingLanguage)
     )
 
@@ -803,9 +813,9 @@ class Ballet(Object):
     title: str | None = None
     """Title of the ballet performance."""
 
-    arguments: ClassVar[Arguments] = Arguments(
-        ["ballet"], "ballet"
-    ).add_argument("title")
+    arguments: ClassVar[Arguments] = Arguments(["ballet"], "ballet").add(
+        Argument("title")
+    )
 
     def __hash__(self) -> int:
         return hash(self.title)
@@ -826,8 +836,8 @@ class Concert(Object):
 
     arguments: ClassVar[Arguments] = (
         Arguments(["concert"], "concert")
-        .add_argument("title")
-        .add_argument("artist", prefix="by")
+        .add(Argument("title"))
+        .add(Argument("artist", prefix="by"))
     )
 
     def __hash__(self) -> int:
@@ -845,8 +855,8 @@ class Opera(Object):
     title: str | None = None
     """Title of the opera performance."""
 
-    arguments: ClassVar[Arguments] = Arguments(["opera"], "opera").add_argument(
-        "title"
+    arguments: ClassVar[Arguments] = Arguments(["opera"], "opera").add(
+        Argument("title")
     )
 
     def __hash__(self) -> int:
@@ -868,8 +878,8 @@ class Standup(Object):
 
     arguments: ClassVar[Arguments] = (
         Arguments(["standup"], "standup")
-        .add_argument("title")
-        .add_argument("artist", prefix="by")
+        .add(Argument("title"))
+        .add(Argument("artist", prefix="by"))
     )
 
     def __hash__(self) -> int:

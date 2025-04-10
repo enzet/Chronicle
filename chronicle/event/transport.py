@@ -4,7 +4,7 @@ import re
 from dataclasses import dataclass, field
 from typing import ClassVar
 
-from chronicle.argument import Arguments
+from chronicle.argument import Argument, Arguments
 from chronicle.event.core import Event
 from chronicle.objects.core import Person, Place, Service
 from chronicle.value import Cost
@@ -22,20 +22,24 @@ class TransportEvent(Event):
 
     arguments: ClassVar[Arguments] = (
         Arguments(["transport"], "transport")
-        .add_argument(
-            "places",
-            patterns=[re.compile(r"@[a-zA-Z0-9_]+(/@[a-zA-Z0-9_]+)+")],
-            extractors=[
-                lambda groups: [Place(x) for x in groups(0).split("/")]
-            ],
+        .add(
+            Argument(
+                "places",
+                patterns=[re.compile(r"@[a-zA-Z0-9_]+(/@[a-zA-Z0-9_]+)+")],
+                extractors=[
+                    lambda groups: [Place(x) for x in groups(0).split("/")]
+                ],
+            )
         )
-        .add_argument(
-            "persons",
-            prefix="with",
-            patterns=[re.compile(r"@[a-zA-Z0-9_]+(;@[a-zA-Z0-9_]+)*")],
-            extractors=[
-                lambda groups: [Person(x) for x in groups(0).split(";")]
-            ],
+        .add(
+            Argument(
+                "persons",
+                prefix="with",
+                patterns=[re.compile(r"@[a-zA-Z0-9_]+(;@[a-zA-Z0-9_]+)*")],
+                extractors=[
+                    lambda groups: [Person(x) for x in groups(0).split(";")]
+                ],
+            )
         )
     )
     color: ClassVar[str] = "#000088"
@@ -58,7 +62,7 @@ class FlightEvent(TransportEvent):
 
     arguments: ClassVar[Arguments] = TransportEvent.arguments.replace(
         ["flight"], "flight"
-    ).add_argument("number", is_insert=True)
+    ).add(Argument("number"), is_insert=True)
 
 
 @dataclass

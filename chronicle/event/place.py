@@ -2,7 +2,7 @@ import re
 from dataclasses import dataclass, field
 from typing import ClassVar
 
-from chronicle.argument import Arguments
+from chronicle.argument import Argument, Arguments
 from chronicle.event.core import Event
 from chronicle.objects.core import Person, Place
 
@@ -23,13 +23,15 @@ class PlaceEvent(Event):
     arguments: ClassVar[Arguments] = (
         Arguments(["place"], "place")
         .add_object_argument("place", Place)
-        .add_argument(
-            "persons",
-            prefix="with",
-            patterns=[re.compile(r"@[a-zA-Z0-9_]+(;@[a-zA-Z0-9_]+)*")],
-            extractors=[
-                lambda groups: [Person(x) for x in groups(0).split(";")]
-            ],
+        .add(
+            Argument(
+                "persons",
+                prefix="with",
+                patterns=[re.compile(r"@[a-zA-Z0-9_]+(;@[a-zA-Z0-9_]+)*")],
+                extractors=[
+                    lambda groups: [Person(x) for x in groups(0).split(";")]
+                ],
+            )
         )
     )
     color: ClassVar[str] = "#CCCCCC"
