@@ -6,6 +6,7 @@ Arguments from existing events and objects should be tested in other test files.
 import re
 
 from chronicle.argument import Argument, Arguments
+from chronicle.objects.core import Objects
 from chronicle.value import Language
 
 __author__ = "Sergey Vartanov"
@@ -16,7 +17,7 @@ def test_main_argument() -> None:
     """Test main argument."""
 
     parser: Arguments = Arguments(["do"], "do").add(Argument("argument"))
-    assert parser.parse(["work"], None) == {"argument": "work"}
+    assert parser.parse(["work"], Objects()) == {"argument": "work"}
 
 
 def test_argument_with_pattern() -> None:
@@ -33,7 +34,7 @@ def test_argument_with_pattern() -> None:
             )
         )
     )
-    assert parser.parse(["work", "_en"], None) == {
+    assert parser.parse(["work", "_en"], Objects()) == {
         "activity": "work",
         "language": Language("en"),
     }
@@ -53,7 +54,7 @@ def test_argument_with_pattern_and_extractor() -> None:
             )
         )
     )
-    assert parser.parse(["work", "_en"], None) == {
+    assert parser.parse(["work", "_en"], Objects()) == {
         "activity": "work",
         "language": Language("en"),
     }

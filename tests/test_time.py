@@ -17,6 +17,8 @@ def check(
     minute: float,
     second: float,
 ) -> None:
+    """Check whether moment is correct."""
+
     assert moment
     assert moment.year == year
     assert moment.month == month

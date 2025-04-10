@@ -8,7 +8,10 @@ class Token:
     """A token of a command."""
 
     value: str
+    """Value of the token."""
+
     language: str | None = None
+    """Language of the token."""
 
 
 def parse_tokens(command: str) -> list[Token]:
