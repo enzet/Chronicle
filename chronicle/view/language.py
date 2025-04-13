@@ -1,5 +1,8 @@
+"""Language learning viewer."""
+
 import argparse
 from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
@@ -7,6 +10,7 @@ from rich import box
 from rich.console import Console
 from rich.table import Table
 
+from chronicle.event.core import Event
 from chronicle.objects.core import Object, Service
 from chronicle.summary.core import Summary
 from chronicle.timeline import Timeline
@@ -92,7 +96,10 @@ class LanguageLearningViewer:
                 )
 
     def construct_data(
-        self, filter_, languages, services
+        self,
+        filter_: Callable[[Event], bool],
+        languages: set[Language],
+        services: list[Object],
     ) -> tuple[list[datetime], dict[str, list[float]], dict[str, list[float]]]:
         """Construct data for plotting language learning progress."""
 
@@ -162,8 +169,14 @@ class LanguageLearningViewer:
         return xs, data, language_data
 
     def plot_languages(
-        self, xs, language_data, stack_plot, total_threshold: float = 0.0
+        self,
+        xs: list[datetime],
+        language_data: dict[str, list[float]],
+        stack_plot: bool,
+        total_threshold: float = 0.0,
     ) -> None:
+        """Plot language learning progress."""
+
         from matplotlib import pyplot as plt
 
         stack_plot: bool = False

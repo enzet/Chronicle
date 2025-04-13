@@ -256,7 +256,7 @@ class Arguments:
                     text += " " + string
         return text
 
-    def to_html(self, objects, value) -> str:
+    def to_html(self, objects: Objects, value: Any) -> str:
         """Get HTML representation of arguments."""
 
         text: str = self.command
@@ -269,7 +269,7 @@ class Arguments:
                     text += " " + string
         return text
 
-    def to_object_command(self, value) -> str:
+    def to_object_command(self, value: Any) -> str:
         """Convert entity with arguments to normalized command."""
 
         text: str = ""
