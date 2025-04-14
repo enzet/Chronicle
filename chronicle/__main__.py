@@ -251,6 +251,7 @@ def main() -> None:
 
         elif command == "timeline":
             timeline.print()
+
         elif command == "summary":
             print(timeline.get_summary())
         elif command == "shows":
