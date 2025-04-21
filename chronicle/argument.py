@@ -109,10 +109,11 @@ class Arguments:
         current_loader: Callable[[Any, Objects], Any] | None = (
             main.loader if main else None
         )
-        current: str = ""
+        current_value: str = ""
 
         def load_current() -> None:
-            result[current_key] = current_loader(current, objects)
+            """Load current argument."""
+            result[current_key] = current_loader(current_value, objects)
 
         for token in tokens:
 
@@ -125,14 +126,14 @@ class Arguments:
                             "Token `{token}` is ambiguous, possible arguments: "
                             f"`{detected.key}`, `{argument.key}`."
                         )
-                    if current:
+                    if current_value:
                         if not current_key:
                             raise ChronicleArgumentError(
-                                f"No argument name before `{current}` for "
-                                f"tokens `{tokens}`."
+                                f"No argument key for value `{current_value}` "
+                                f"for tokens `{tokens}`."
                             )
                         load_current()
-                        current = ""
+                        current_value = ""
                     current_key = argument.key
                     current_loader = argument.loader
                     detected = argument
@@ -141,35 +142,36 @@ class Arguments:
                     continue
 
                 for i, pattern in enumerate(argument.patterns):
-                    if matcher := pattern.fullmatch(token):
-                        if current:
-                            if not current_key:
-                                raise ChronicleArgumentError(
-                                    f"No argument name before `{current}`."
-                                )
-                            load_current()
-                            current_key = None
-                            current = ""
-                        if detected:
-                            raise ChronicleAmbiguousArgumentError(
-                                f"Token `{token}` is ambiguous, possible "
-                                f"arguments: `{detected.key}`, "
-                                f"`{argument.key}`."
+                    if not (matcher := pattern.fullmatch(token)):
+                        continue
+                    if current_value:
+                        if not current_key:
+                            raise ChronicleArgumentError(
+                                f"No argument key for value `{current_value}`."
                             )
-                        if argument.extractors is not None:
-                            result[argument.key] = argument.extractors[i](
-                                matcher.group
-                            )
-                        else:
-                            result[argument.key] = argument.loader(
-                                matcher.group(1), objects
-                            )
-                        detected = argument
+                        load_current()
+                        current_key = None
+                        current_value = ""
+                    if detected:
+                        raise ChronicleAmbiguousArgumentError(
+                            f"Token `{token}` is ambiguous, possible "
+                            f"arguments: `{detected.key}`, "
+                            f"`{argument.key}`."
+                        )
+                    if argument.extractors is not None:
+                        result[argument.key] = argument.extractors[i](
+                            matcher.group
+                        )
+                    else:
+                        result[argument.key] = argument.loader(
+                            matcher.group(1), objects
+                        )
+                    detected = argument
 
             if not detected:
-                current += (" " if current else "") + token
+                current_value += (" " if current_value else "") + token
 
-        if current and current_key:
+        if current_value and current_key:
             load_current()
 
         return result

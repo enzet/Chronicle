@@ -594,7 +594,7 @@ class Book(Object):
         .add(
             Argument(
                 "volume",
-                patterns=[re.compile(r"(\d*\.\d*)p")],
+                patterns=[re.compile(r"(\d*(\.\d*)?)p")],
                 extractors=[lambda groups: float(groups(1))],
                 command_printer=lambda x: str(x) + "p",
             )

@@ -13,7 +13,7 @@ from chronicle.event.core import Event, Objects
 from chronicle.objects.core import Audiobook, Book, Project
 from chronicle.time import Context, Timedelta
 from chronicle.timeline import CommandParser, Timeline
-from chronicle.value import Interval, Language, ProgrammingLanguage
+from chronicle.value import Interval, Language, ProgrammingLanguage, Subject
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
@@ -221,3 +221,20 @@ def test_program() -> None:
     assert event.project == Project(
         "linux", title="Linux", language=ProgrammingLanguage("c")
     )
+
+
+def test_object_book() -> None:
+    """Test book definition."""
+
+    parser: CommandParser = CommandParser()
+    parser.parse_command(
+        "book @ni_eve = Ni d’Ève ni d’Adame .fr 186.0p Q1996380 /fiction"
+    )
+    timeline: Timeline = parser.timeline
+
+    assert len(timeline.objects.objects) == 1
+    assert isinstance(timeline.objects.objects["ni_eve"], Book)
+    assert timeline.objects.objects["ni_eve"].volume == 186.0
+    assert timeline.objects.objects["ni_eve"].language == Language("fr")
+    assert timeline.objects.objects["ni_eve"].wikidata_id == 1996380
+    assert timeline.objects.objects["ni_eve"].subject == Subject("fiction")
