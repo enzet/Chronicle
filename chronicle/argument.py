@@ -120,7 +120,6 @@ class Arguments:
             result[current_key] = current_loader(current_value, objects)
 
         for token in tokens:
-
             detected: Argument | None = None
 
             for argument in self.arguments:
@@ -181,13 +180,19 @@ class Arguments:
 
         return result
 
-    def add(self, argument: Argument, is_insert: bool = False) -> Self:
+    def add(
+        self, argument: Argument, is_insert: bool = False, is_main: bool = False
+    ) -> Self:
         """Add argument to a parser."""
 
         if is_insert:
             self.arguments.insert(0, argument)
         else:
             self.arguments.append(argument)
+
+        if is_main:
+            self.main_argument = argument
+
         return self
 
     def __add__(self, other: Self) -> Self:

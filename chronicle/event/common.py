@@ -173,8 +173,8 @@ class WriteEvent(Event):
     """Person you were writing to."""
 
     arguments: ClassVar[Arguments] = (
-        Arguments(["write"], "write")
-        .add(Argument("title"))
+        Event.arguments.replace(["write"], "write")
+        .add(Argument("title"), is_main=True)
         .add_class_argument("language", Language)
         .add_class_argument("duration", Timedelta)
         .add_class_argument("volume", Volume)
