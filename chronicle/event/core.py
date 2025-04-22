@@ -8,7 +8,10 @@ from dataclasses import dataclass, field
 from typing import Any, ClassVar, Self
 
 from chronicle.argument import Arguments
-from chronicle.errors import ChronicleObjectNotFoundException
+from chronicle.errors import (
+    ChronicleArgumentError,
+    ChronicleObjectNotFoundException,
+)
 from chronicle.objects.core import Objects
 from chronicle.summary.core import Summary
 from chronicle.time import Time, Timedelta
@@ -31,7 +34,7 @@ class Event:
     """Point in time or time span when event is occurred."""
 
     source: Any = None
-    """Source representation was used to create this event."""
+    """Source was used to create this event."""
 
     tags: set[str] = field(default_factory=set)
     """Arbitrary user tag set for an event."""
@@ -52,6 +55,10 @@ class Event:
         arguments: Arguments = cls.arguments
         try:
             parsed = arguments.parse(tokens, objects)
+        except ChronicleArgumentError as error:
+            raise ChronicleArgumentError(
+                f"Cannot parse command `{command}`."
+            ) from error
         except ChronicleObjectNotFoundException as e:
             raise ChronicleObjectNotFoundException(
                 f"Object with id `{e.object_id}` not found, needed to parse "

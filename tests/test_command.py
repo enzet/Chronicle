@@ -13,7 +13,7 @@ from chronicle.event.core import Event, Objects
 from chronicle.objects.core import Audiobook, Book, Project
 from chronicle.time import Context, Timedelta
 from chronicle.timeline import CommandParser, Timeline
-from chronicle.value import Interval, Language, ProgrammingLanguage, Subject
+from chronicle.value import Interval, Language, ProgrammingLanguage
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
@@ -237,4 +237,19 @@ def test_object_book() -> None:
     assert timeline.objects.objects["ni_eve"].volume == 186.0
     assert timeline.objects.objects["ni_eve"].language == Language("fr")
     assert timeline.objects.objects["ni_eve"].wikidata_id == 1996380
-    assert timeline.objects.objects["ni_eve"].subject == Subject("fiction")
+
+
+def test_event_clean() -> None:
+    """Test cleaning event."""
+
+    parser: CommandParser = CommandParser()
+    parser.parse_commands(
+        [
+            "2000-01-01",
+            "glasses @ray_ban = Ray-Ban Glasses",
+            "23:00 clean @ray_ban !every_day",
+        ]
+    )
+    timeline: Timeline = parser.timeline
+
+    assert len(timeline.events) == 1

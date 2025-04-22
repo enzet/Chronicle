@@ -85,9 +85,9 @@ class CleanEvent(Event):
     object_: Object | None = None
     """Object that was cleaned."""
 
-    arguments: ClassVar[Arguments] = Arguments(
+    arguments: ClassVar[Arguments] = Event.arguments.replace(
         ["clean", "wash"], "clean"
-    ).add_object_argument("object_", Object)
+    ).add_object_argument("object_", Object, is_main=True)
 
 
 @dataclass

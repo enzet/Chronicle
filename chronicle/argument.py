@@ -90,6 +90,7 @@ class Arguments:
         self.prefixes: list[str] = prefixes
         self.command: str = command
         self.arguments: list[Argument] = []
+        self.main_argument: Argument | None = None
 
     def parse(self, tokens: list[str], objects: Objects) -> dict[str, Any]:
         """Parse arguments from command."""
@@ -100,9 +101,12 @@ class Arguments:
 
         # FIXME: rewrite, there should be no more than one main argument without
         # patterns. We should check it here.
-        main: Argument | None = (
-            self.arguments[0] if not self.arguments[0].patterns else None
-        )
+        main: Argument | None
+        if self.main_argument:
+            main = self.main_argument
+        else:
+            main = self.arguments[0] if not self.arguments[0].patterns else None
+
         result: dict[str, str] = {}
 
         current_key: str | None = main.key if main else None
@@ -147,7 +151,8 @@ class Arguments:
                     if current_value:
                         if not current_key:
                             raise ChronicleArgumentError(
-                                f"No argument key for value `{current_value}`."
+                                f"No argument key for value `{current_value}` "
+                                f"for tokens `{tokens}`."
                             )
                         load_current()
                         current_key = None
@@ -214,7 +219,11 @@ class Arguments:
         return self
 
     def add_object_argument(
-        self, name: str, class_: type, is_insert: bool = False
+        self,
+        name: str,
+        class_: type,
+        is_insert: bool = False,
+        is_main: bool = False,
     ) -> Self:
         """Add argument using object class.
 
@@ -243,6 +252,10 @@ class Arguments:
             self.arguments.insert(0, argument)
         else:
             self.arguments.append(argument)
+
+        if is_main:
+            self.main_argument = argument
+
         return self
 
     def to_string(self, value: Any) -> str:
