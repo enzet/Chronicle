@@ -137,11 +137,11 @@ class DuomeImporter(Importer):
 
         ```
         2000-01-01
-         Japanese W 587 L 24 XP 27550 +2450 XP to next level
+         Japanese W 587 L 24 XP 27550
 
         2000-01-02
-         Japanese W 587 L 24 XP 28921 +1079 XP to next level
-         Norwegian W 21 L 5 XP 390 +60 XP to next level
+         Japanese W 587 L 24 XP 28921
+         Norwegian W 21 L 5 XP 390
         ```
         """
         service: Object = timeline.objects.get_object("@duolingo")
@@ -150,19 +150,27 @@ class DuomeImporter(Importer):
 
         data: dict[str, list[tuple[datetime, int]]] = defaultdict(list)
 
+        date: datetime | None = None
+
         with self.file_path.open(encoding="utf-8") as input_file:
             for line in input_file.readlines():
                 line = line[:-1]
                 if not line:
                     continue
-                if not line.startswith(" "):
+                if not line.startswith(" ") or line.startswith("\t"):
                     date = datetime.strptime(line, "%Y-%m-%d")
                 else:
-                    course_name: str = line[1 : line.find(" W ")]
-                    value: int = int(
-                        line[line.find(" XP ") + 4 : line.find(" +")]
-                    )
-                    data[course_name].append((date, value))
+                    parts: list[str] = [
+                        part for part in line.split(" ") if part.strip()
+                    ]
+                    course_name_end: int = parts.index("W")
+                    course_name: str = " ".join(parts[:course_name_end])
+                    for index, part in enumerate(parts):
+                        if part == "XP":
+                            value: int = int(parts[index + 1])
+                            if date:
+                                data[course_name].append((date, value))
+                            break
 
         for course_name, values in data.items():
             previous_date: datetime | None = None
