@@ -12,6 +12,8 @@ __email__ = "me@enzet.ru"
 
 LANGUAGES: dict[str, tuple[str, str]] = {
     "ar": ("Arabic", "#FF7F50"),
+    "be": ("Belarusian", "#FF7F50"),
+    "da": ("Danish", "#FF7F50"),
     "de": ("German", "#DFA398"),
     "el": ("Greek", "#FF7F50"),
     "en": ("English", "#FF7F50"),
@@ -26,18 +28,17 @@ LANGUAGES: dict[str, tuple[str, str]] = {
     "is": ("Icelandic", "#FF7F50"),
     "it": ("Italian", "#FF7F50"),
     "ja": ("Japanese", "#CA1717"),
+    "ka": ("Georgian", "#FF7F50"),
     "ko": ("Korean", "#FF7F50"),
     "la": ("Latin", "#888888"),
     "no": ("Norwegian", "#FF7F50"),
+    "po": ("Polish", "#FF7F50"),
     "pt": ("Portuguese", "#FF7F50"),
     "rsl": ("Russian Sign Language", "#FF7F50"),
     "ru": ("Russian", "#FF7F50"),
     "sv": ("Swedish", "#FF7F50"),
     "uk": ("Ukrainian", "#FF7F50"),
     "zh": ("Chinese", "#FF7F50"),
-    "da": ("Danish", "#FF7F50"),
-    "po": ("Polish", "#FF7F50"),
-    "be": ("Belarusian", "#FF7F50"),
 }
 
 WRITING_SYSTEM_NAMES = {
@@ -402,10 +403,33 @@ class Volume:
         if self.measure == "percent":
             self.of = 100.0
 
-    def verify(self):
+    def verify(self) -> None:
+        """Raise an error if the volume value is incorrect."""
+
+        if self.from_ and self.to_ and self.from_ > self.to_:
+            raise ChronicleValueException(
+                "Start value should be less than end value, not "
+                f"`{self.from_}` > `{self.to_}`."
+            )
         if self.measure == "percent" and self.of != 100.0:
             raise ChronicleValueException(
                 f"Maximum should be 100%, not `{self.of}`."
+            )
+        if (
+            self.measure == "percent"
+            and self.from_
+            and (self.from_ < 0.0 or self.from_ > 100.0)
+        ):
+            raise ChronicleValueException(
+                f"From should be in range 0–100%, not `{self.from_}`."
+            )
+        if (
+            self.measure == "percent"
+            and self.to_
+            and (self.to_ < 0.0 or self.to_ > 100.0)
+        ):
+            raise ChronicleValueException(
+                f"To should be in range 0–100%, not `{self.to_}`."
             )
 
     def get_ratio(self) -> float | None:
