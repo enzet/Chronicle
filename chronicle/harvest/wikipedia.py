@@ -19,44 +19,53 @@ class WikipediaImporter(Importer):
     username: str
     """Wikipedia username."""
 
-    limit: int = 500
-    """Maximum number of contributions to fetch."""
-
     @override
     def import_data(self, timeline: Timeline) -> None:
         """Import data from Wikipedia."""
 
         api_url: str = "https://en.wikipedia.org/w/api.php"
-
         parameters: dict = {
             "action": "query",
             "format": "json",
             "list": "usercontribs",
             "ucuser": self.username,
-            "uclimit": self.limit,
-            "ucprop": "timestamp|sizediff",
+            "uclimit": 500,  # Maximum allowed per request
+            "ucprop": "timestamp|sizediff|title|flags",
         }
+
+        continue_token: str | None = None
         try:
-            response: requests.Response = requests.get(
-                api_url, params=parameters, timeout=10
-            )
-            response.raise_for_status()
-            data: dict = response.json()
+            while True:
+                # Add continue token if we have one.
+                if continue_token:
+                    parameters["uccontinue"] = continue_token
 
-            for contrib in data["query"]["usercontribs"]:
-                timestamp: datetime = datetime.strptime(
-                    contrib["timestamp"], "%Y-%m-%dT%H:%M:%SZ"
+                response: requests.Response = requests.get(
+                    api_url, params=parameters, timeout=10
                 )
-                difference: int = contrib["sizediff"]
+                response.raise_for_status()
+                data: dict = response.json()
 
-                event: WikiContributionEvent = WikiContributionEvent(
-                    Time.from_moment(Moment.from_datetime(timestamp)),
-                    page_title=contrib["title"],
-                    difference=difference,
-                    is_new=contrib["new"],
-                    is_minor=contrib["minor"],
-                )
-                timeline.events.append(event)
+                for contrib in data["query"]["usercontribs"]:
+                    timestamp: datetime = datetime.strptime(
+                        contrib["timestamp"], "%Y-%m-%dT%H:%M:%SZ"
+                    )
+                    difference: int = contrib["sizediff"]
 
-        except requests.RequestException as e:
-            print(f"Error fetching Wikipedia contributions: {e}")
+                    event: WikiContributionEvent = WikiContributionEvent(
+                        Time.from_moment(Moment.from_datetime(timestamp)),
+                        page_title=contrib["title"],
+                        difference=difference,
+                        is_new="new" in contrib,
+                        is_minor="minor" in contrib,
+                    )
+                    timeline.events.append(event)
+
+                # Check if there are more pages.
+                if "continue" in data and "uccontinue" in data["continue"]:
+                    continue_token = data["continue"]["uccontinue"]
+                else:
+                    break  # No more pages to fetch.
+
+        except requests.RequestException as error:
+            print(f"Error fetching Wikipedia contributions: {error}.")
