@@ -28,6 +28,9 @@ summaries.
 Chronicle uses plain text files with the `.chr` extension. The syntax is
 designed to be both human-readable and machine-parseable.
 
+Each line in the file is a separate record, that can be an event (or a task),
+an object definition, a special command, or a comment.
+
 ### Events and Tasks
 
 Events are activities that have occurred, while tasks are planned future events.
@@ -39,8 +42,8 @@ Events are activities that have occurred, while tasks are planned future events.
 19:00/19:30 <span style="font-weight: bold;">run</span> 5.2km
 
 <span style="color: green; font-style: italic;">-- Tasks (prefixed with [ ] or [x]).</span>
-[x] <span style="font-weight: bold;">do</span> the dishes
-[ ] <span style="font-weight: bold;">clean</span> @bathroom
+[x] <b>do</b> the dishes
+[ ] <b>clean</b> @bathroom
 
 <span style="color: green; font-style: italic;">-- Future events (prefixed with >>>).</span>
 >>> 20:00/ concert @radiohead
@@ -50,9 +53,8 @@ Events are activities that have occurred, while tasks are planned future events.
 
 Define reusable objects to simplify your entries:
 
-<pre><code><span style="font-weight: bold;">podcast</span> @innerfrench = Inner French Podcast .fr
-<span style="font-weight: bold;">book</span> @dune = Dune by Frank Herbert
-</code></pre>
+<pre><code><b>podcast</b> @innerfrench = Inner French Podcast .fr
+<b>book</b> @dune = Dune by Frank Herbert</code></pre>
 
 ### Special Commands
 
@@ -73,8 +75,15 @@ pip install .
 
 ## Usage
 
-See
+For the most detailed help, run:
 
 ```shell
 chronicle --help
 ```
+
+### Importing Data
+
+| Option | Description |
+|---|---|
+| `--import-memrise` | Exported Memrise `.html` files. |
+| `--import-duome` | Exported Duome `.txt` files. |
