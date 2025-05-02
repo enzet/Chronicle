@@ -81,6 +81,25 @@ For the most detailed help, run:
 chronicle --help
 ```
 
+Common usage:
+
+```shell
+chronicle \
+    --input <input Chronicle files> \
+    <import options> \
+    <command>
+```
+
+Example:
+
+```shell
+chronicle \
+    --input timeline.chr \
+    --import-wikimedia User1@en.wikipedia.org User2@wikidata.org \
+    --import-memrise memrise.html \
+    view language --form table
+```
+
 ### Importing Data
 
 - `--import-memrise`: exported Memrise `.html` files. File can be requested at
