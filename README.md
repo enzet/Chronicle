@@ -83,7 +83,10 @@ chronicle --help
 
 ### Importing Data
 
-| Option | Description |
-|---|---|
-| `--import-memrise` | Exported Memrise `.html` files. |
-| `--import-duome` | Exported Duome `.txt` files. |
+- `--import-memrise`: exported Memrise `.html` files. File can be requested at
+  [Memrise settings](https://app.memrise.com/settings/) by "Download Personal
+  Data" button.
+- `--import-duome`: exported Duome `.txt` files.
+- `--import-wikimedia`: import contributions from Wikimedia projects.
+  Argument format is `<username>@<url>`, e.g. `User1@en.wikipedia.org`
+  or `User2@wikidata.org`.
