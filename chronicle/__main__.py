@@ -32,6 +32,9 @@ def main() -> None:
         default="silent",
         help="logging level",
     )
+    argument_parser.add_argument(
+        "--cache-only", action="store_true", help="use cache only"
+    )
     argument_parser.add_argument("-c", "--command", help="command")
     argument_parser.add_argument("--sub-command", default="")
     argument_parser.add_argument("-i", "--input", nargs="+", help="input files")
@@ -167,6 +170,7 @@ def main() -> None:
 
     timeline: Timeline = Timeline()
     cache_path: Path = Path.home() / "program" / "chronicle" / "cache"
+    cache_only: bool = arguments.cache_only
 
     if arguments.input:
         for file_name in arguments.input:
@@ -243,7 +247,10 @@ def main() -> None:
             username, url = value.split("@")
             logging.info("Importing Wikimedia contributions for `%s`.", url)
             WikimediaImporter(
-                url=url, username=username, cache_path=cache_path
+                url=url,
+                username=username,
+                cache_path=cache_path,
+                cache_only=cache_only,
             ).import_data(timeline)
 
     if arguments.import_apple_health:
@@ -290,6 +297,7 @@ def main() -> None:
 
         elif command == "summary":
             print(timeline.get_summary())
+
         elif command == "shows":
             from chronicle.view.show import ShowViewer
 

@@ -27,6 +27,9 @@ class WikimediaImporter(Importer):
     cache_path: Path
     """Path to cache directory."""
 
+    cache_only: bool
+    """Use cache only."""
+
     def _get_cache_file(self) -> Path:
         """Get the cache file path."""
         return self.cache_path / f"{self.url}_{self.username}.json"
@@ -63,6 +66,13 @@ class WikimediaImporter(Importer):
     def import_data(self, timeline: Timeline) -> None:
         """Import data from Wikimedia."""
         cache: list[dict] = self._load_cache()
+
+        if self.cache_only:
+            timeline.events.extend(
+                self._create_event(contrib) for contrib in cache
+            )
+            return
+
         api_url: str = f"https://{self.url}/w/api.php"
         parameters: dict[str, str | int] = {
             "action": "query",
