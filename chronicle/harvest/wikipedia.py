@@ -18,6 +18,9 @@ from chronicle.timeline import Timeline
 class WikipediaImporter(Importer):
     """Importer for Wikipedia data."""
 
+    url: str
+    """Wikipedia URL."""
+
     username: str
     """Wikipedia username."""
 
@@ -26,7 +29,7 @@ class WikipediaImporter(Importer):
 
     def _get_cache_file(self) -> Path:
         """Get the cache file path."""
-        return self.cache_path / f"wikipedia_{self.username}.json"
+        return self.cache_path / f"{self.url}_{self.username}.json"
 
     def _load_cache(self) -> list[dict]:
         """Load cached contributions from file."""
@@ -59,13 +62,13 @@ class WikipediaImporter(Importer):
     def import_data(self, timeline: Timeline) -> None:
         """Import data from Wikipedia."""
         cache: list[dict] = self._load_cache()
-        api_url: str = "https://en.wikipedia.org/w/api.php"
+        api_url: str = f"https://{self.url}/w/api.php"
         parameters: dict[str, str | int] = {
             "action": "query",
             "format": "json",
             "list": "usercontribs",
             "ucuser": self.username,
-            "uclimit": 500,  # Maximum allowed per request.
+            "uclimit": 100,  # Maximum allowed per request is 500.
             "ucprop": "timestamp|sizediff|title|flags",
         }
 
@@ -78,7 +81,7 @@ class WikipediaImporter(Importer):
                 if continue_token:
                     parameters["uccontinue"] = continue_token
 
-                print("Requesting data...")
+                print(f"Requesting data for {self.url}...")
                 response: requests.Response = requests.get(
                     api_url, params=parameters, timeout=10
                 )

@@ -72,9 +72,10 @@ def main() -> None:
         metavar="<CSV file path>",
     )
     argument_parser.add_argument(
-        "--import-wikipedia",
+        "--import-wiki",
         help="import data from Wikipedia",
-        metavar="<username>",
+        metavar="<url>",
+        nargs="+",
     )
 
     sub_parsers = argument_parser.add_subparsers(dest="command")
@@ -227,13 +228,13 @@ def main() -> None:
             timeline
         )
 
-    if arguments.import_wikipedia:
-        logging.info(
-            "Importing Wikipedia data from `%s`.", arguments.import_wikipedia
-        )
-        WikipediaImporter(
-            username=arguments.import_wikipedia, cache_path=cache_path
-        ).import_data(timeline)
+    if arguments.import_wiki:
+        for value in arguments.import_wiki:
+            username, url = value.split("@")
+            logging.info("Importing wiki contributions for `%s`.", url)
+            WikipediaImporter(
+                url=url, username=username, cache_path=cache_path
+            ).import_data(timeline)
 
     def process_command(command: str) -> None:
         console: Console = Console(highlight=False)
