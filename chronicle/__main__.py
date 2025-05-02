@@ -7,11 +7,13 @@ from pathlib import Path
 
 from rich.console import Console
 
-from chronicle.harvest.old import (
-    OldImporter,
-    OldMovieImporter,
-    OldPodcastImporter,
-)
+from chronicle.harvest.apple_health import AppleHealthImportManager
+from chronicle.harvest.arc import ArcImportManager
+from chronicle.harvest.core import ImportManager
+from chronicle.harvest.duolingo import DuolingoImportManager
+from chronicle.harvest.memrise import MemriseImportManager
+from chronicle.harvest.old import OldImportManager
+from chronicle.harvest.wikimedia import WikimediaImportManager
 from chronicle.timeline import CommandParser, SportViewer, Timeline
 from chronicle.view.objects import ObjectsHtmlViewer
 
@@ -33,61 +35,31 @@ def main() -> None:
         help="logging level",
     )
     argument_parser.add_argument(
+        "--cache-path",
+        type=str,
+        default="cache",
+        help="path to cache directory",
+    )
+    argument_parser.add_argument(
         "--cache-only", action="store_true", help="use cache only"
     )
     argument_parser.add_argument("-c", "--command", help="command")
     argument_parser.add_argument("--sub-command", default="")
     argument_parser.add_argument("-i", "--input", nargs="+", help="input files")
-    argument_parser.add_argument(
-        "--import-old",
-        help="import data from old Chronicle format",
-        metavar="<JSON file path>",
-    )
-    argument_parser.add_argument(
-        "--import-old-movie",
-        help="import movies from old Chronicle format",
-        metavar="<JSON file path>",
-    )
-    argument_parser.add_argument(
-        "--import-old-podcast",
-        help="import podcasts from old Chronicle format",
-        metavar="<JSON file path>",
-    )
-    argument_parser.add_argument(
-        "--import-arc",
-        help="import data from Arc iOS application",
-        metavar="<path>",
-    )
-    argument_parser.add_argument(
-        "--import-memrise",
-        help="import data from Memrise",
-        metavar="<HTML file path>",
-    )
-    argument_parser.add_argument(
-        "--import-duome",
-        help="import data from Duome project",
-        metavar="<text file path>",
-    )
-    argument_parser.add_argument(
-        "--import-duolingo",
-        help="import data from Duolingo",
-        metavar="<CSV file path>",
-    )
-    argument_parser.add_argument(
-        "--import-wikimedia",
-        help=(
-            "import contributions from Wikimedia projects, format: "
-            "<username>@<url>, e.g. `User1@en.wikipedia.org`, "
-            "`User2@wikidata.org`"
-        ),
-        metavar="<username>@<url>",
-        nargs="+",
-    )
-    argument_parser.add_argument(
-        "--import-apple-health",
-        help="import movement data from Apple Health",
-        metavar="<JSON file path>",
-    )
+
+    import_parsers = argument_parser.add_argument_group("import")
+
+    import_managers: list[type[ImportManager]] = [
+        WikimediaImportManager,
+        AppleHealthImportManager,
+        ArcImportManager,
+        DuolingoImportManager,
+        MemriseImportManager,
+        OldImportManager,
+    ]
+
+    for manager in import_managers:
+        manager.add_argument(import_parsers)
 
     sub_parsers = argument_parser.add_subparsers(dest="command")
     view_parser = sub_parsers.add_parser("view")
@@ -169,8 +141,6 @@ def main() -> None:
     logging.info("Starting Chronicle.")
 
     timeline: Timeline = Timeline()
-    cache_path: Path = Path.home() / "program" / "chronicle" / "cache"
-    cache_only: bool = arguments.cache_only
 
     if arguments.input:
         for file_name in arguments.input:
@@ -189,80 +159,8 @@ def main() -> None:
                 logging.critical("Unknown format of file `%s`.", file_name)
                 sys.exit(1)
 
-    if arguments.import_arc:
-        from chronicle.harvest.arc import ArcImporter
-
-        logging.info("Importing Arc data from `%s`.", arguments.import_arc)
-        ArcImporter(Path(arguments.import_arc), cache_path).import_data(
-            timeline
-        )
-
-    if arguments.import_memrise:
-        from chronicle.harvest.memrise import MemriseImporter
-
-        logging.info(
-            "Importing Memrise data from `%s`.", arguments.import_memrise
-        )
-        MemriseImporter(Path(arguments.import_memrise)).import_data(timeline)
-
-    if arguments.import_duome:
-        from chronicle.harvest.duolingo import DuomeImporter
-
-        logging.info("Importing Duome data from `%s`.", arguments.import_duome)
-        DuomeImporter(Path(arguments.import_duome)).import_data(timeline)
-
-    if arguments.import_duolingo:
-        from chronicle.harvest.duolingo import DuolingoImporter
-
-        logging.info(
-            "Importing Duolingo data from `%s`.", arguments.import_duolingo
-        )
-        DuolingoImporter(Path(arguments.import_duolingo)).import_data(timeline)
-
-    if arguments.import_old:
-        logging.info(
-            "Importing events from old format `%s`.", arguments.import_old
-        )
-        OldImporter(Path(arguments.import_old)).import_data(timeline)
-
-    if arguments.import_old_movie:
-        logging.info(
-            "Importing movies from old format `%s`.", arguments.import_old_movie
-        )
-        OldMovieImporter(Path(arguments.import_old_movie)).import_data(timeline)
-
-    if arguments.import_old_podcast:
-        logging.info(
-            "Importing podcasts from old format `%s`.",
-            arguments.import_old_podcast,
-        )
-        OldPodcastImporter(Path(arguments.import_old_podcast)).import_data(
-            timeline
-        )
-
-    if arguments.import_wikimedia:
-        from chronicle.harvest.wikimedia import WikimediaImporter
-
-        for value in arguments.import_wikimedia:
-            username, url = value.split("@")
-            logging.info("Importing Wikimedia contributions for `%s`.", url)
-            WikimediaImporter(
-                url=url,
-                username=username,
-                cache_path=cache_path,
-                cache_only=cache_only,
-            ).import_data(timeline)
-
-    if arguments.import_apple_health:
-        from chronicle.harvest.apple_health import AppleHealthImporter
-
-        logging.info(
-            "Importing Apple Health data from `%s`.",
-            arguments.import_apple_health,
-        )
-        AppleHealthImporter(Path(arguments.import_apple_health)).import_data(
-            timeline
-        )
+    for manager in import_managers:
+        manager.process_arguments(arguments, timeline)
 
     def process_command(command: str) -> None:
         console: Console = Console(highlight=False)

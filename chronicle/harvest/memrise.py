@@ -1,5 +1,6 @@
 """Harvest data from Memrise."""
 
+import argparse
 import re
 from collections import defaultdict
 from dataclasses import dataclass
@@ -10,7 +11,7 @@ from typing import override
 
 from chronicle.event.common import LearnEvent
 from chronicle.event.core import Event
-from chronicle.harvest.core import Importer
+from chronicle.harvest.core import Importer, ImportManager
 from chronicle.objects.core import Object, Service
 from chronicle.time import Moment, Time, Timedelta
 from chronicle.timeline import Timeline
@@ -89,6 +90,26 @@ class MemriseHTMLParser(HTMLParser):
         if tag == "tr":
             if any(self.current_data):
                 self.data.append(self.current_data)
+
+
+class MemriseImportManager(ImportManager):
+    """Manager for Memrise import."""
+
+    @staticmethod
+    @override
+    def add_argument(parser: argparse._ArgumentGroup) -> None:
+        parser.add_argument(
+            "--import-memrise", help="import Memrise data", metavar="<path>"
+        )
+
+    @staticmethod
+    @override
+    def process_arguments(
+        arguments: argparse.Namespace, timeline: Timeline
+    ) -> None:
+        if arguments.import_memrise:
+            file_path: Path = Path(arguments.import_memrise)
+            MemriseImporter(file_path).import_data(timeline)
 
 
 @dataclass

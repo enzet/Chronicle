@@ -1,14 +1,15 @@
 """Harvest data from Duolingo."""
 
+import argparse
 import csv
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Iterator
+from typing import Iterator, override
 
 from chronicle.event.common import LearnEvent
-from chronicle.harvest.core import Importer
+from chronicle.harvest.core import Importer, ImportManager
 from chronicle.objects.core import Object, Service
 from chronicle.time import Moment, Time, Timedelta
 from chronicle.timeline import Timeline
@@ -50,6 +51,38 @@ def approximate_duration(xp: int, date: datetime) -> Timedelta:
             return Timedelta(delta=timedelta(seconds=xp * 5))
         case _:
             return Timedelta(delta=timedelta(seconds=xp * 20))
+
+
+class DuolingoImportManager(ImportManager):
+    """Manager for Duolingo import."""
+
+    @staticmethod
+    @override
+    def add_argument(parser: argparse._ArgumentGroup) -> None:
+        parser.add_argument(
+            "--import-duolingo", help="import Duolingo data", metavar="<path>"
+        )
+        parser.add_argument(
+            "--import-duome",
+            help="import Duolingo data using Duome",
+            metavar="<path>",
+        )
+
+    @staticmethod
+    @override
+    def process_arguments(
+        arguments: argparse.Namespace, timeline: Timeline
+    ) -> None:
+
+        file_path: Path
+
+        if arguments.import_duolingo:
+            file_path = Path(arguments.import_duolingo)
+            DuolingoImporter(file_path).import_data(timeline)
+
+        if arguments.import_duome:
+            file_path = Path(arguments.import_duome)
+            DuomeImporter(file_path).import_data(timeline)
 
 
 @dataclass

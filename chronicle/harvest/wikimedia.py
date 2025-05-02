@@ -1,6 +1,8 @@
 """Harvest contribution data from Wikimedia."""
 
+import argparse
 import json
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -9,9 +11,43 @@ from typing import override
 import requests
 
 from chronicle.event.contibution import WikiContributionEvent
-from chronicle.harvest.core import Importer
+from chronicle.harvest.core import Importer, ImportManager
 from chronicle.time import Moment, Time
 from chronicle.timeline import Timeline
+
+
+class WikimediaImportManager(ImportManager):
+    """Manager for Wikimedia import."""
+
+    @staticmethod
+    @override
+    def add_argument(parser: argparse._ArgumentGroup) -> None:
+        parser.add_argument(
+            "--import-wikimedia",
+            help=(
+                "import contributions from Wikimedia projects, format: "
+                "<username>@<url>, e.g. `User1@en.wikipedia.org`, "
+                "`User2@wikidata.org`"
+            ),
+            metavar="<username>@<url>",
+            nargs="+",
+        )
+
+    @staticmethod
+    @override
+    def process_arguments(
+        arguments: argparse.Namespace, timeline: Timeline
+    ) -> None:
+        """Process arguments."""
+        for value in arguments.import_wikimedia:
+            username, url = value.split("@")
+            logging.info("Importing Wikimedia contributions for `%s`.", url)
+            WikimediaImporter(
+                url=url,
+                username=username,
+                cache_path=Path(arguments.cache_path),
+                cache_only=arguments.cache_only,
+            ).import_data(timeline)
 
 
 @dataclass

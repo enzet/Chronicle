@@ -1,10 +1,11 @@
 """Importer for old Chronicle format."""
 
+import argparse
 import json
 import re
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 from chronicle.event.art import (
     ListenAudiobookEvent,
@@ -14,13 +15,54 @@ from chronicle.event.art import (
     WatchEvent,
 )
 from chronicle.event.core import Event
-from chronicle.harvest.core import Importer
+from chronicle.harvest.core import Importer, ImportManager
 from chronicle.objects.core import Audiobook, Book, Object, Podcast, Video
 from chronicle.time import Context, Moment, Time, Timedelta
 from chronicle.timeline import Timeline
 from chronicle.value import ChronicleValueException, Interval, Language, Volume
 
 OLD_TIME_FORMAT: str = "%d.%m.%Y %H:%M"
+
+
+class OldImportManager(ImportManager):
+    """Manager for old Chronicle format import."""
+
+    @staticmethod
+    @override
+    def add_argument(parser: argparse._ArgumentGroup) -> None:
+        parser.add_argument(
+            "--import-old", help="import old Chronicle format", metavar="<path>"
+        )
+        parser.add_argument(
+            "--import-old-movie",
+            help="import old Chronicle format",
+            metavar="<path>",
+        )
+        parser.add_argument(
+            "--import-old-podcast",
+            help="import old Chronicle format",
+            metavar="<path>",
+        )
+
+    @staticmethod
+    @override
+    def process_arguments(
+        arguments: argparse.Namespace, timeline: Timeline
+    ) -> None:
+
+        file_path: Path
+
+        if arguments.import_old:
+            file_path = Path(arguments.import_old)
+            OldImporter(file_path).import_data(timeline)
+
+        if arguments.import_old_movie:
+            file_path = Path(arguments.import_old_movie)
+            OldMovieImporter(file_path).import_data(timeline)
+
+        if arguments.import_old_podcast:
+            file_path = Path(arguments.import_old_podcast)
+            OldPodcastImporter(file_path).import_data(timeline)
 
 
 class OldImporter(Importer):

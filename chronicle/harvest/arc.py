@@ -1,5 +1,6 @@
 """Harvest data from the Arc iOS application."""
 
+import argparse
 import json
 import shutil
 import subprocess
@@ -7,8 +8,32 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import override
 
-from chronicle.harvest.core import Importer
+from chronicle.harvest.core import Importer, ImportManager
 from chronicle.timeline import Timeline
+
+
+class ArcImportManager(ImportManager):
+    """Manager for Arc import."""
+
+    @staticmethod
+    @override
+    def add_argument(parser: argparse._ArgumentGroup) -> None:
+        parser.add_argument(
+            "--import-arc",
+            help="import data from the Arc iOS application",
+            metavar="<path>",
+        )
+
+    @staticmethod
+    @override
+    def process_arguments(
+        arguments: argparse.Namespace, timeline: Timeline
+    ) -> None:
+        if arguments.import_arc:
+            file_path: Path = Path(arguments.import_arc)
+            ArcImporter(
+                file_path, cache_path=Path(arguments.cache_path)
+            ).import_data(timeline)
 
 
 @dataclass
