@@ -36,7 +36,8 @@ class WikimediaImporter(Importer):
         cache_file: Path = self._get_cache_file()
         if cache_file.exists():
             with open(cache_file, "r", encoding="utf-8") as input_file:
-                return json.load(input_file)
+                data: list[dict] = json.load(input_file)
+                return data
         return []
 
     def _save_cache(self, data: list[dict]) -> None:

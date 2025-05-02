@@ -12,7 +12,6 @@ from chronicle.harvest.old import (
     OldMovieImporter,
     OldPodcastImporter,
 )
-from chronicle.harvest.wikimedia import WikimediaImporter
 from chronicle.timeline import CommandParser, SportViewer, Timeline
 from chronicle.view.objects import ObjectsHtmlViewer
 
@@ -80,6 +79,11 @@ def main() -> None:
         ),
         metavar="<username>@<url>",
         nargs="+",
+    )
+    argument_parser.add_argument(
+        "--import-apple-health",
+        help="import movement data from Apple Health",
+        metavar="<JSON file path>",
     )
 
     sub_parsers = argument_parser.add_subparsers(dest="command")
@@ -169,7 +173,7 @@ def main() -> None:
             if file_name.endswith(".chr"):
                 logging.info("Importing data from `%s`.", file_name)
                 parser: CommandParser = CommandParser(timeline)
-                with Path(file_name).open() as input_file:
+                with Path(file_name).open(encoding="utf-8") as input_file:
                     for line in input_file.readlines():
                         parser.parse_command(line[:-1].strip())
             elif file_name.endswith(".vcf"):
@@ -233,12 +237,25 @@ def main() -> None:
         )
 
     if arguments.import_wikimedia:
+        from chronicle.harvest.wikimedia import WikimediaImporter
+
         for value in arguments.import_wikimedia:
             username, url = value.split("@")
             logging.info("Importing Wikimedia contributions for `%s`.", url)
             WikimediaImporter(
                 url=url, username=username, cache_path=cache_path
             ).import_data(timeline)
+
+    if arguments.import_apple_health:
+        from chronicle.harvest.apple_health import AppleHealthImporter
+
+        logging.info(
+            "Importing Apple Health data from `%s`.",
+            arguments.import_apple_health,
+        )
+        AppleHealthImporter(Path(arguments.import_apple_health)).import_data(
+            timeline
+        )
 
     def process_command(command: str) -> None:
         console: Console = Console(highlight=False)
