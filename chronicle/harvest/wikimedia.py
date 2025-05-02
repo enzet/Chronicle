@@ -1,4 +1,4 @@
-"""Harvest contribution data from Wikipedia."""
+"""Harvest contribution data from Wikimedia."""
 
 import json
 from dataclasses import dataclass
@@ -15,14 +15,14 @@ from chronicle.timeline import Timeline
 
 
 @dataclass
-class WikipediaImporter(Importer):
-    """Importer for Wikipedia data."""
+class WikimediaImporter(Importer):
+    """Importer for Wikimedia data."""
 
     url: str
-    """Wikipedia URL."""
+    """Wikimedia project URL."""
 
     username: str
-    """Wikipedia username."""
+    """Username in Wikimedia project."""
 
     cache_path: Path
     """Path to cache directory."""
@@ -46,7 +46,7 @@ class WikipediaImporter(Importer):
             json.dump(data, output_file, ensure_ascii=False, indent=2)
 
     def _create_event(self, contrib: dict) -> WikiContributionEvent:
-        """Create a Wiki contribution event from contribution data."""
+        """Create a Wikimedia contribution event from contribution data."""
         timestamp: datetime = datetime.strptime(
             contrib["timestamp"], "%Y-%m-%dT%H:%M:%SZ"
         )
@@ -60,7 +60,7 @@ class WikipediaImporter(Importer):
 
     @override
     def import_data(self, timeline: Timeline) -> None:
-        """Import data from Wikipedia."""
+        """Import data from Wikimedia."""
         cache: list[dict] = self._load_cache()
         api_url: str = f"https://{self.url}/w/api.php"
         parameters: dict[str, str | int] = {
@@ -68,7 +68,7 @@ class WikipediaImporter(Importer):
             "format": "json",
             "list": "usercontribs",
             "ucuser": self.username,
-            "uclimit": 100,  # Maximum allowed per request is 500.
+            "uclimit": 100,
             "ucprop": "timestamp|sizediff|title|flags",
         }
 

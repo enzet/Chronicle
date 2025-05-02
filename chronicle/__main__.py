@@ -12,7 +12,7 @@ from chronicle.harvest.old import (
     OldMovieImporter,
     OldPodcastImporter,
 )
-from chronicle.harvest.wikipedia import WikipediaImporter
+from chronicle.harvest.wikimedia import WikimediaImporter
 from chronicle.timeline import CommandParser, SportViewer, Timeline
 from chronicle.view.objects import ObjectsHtmlViewer
 
@@ -72,9 +72,13 @@ def main() -> None:
         metavar="<CSV file path>",
     )
     argument_parser.add_argument(
-        "--import-wiki",
-        help="import data from Wikipedia",
-        metavar="<url>",
+        "--import-wikimedia",
+        help=(
+            "import contributions from Wikimedia projects, format: "
+            "<username>@<url>, e.g. `User1@en.wikipedia.org`, "
+            "`User2@wikidata.org`"
+        ),
+        metavar="<username>@<url>",
         nargs="+",
     )
 
@@ -228,11 +232,11 @@ def main() -> None:
             timeline
         )
 
-    if arguments.import_wiki:
-        for value in arguments.import_wiki:
+    if arguments.import_wikimedia:
+        for value in arguments.import_wikimedia:
             username, url = value.split("@")
-            logging.info("Importing wiki contributions for `%s`.", url)
-            WikipediaImporter(
+            logging.info("Importing Wikimedia contributions for `%s`.", url)
+            WikimediaImporter(
                 url=url, username=username, cache_path=cache_path
             ).import_data(timeline)
 
