@@ -293,10 +293,6 @@ def main() -> None:
             SportViewer(timeline).plot_sport()
         elif command == "graph":
             timeline.graph()
-        elif command == "duolingo":
-            DuomeImporter(
-                Path.home() / "Dropbox" / "Data" / "duome.txt"
-            ).import_data(timeline)
 
     command = arguments.command
     if command == "interpret":
