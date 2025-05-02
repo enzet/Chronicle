@@ -43,8 +43,6 @@ def main() -> None:
     argument_parser.add_argument(
         "--cache-only", action="store_true", help="use cache only"
     )
-    argument_parser.add_argument("-c", "--command", help="command")
-    argument_parser.add_argument("--sub-command", default="")
     argument_parser.add_argument("-i", "--input", nargs="+", help="input files")
 
     import_parsers = argument_parser.add_argument_group("import")
