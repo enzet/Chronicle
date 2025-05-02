@@ -12,6 +12,7 @@ from chronicle.harvest.old import (
     OldMovieImporter,
     OldPodcastImporter,
 )
+from chronicle.harvest.wikipedia import WikipediaImporter
 from chronicle.timeline import CommandParser, SportViewer, Timeline
 from chronicle.view.objects import ObjectsHtmlViewer
 
@@ -69,6 +70,11 @@ def main() -> None:
         "--import-duolingo",
         help="import data from Duolingo",
         metavar="<CSV file path>",
+    )
+    argument_parser.add_argument(
+        "--import-wikipedia",
+        help="import data from Wikipedia",
+        metavar="<username>",
     )
 
     sub_parsers = argument_parser.add_subparsers(dest="command")
@@ -220,6 +226,14 @@ def main() -> None:
         OldPodcastImporter(Path(arguments.import_old_podcast)).import_data(
             timeline
         )
+
+    if arguments.import_wikipedia:
+        logging.info(
+            "Importing Wikipedia data from `%s`.", arguments.import_wikipedia
+        )
+        WikipediaImporter(
+            username=arguments.import_wikipedia, cache_path=cache_path
+        ).import_data(timeline)
 
     def process_command(command: str) -> None:
         console: Console = Console(highlight=False)
