@@ -1,7 +1,7 @@
 -- Script for Neovim to manage tasks in Chronicle project files.
 -- See https://github.com/enzet/Chronicle for more information.
 
--- Reload it with `:source ~/.config/nvim/lua/chronicle.lua`.
+-- Reload it with `:source <path to Chronicle>/scripts/chronicle.lua`.
 
 local M = {}
 
@@ -14,13 +14,12 @@ local function is_valid_date(date_str)
 end
 
 -- Process line under cursor.
-function M.process_line(command)
-    -- Input validation.
-    if type(command) ~= "string" or (command ~= "done" and command ~= "start") then
-        vim.notify("Invalid command: " .. tostring(command), vim.log.levels.ERROR)
-        return
-    end
-
+function M.process_line(
+    to_mark_as_done,
+    to_propagate,
+    to_start,
+    to_create_new
+)
     local bufnr = vim.api.nvim_get_current_buf()
     local line = vim.api.nvim_buf_get_lines(
         bufnr,
@@ -74,21 +73,27 @@ function M.process_line(command)
         vim.api.nvim_buf_set_lines(bufnr, i, i, false, { text })
     end
 
-    -- Enhanced pattern matching with better error handling.
+    -- Detect marker, start time, end time, and content.
     local marker, start_time, end_time, content = line:match("^(%[[ x]%]) (.....).(.....) (.*)$")
     if not (marker and start_time and end_time and content) then
-        vim.notify("Invalid task format", vim.log.levels.WARN)
+        vim.notify("Chronicle: no valid task under cursor", vim.log.levels.WARN)
         return
     end
 
+    local is_done = marker == "[x]"
+
     -- Mark unfinished task as complete.
-    if command == "done" and line:match("^%[ %]") then
+    if not is_done and to_mark_as_done then
         if end_time == "     " then
             end_time = os.date("%H:%M")
         end
         local completed_line = "[x] " .. start_time .. "/" .. end_time .. " " .. content
-
         rewrite_line_under_cursor(completed_line)
+    end
+
+    -- Propagate task to the next day.
+    if to_propagate then
+
         local new_task = "[ ]             " .. content
 
         -- Check if task needs to be repeated in the future.
@@ -145,18 +150,28 @@ function M.process_line(command)
     end
 
     -- Start new task.
-    if command == "start" then
+    if to_start then
         local new_task = "[ ] " .. os.date("%H:%M") .. "/      " .. content
         rewrite_line_under_cursor(new_task)
+    end
+
+    -- Pause task: mark task as done and create new identical task.
+    if to_create_new then
+        local new_task = "[ ]             " .. content
+        insert_line(new_task, vim.api.nvim_win_get_cursor(0)[1])
     end
 end
 
 function M.finish_task()
-    M.process_line("done")
+    M.process_line(true, true, false, false)
 end
 
 function M.start_task()
-    M.process_line("start")
+    M.process_line(false, false, true, false)
+end
+
+function M.pause_task()
+    M.process_line(true, false, false, true)
 end
 
 local options = { noremap = true, silent = true }
