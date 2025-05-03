@@ -115,7 +115,7 @@ Chronicle provides a Lua script (`scripts/chronicle.lua`) for NeoVim to help
 manage tasks directly within your `.chr` files. This script adds convenient
 commands and key mappings for working with tasks in your journal.
 
-### Available NeoVim Commands
+### Available NeoVim Task Commands
 
 - `:ChronicleDone` or <kbd>Space</kbd> <kbd>d</kbd>
   - Marks the current task as done (completes the task under the cursor).
@@ -125,15 +125,15 @@ commands and key mappings for working with tasks in your journal.
   
 - `:ChronicleStart` or <kbd>Space</kbd> <kbd>s</kbd>
   - Changes the event start time to the current time.
-  
+
+- `:ChroniclePause` or <kbd>Space</kbd> <kbd>p</kbd>
+  - Marks the current task as done and creates a new identical task.
+
 These commands are available after sourcing the script in NeoVim:
 
 ```vim
 :source <path to Chronicle>/scripts/chronicle.lua
 ```
-
-Or, if you have the script in your runtime path, it will be loaded
-automatically.
 
 ### Example Usage
 

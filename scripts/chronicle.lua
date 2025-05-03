@@ -10,7 +10,9 @@ local function is_valid_date(date_str)
     if not date_str then return false end
     local year, month, day = date_str:match("^(%d%d%d%d)-(%d%d)-(%d%d)$")
     if not (year and month and day) then return false end
-    return os.time({year = tonumber(year), month = tonumber(month), day = tonumber(day)}) ~= nil
+    return os.time({
+        year = tonumber(year), month = tonumber(month), day = tonumber(day)
+    }) ~= nil
 end
 
 -- Process line under cursor.
@@ -40,7 +42,10 @@ function M.process_line(
     end
 
     if not current_date then
-        vim.notify("No valid date found above the current line", vim.log.levels.WARN)
+        vim.notify(
+            "Chronicle: no valid date found above the current line",
+            vim.log.levels.WARN
+        )
         return
     end
 
@@ -74,7 +79,9 @@ function M.process_line(
     end
 
     -- Detect marker, start time, end time, and content.
-    local marker, start_time, end_time, content = line:match("^(%[[ x]%]) (.....).(.....) (.*)$")
+    local marker, start_time, end_time, content = line:match(
+        "^(%[[ x]%]) (.....).(.....) (.*)$"
+    )
     if not (marker and start_time and end_time and content) then
         vim.notify("Chronicle: no valid task under cursor", vim.log.levels.WARN)
         return
@@ -87,14 +94,15 @@ function M.process_line(
         if end_time == "     " then
             end_time = os.date("%H:%M")
         end
-        local completed_line = "[x] " .. start_time .. "/" .. end_time .. " " .. content
+        local completed_line = ("[x] %s/%s %s"):format(
+            start_time, end_time, content
+        )
         rewrite_line_under_cursor(completed_line)
     end
 
     -- Propagate task to the next day.
     if to_propagate then
-
-        local new_task = "[ ]             " .. content
+        local new_task = ("[ ]             %s"):format(content)
 
         -- Check if task needs to be repeated in the future.
 
@@ -102,7 +110,9 @@ function M.process_line(
         if line:match("!every_day") then
             next_date = get_next_date(current_date, 1)
         elseif line:match("!every_(%d+)_days") then
-            next_date = get_next_date(current_date, tonumber(line:match("!every_(%d+)_days")))
+            next_date = get_next_date(
+                current_date, tonumber(line:match("!every_(%d+)_days"))
+            )
         elseif line:match("!every_week") then
             next_date = get_next_date(current_date, 7)
         elseif line:match("!every_month") then
@@ -117,7 +127,11 @@ function M.process_line(
                 local l = lines[i]
                 if l:match("^%d%d%d%d%-%d%d%-%d%d$") then
                     local year, month, day = l:match("(%d+)-(%d+)-(%d+)")
-                    local os_date = os.time({ year = tonumber(year), month = tonumber(month), day = tonumber(day) })
+                    local os_date = os.time({
+                        year = tonumber(year),
+                        month = tonumber(month),
+                        day = tonumber(day)
+                    })
                     if os_date > next_date then
                         -- Insert new lines with new date before `i`.
                         insert_line(os.date("%Y-%m-%d", next_date), i - 1)
@@ -181,5 +195,8 @@ vim.api.nvim_set_keymap("n", "<Space>d", ":ChronicleDone<CR>", options)
 
 vim.api.nvim_create_user_command("ChronicleStart", M.start_task, {})
 vim.api.nvim_set_keymap("n", "<Space>s", ":ChronicleStart<CR>", options)
+
+vim.api.nvim_create_user_command("ChroniclePause", M.pause_task, {})
+vim.api.nvim_set_keymap("n", "<Space>p", ":ChroniclePause<CR>", options)
 
 return M
