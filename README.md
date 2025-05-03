@@ -35,32 +35,31 @@ an object definition, a special command, or a comment.
 
 Events are activities that have occurred, while tasks are planned future events.
 
-<pre><code><span style="color: green; font-style: italic;">-- Comments start with `--`.</span>
+<pre><code><span style="color: green;"><i>-- Comments start with `--`.</i></span>
 
-<span style="color: green; font-style: italic;">-- Completed events.</span>
-<span style="font-weight: bold;">podcast</span> @inner_french e147 00:00/45:00
-19:00/19:30 <span style="font-weight: bold;">run</span> 5.2km
+<span style="color: green;"><i>-- Completed events.</i></span>
+<b>podcast</b> @<u>inner_french</u> e147 00:00/45:00
+19:00/19:30 <b>run</b> 5.2km
 
-<span style="color: green; font-style: italic;">-- Tasks (prefixed with [ ] or [x]).</span>
-[x] <b>do</b> the dishes
-[ ] <b>clean</b> @bathroom
+<span style="color: green;"><i>-- Tasks (prefixed with [ ] or [x]).</i></span>
+[x] <b>do</b> <i>the dishes</i>
+[ ] <b>clean</b> @<u>bathroom</u>
 
-<span style="color: green; font-style: italic;">-- Future events (prefixed with >>>).</span>
->>> 20:00/ concert @radiohead
-</code></pre>
+<span style="color: green;"><i>-- Future events (prefixed with >>>).</i></span>
+>>> 20:00/ <b>concert</b> @<u>radiohead</u></code></pre>
 
 ### Objects
 
 Define reusable objects to simplify your entries:
 
-<pre><code><b>podcast</b> @innerfrench = Inner French Podcast .fr
-<b>book</b> @dune = Dune by Frank Herbert</code></pre>
+<pre><code><b>podcast</b> @<u>innerfrench</u> = <i>Inner French Podcast</i> .fr
+<b>book</b> @<u>dune</u> = <i>Dune</i> by <i>Frank Herbert</i></code></pre>
 
 ### Special Commands
 
 Date entries help organize your journal chronologically:
 
-<pre><code>2024-01-01 <span style="color: green; font-style: italic;">-- Sets the current date.</span>
+<pre><code><b>2024-01-01</b> <span style="color: green;"><i>-- Sets the current date.</i></span>
 </code></pre>
 
 ## Requirements
