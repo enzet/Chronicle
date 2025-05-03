@@ -108,3 +108,37 @@ chronicle \
 - `--import-wikimedia`: import contributions from Wikimedia projects.
   Argument format is `<username>@<url>`, e.g. `User1@en.wikipedia.org`
   or `User2@wikidata.org`.
+
+## NeoVim Integration
+
+Chronicle provides a Lua script (`scripts/chronicle.lua`) for NeoVim to help
+manage tasks directly within your `.chr` files. This script adds convenient
+commands and key mappings for working with tasks in your journal.
+
+### Available NeoVim Commands
+
+- `:ChronicleDone` or <kbd>Space</kbd> <kbd>d</kbd>
+  - Marks the current task as done (completes the task under the cursor).
+  - Changes the event end time to the current time.
+  - If the task is recurring (e.g., contains `!every_day`), it will
+    automatically schedule the next occurrence on the appropriate date.
+  
+- `:ChronicleStart` or <kbd>Space</kbd> <kbd>s</kbd>
+  - Changes the event start time to the current time.
+  
+These commands are available after sourcing the script in NeoVim:
+
+```vim
+:source <path to Chronicle>/scripts/chronicle.lua
+```
+
+Or, if you have the script in your runtime path, it will be loaded
+automatically.
+
+### Example Usage
+
+1. Place your cursor on a task line in a `.chr` file.
+2. Press <kbd>Space</kbd> <kbd>d</kbd> to mark it as done, or
+   <kbd>Space</kbd> <kbd>s</kbd> to start the task.
+3. If the task is recurring, the script will automatically insert the next
+   occurrence on the correct date.
