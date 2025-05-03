@@ -63,6 +63,9 @@ class Object:
     tags: set[str] = field(default_factory=set)
     """Set of user defined string tags."""
 
+    prefix: ClassVar[str | None] = None
+    """Prefix for the object."""
+
     def __hash__(self) -> int:
         return hash(self.id)
 
@@ -86,8 +89,6 @@ class Object:
     def to_command(self) -> str:
         """Get command representation of an object."""
         return self.arguments.to_object_command(self)
-
-    prefix: ClassVar[str] = None
 
 
 @dataclass

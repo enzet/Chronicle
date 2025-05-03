@@ -14,7 +14,7 @@ from chronicle.harvest.duolingo import DuolingoImportManager
 from chronicle.harvest.memrise import MemriseImportManager
 from chronicle.harvest.old import OldImportManager
 from chronicle.harvest.wikimedia import WikimediaImportManager
-from chronicle.timeline import CommandParser, SportViewer, Timeline
+from chronicle.timeline import CommandParser, Timeline
 from chronicle.view.objects import ObjectsHtmlViewer
 
 __author__ = "Sergey Vartanov"
@@ -127,6 +127,8 @@ def main() -> None:
     view_podcasts_parser = view_sub_parsers.add_parser("podcasts")
     view_podcasts_parser.add_argument("--title", default=None, type=str)
 
+    view_sub_parsers.add_parser("sport")
+
     arguments: argparse.Namespace = argument_parser.parse_args(sys.argv[1:])
 
     if arguments.logging == "info":
@@ -188,6 +190,11 @@ def main() -> None:
 
                 PodcastViewer(timeline).print_podcasts()
 
+            elif arguments.sub_command == "sport":
+                from chronicle.view.sport import SportViewer
+
+                SportViewer(timeline).plot_sport()
+
         elif command == "timeline":
             timeline.print()
 
@@ -210,8 +217,6 @@ def main() -> None:
             Console().print(timeline.get_dishes())
         elif command == "objects":
             Console().print(timeline.get_objects())
-        elif command == "sport":
-            SportViewer(timeline).plot_sport()
         elif command == "graph":
             timeline.graph()
 

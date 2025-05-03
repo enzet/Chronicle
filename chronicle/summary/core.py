@@ -81,6 +81,9 @@ class Summary:
     chin_ups: int = 0
     """Number of chin-ups performed."""
 
+    sit_ups: int = 0
+    """Number of sit-ups performed."""
+
     squats: int = 0
     """Number of squats performed."""
 

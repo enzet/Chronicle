@@ -194,6 +194,15 @@ class ChinUpsEvent(CountableSportEvent):
 
 
 @dataclass
+class SitUpsEvent(CountableSportEvent):
+    """Event representing sit ups."""
+
+    arguments: ClassVar[Arguments] = CountableSportEvent.arguments.replace(
+        ["sit_ups"], "sit_ups"
+    )
+
+
+@dataclass
 class SquatJumpsEvent(CountableSportEvent):
     """Event representing squat jumps."""
 
