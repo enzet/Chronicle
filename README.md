@@ -35,17 +35,17 @@ an object definition, a special command, or a comment.
 
 Events are activities that have occurred, while tasks are planned future events.
 
-<pre><code><span style="color: green;"><i>-- Comments start with `--`.</i></span>
+<pre><code><i style="color: green;">-- Comments start with `--`.</i>
 
-<span style="color: green;"><i>-- Completed events.</i></span>
+<i style="color: green;">-- Completed events.</i>
 <b>podcast</b> @<u>inner_french</u> e147 00:00/45:00
 19:00/19:30 <b>run</b> 5.2km
 
-<span style="color: green;"><i>-- Tasks (prefixed with [ ] or [x]).</i></span>
+<i style="color: green;">-- Tasks (prefixed with [ ] or [x]).</i>
 [x] <b>do</b> <i>the dishes</i>
 [ ] <b>clean</b> @<u>bathroom</u>
 
-<span style="color: green;"><i>-- Future events (prefixed with >>>).</i></span>
+<i style="color: green;">-- Future events (prefixed with >>>).</i>
 >>> 20:00/ <b>concert</b> @<u>radiohead</u></code></pre>
 
 ### Objects
@@ -59,8 +59,47 @@ Define reusable objects to simplify your entries:
 
 Date entries help organize your journal chronologically:
 
-<pre><code><b>2024-01-01</b> <span style="color: green;"><i>-- Sets the current date.</i></span>
+<pre><code><b>2024-01-01</b> <i style="color: green;">-- Sets the current date.</i>
 </code></pre>
+
+## Example
+
+### Chronicle file
+
+<pre><code><b>book</b> @<u>dune</u> = <i>Dune</i> by <i>Frank Herbert</i> .en /fiction 896p
+<b>podcast</b> @<u>inner_french</u> = <i>Inner French Podcast</i> .fr
+
+<b>2000-01-01</b>
+
+00:00/08:00 <b>sleep</b>
+09:00/09:30 <b>run</b> 5.2km
+
+<b>read</b> @<u>dune</u> 120/140p
+<b>podcast</b> @<u>inner_french</u> e50 45:00
+
+>>> 20:00/ <b>concert</b> <i>Radiohead</i>
+
+[x] <b>buy</b> <i>milk</i>
+[ ] <b>pay</b> for <i>internet</i> 15usd
+</code></pre>
+
+### Text representation
+
+Objects:
+  - Book _Dune_ by Frank Herbert, 896 pages, in English, fiction.
+  - Podcast _Inner French Podcast_ in French.
+
+1 January 2000.
+  - Events:
+    - 00:00—08:00 Sleep.
+    - 09:00—09:30 Run 5.2 km.
+    - Read _Dune_ from page 120 to 140.
+    - Listen to _Inner French Podcast_ episode 50 for 45 minutes.
+  - Planned:
+    - 20:00 Concert _Radiohead_.
+  - Tasks:
+    - [x] Buy milk.
+    - [ ] Pay for internet $15.
 
 ## Requirements
 
