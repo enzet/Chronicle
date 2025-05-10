@@ -7,7 +7,7 @@ from chronicle.argument import Argument, Arguments
 from chronicle.event.core import Event
 from chronicle.summary.core import Summary
 from chronicle.time import Timedelta
-from chronicle.value import Distance, Kilocalories
+from chronicle.value import Distance, Integers, Kilocalories, Weights
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
@@ -164,6 +164,23 @@ class CountableSportEvent(SportEvent):
             name = "abs_"
         if self.count is not None:
             setattr(summary, name, getattr(summary, name) + self.count)
+
+
+@dataclass
+class ExerciseEvent(CountableSportEvent):
+    """Event representing an exercise."""
+
+    repetitions: list[int] | None = None
+    """The number of repetitions of each set."""
+
+    weights: list[float] | None = None
+    """The weights used for each set."""
+
+    arguments: ClassVar[Arguments] = (
+        CountableSportEvent.arguments.replace(["exercise"], "exercise")
+        .add_class_argument("repetitions", Integers)
+        .add_class_argument("weights", Weights)
+    )
 
 
 @dataclass

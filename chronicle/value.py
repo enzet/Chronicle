@@ -536,3 +536,37 @@ class AudiobookVolume:
             case "seconds":
                 return f"{self.from_}–{self.to_}s"
         raise ChronicleValueException(f"Unknown measure `{self.measure}`.")
+
+
+@dataclass
+class Integers:
+    """List of integers."""
+
+    values: list[int]
+    """Integers."""
+
+    patterns: ClassVar[list[re.Pattern]] = [
+        re.compile(r"(\d+)(,(\d+))*"),
+        re.compile(r"\d+x\d+"),
+    ]
+    extractors: ClassVar[list[Callable]] = [
+        lambda groups: [int(group) for group in groups(0).split(",")],
+        lambda groups: (
+            int(groups(0).split("x")[0]) * [int(groups(0).split("x")[1])]
+        ),
+    ]
+
+
+@dataclass
+class Weights:
+    """List of weights in kilograms."""
+
+    values: list[float]
+    """Weights in kilograms."""
+
+    patterns: ClassVar[list[re.Pattern]] = [
+        re.compile(r"((\d+(\.\d+)?)kg)(,(\d+(\.\d+)?)kg)*")
+    ]
+    extractors: ClassVar[list[Callable]] = [
+        lambda groups: [float(group) for group in groups(0).split(",")]
+    ]
