@@ -197,16 +197,30 @@ class ProgrammingLanguage:
 
 @dataclass
 class OSM:
-    """OpenStreetMap object."""
+    """OpenStreetMap object.
+
+    URL of the object is
+    `https://www.openstreetmap.org/<type>/<id>/history/<version>`.
+    """
+
+    type: str
+    """OpenStreetMap object type."""
 
     id: int
+    """OpenStreetMap object identifier."""
+
     version: int
+    """OpenStreetMap object version."""
 
     patterns: ClassVar[list[re.Pattern]] = [
-        re.compile(r"osm:(?P<id>\d+)/(?P<version>\d+)")
+        re.compile(r"osm:(?P<type>[a-z]+)/(?P<id>\d+)/(?P<version>\d+)")
     ]
     extractors: ClassVar[list[Callable]] = [
-        lambda groups: OSM(id=int(groups("id")), version=int(groups("version")))
+        lambda groups: OSM(
+            type=groups("type"),
+            id=int(groups("id")),
+            version=int(groups("version")),
+        )
     ]
 
 
