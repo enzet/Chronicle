@@ -278,6 +278,7 @@ class Cost(Value):
     ]
 
 
+@dataclass
 class Distance:
     """Distance in meters."""
 
@@ -293,6 +294,7 @@ class Distance:
     ]
 
 
+@dataclass
 class Kilocalories:
     """Kilocalories."""
 
@@ -304,6 +306,7 @@ class Kilocalories:
     extractors: ClassVar[list[Callable]] = [lambda groups: float(groups("v"))]
 
 
+@dataclass
 class Season:
     """Season number."""
 
@@ -313,6 +316,7 @@ class Season:
     extractors: ClassVar[list[Callable]] = [lambda groups: int(groups(1))]
 
 
+@dataclass
 class Episode:
     """Episode number."""
 
