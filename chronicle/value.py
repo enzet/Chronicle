@@ -56,9 +56,7 @@ class Value:
     """Base class for all values."""
 
     prefix: ClassVar[str | None] = None
-
     patterns: ClassVar[list[re.Pattern]] = []
-
     extractors: ClassVar[list[Callable[[re.Match], Self]]] = []
 
     @classmethod
@@ -140,6 +138,11 @@ class Subject(Value):
     """Categorised subject."""
 
     subject: list[str]
+    """Subject value: from most general to most specific.
+
+    For example, `["language", "english"]` for English language,
+    `["fiction", "mystery"]` for a mystery novels.
+    """
 
     patterns: ClassVar[list[re.Pattern]] = [
         re.compile(r"\/(?P<subjects>[a-z0-9_/]+)")
@@ -171,6 +174,7 @@ class Tags:
     """Arbitrary user tag set."""
 
     tags: set[str]
+    """Tag values."""
 
     patterns: ClassVar[list[re.Pattern]] = [re.compile(r"!([0-9a-z_,-]+)")]
     extractors: ClassVar[list[Callable]] = [
@@ -183,6 +187,7 @@ class ProgrammingLanguage:
     """Programming language, e.g. `python`, `cpp`, `go`."""
 
     code: str
+    """Programming language identifier."""
 
     patterns: ClassVar[list[re.Pattern]] = [re.compile(r"\.(?P<code>[a-z]+)")]
     extractors: ClassVar[list[Callable]] = [
