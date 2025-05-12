@@ -15,11 +15,76 @@ local function is_valid_date(date_str)
     }) ~= nil
 end
 
+-- Block of mockable Vim functions.
+
+-- Notify user with a message.
+local function notify(message)
+    vim.notify(message, vim.log.levels.WARN)
+end
+
+-- Replace line under cursor with new line.
+function M.replace(line)
+    local bufnr = vim.api.nvim_get_current_buf()
+    vim.api.nvim_buf_set_lines(
+        bufnr,
+        vim.api.nvim_win_get_cursor(0)[1] - 1,
+        vim.api.nvim_win_get_cursor(0)[1],
+        false,
+        { line }
+    )
+end
+
+-- Insert line after line under cursor.
+function M.insert(line)
+    local bufnr = vim.api.nvim_get_current_buf()
+    vim.api.nvim_buf_set_lines(
+        bufnr,
+        vim.api.nvim_win_get_cursor(0)[1],
+        vim.api.nvim_win_get_cursor(0)[1],
+        false,
+        { line }
+    )
+end
+
+-- Insert line at line number.
+function M.insert_at(line, line_number)
+    local bufnr = vim.api.nvim_get_current_buf()
+    vim.api.nvim_buf_set_lines(
+        bufnr, line_number, line_number, false, { line }
+    )
+end
+
+-- Get all lines in the current buffer.
+function M.get_all_lines()
+    local bufnr = vim.api.nvim_get_current_buf()
+    return vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+end
+
+-- Get line under cursor.
+function M.get_current_line()
+    local bufnr = vim.api.nvim_get_current_buf()
+    return vim.api.nvim_buf_get_lines(
+        bufnr,
+        vim.api.nvim_win_get_cursor(0)[1] - 1,
+        vim.api.nvim_win_get_cursor(0)[1],
+        false
+    )[1]
+end
+
+-- Get line number of cursor.
+function M.get_cursor_line()
+    return vim.api.nvim_win_get_cursor(0)[1]
+end
+
 -- Parse line with event or task.
 local function parse_event_line(line)
 
-    -- Split line by spaces.
-    local parts = vim.split(line, " ")
+    -- Split line into parts by spaces.
+    local parts = {}
+    for part in line:gmatch("[^ ]+") do
+        table.insert(parts, part)
+    end
+
     local task_marker = nil
     local importance_marker = nil
     local start_time = nil
@@ -33,11 +98,7 @@ local function parse_event_line(line)
 
         if in_content then
             if part ~= "" then
-                if content == "" then
-                    content = part
-                else
-                    content = content .. " " .. part
-                end
+                content = content .. " " .. part
             end
             if part:match("^!every_(.*)$") then
                 repeat_tag = part:match("^!every_(.*)$")
@@ -54,15 +115,16 @@ local function parse_event_line(line)
             importance_marker = "<!>"
         elseif part == "<.>" then
             importance_marker = "<.>"
-        elseif part:match("^%d%d:%d%d/$") then
-            start_time = part
-        elseif part:match("^/%d%d:%d%d$") then
-            end_time = part
-        elseif part:match("^%d%d:%d%d/%d%d:%d%d$") then
+        elseif part:match("^(%d%d:%d%d)/$") then
+            start_time = part:match("^(%d%d:%d%d)/$")
+        elseif part:match("^/(%d%d:%d%d)$") then
+            end_time = part:match("^/(%d%d:%d%d)$")
+        elseif part:match("^(%d%d:%d%d)/(%d%d:%d%d)$") then
             start_time = part:match("^(%d%d:%d%d)/")
             end_time = part:match("/(%d%d:%d%d)$")
         else
             in_content = true
+            content = part
         end
     end
 
@@ -89,18 +151,12 @@ end
 
 -- Process line under cursor.
 function M.process_line()
-    local bufnr = vim.api.nvim_get_current_buf()
-    local line = vim.api.nvim_buf_get_lines(
-        bufnr,
-        vim.api.nvim_win_get_cursor(0)[1] - 1,
-        vim.api.nvim_win_get_cursor(0)[1],
-        false
-    )[1]
-    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    local line = M.get_current_line()
+    local lines = M.get_all_lines()
     local current_date = nil
 
     -- Search lines backwards from the current line until we find a date.
-    for i = vim.api.nvim_win_get_cursor(0)[1], 1, -1 do
+    for i = M.get_cursor_line(), 1, -1 do
         local current_line = lines[i]
         if is_valid_date(current_line) then
             current_date = current_line
@@ -109,10 +165,7 @@ function M.process_line()
     end
 
     if not current_date then
-        vim.notify(
-            "Chronicle: no valid date found above the current line",
-            vim.log.levels.WARN
-        )
+        notify("Chronicle: no valid date found above the current line")
         return
     end
 
@@ -124,8 +177,7 @@ end
 
 function M.repeat_task(event, current_date)
 
-    local bufnr = vim.api.nvim_get_current_buf()
-    local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    local lines = M.get_all_lines()
 
     -- Get next date.
     local function get_next_date(current_date, interval)
@@ -154,13 +206,13 @@ function M.repeat_task(event, current_date)
     end
 
     if next_date == nil then
-        vim.notify("Chronicle: no valid repeat tag found", vim.log.levels.WARN)
+        notify("Chronicle: no valid repeat tag found")
         return
     end
 
     -- Search lines forwards for the next date.
     local found_line_number = nil
-    for i = vim.api.nvim_win_get_cursor(0)[1], #lines do
+    for i = get_cursor_line(), #lines do
         local l = lines[i]
         if l:match("^%d%d%d%d%-%d%d%-%d%d$") then
             local year, month, day = l:match("(%d+)-(%d+)-(%d+)")
@@ -199,45 +251,12 @@ function M.repeat_task(event, current_date)
     end
 end
 
--- Replace line under cursor with new line.
-function M.replace(line)
-    local bufnr = vim.api.nvim_get_current_buf()
-    vim.api.nvim_buf_set_lines(
-        bufnr,
-        vim.api.nvim_win_get_cursor(0)[1] - 1,
-        vim.api.nvim_win_get_cursor(0)[1],
-        false,
-        { line }
-    )
-end
-
--- Insert line after line under cursor.
-function M.insert(line)
-    local bufnr = vim.api.nvim_get_current_buf()
-    vim.api.nvim_buf_set_lines(
-        bufnr,
-        vim.api.nvim_win_get_cursor(0)[1],
-        vim.api.nvim_win_get_cursor(0)[1],
-        false,
-        { line }
-    )
-end
-
--- Insert line at line number.
-function M.insert_at(line, line_number)
-    local bufnr = vim.api.nvim_get_current_buf()
-    vim.api.nvim_buf_set_lines(
-        bufnr,
-        line_number, line_number, false, { line }
-    )
-end
-
 -- Start event.
 function M.start()
     local state = M.process_line()
 
     if not state.event then
-        vim.notify("Chronicle: no valid event found", vim.log.levels.WARN)
+        notify("Chronicle: no valid event found")
         return
     end
 
@@ -294,13 +313,16 @@ end
 
 local options = { noremap = true, silent = true }
 
-vim.api.nvim_create_user_command("ChronicleDone", M.finish, {})
-vim.api.nvim_set_keymap("n", "<Space>d", ":ChronicleDone<CR>", options)
+-- If we are actually running in Neovim, not in tests.
+if vim then
+    vim.api.nvim_create_user_command("ChronicleDone", M.finish, {})
+    vim.api.nvim_set_keymap("n", "<Space>d", ":ChronicleDone<CR>", options)
 
-vim.api.nvim_create_user_command("ChronicleStart", M.start, {})
-vim.api.nvim_set_keymap("n", "<Space>s", ":ChronicleStart<CR>", options)
+    vim.api.nvim_create_user_command("ChronicleStart", M.start, {})
+    vim.api.nvim_set_keymap("n", "<Space>s", ":ChronicleStart<CR>", options)
 
-vim.api.nvim_create_user_command("ChroniclePause", M.pause, {})
-vim.api.nvim_set_keymap("n", "<Space>p", ":ChroniclePause<CR>", options)
+    vim.api.nvim_create_user_command("ChroniclePause", M.pause, {})
+    vim.api.nvim_set_keymap("n", "<Space>p", ":ChroniclePause<CR>", options)
+end
 
 return M
