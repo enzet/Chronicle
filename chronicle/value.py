@@ -56,8 +56,17 @@ class Value:
     """Base class for all values."""
 
     prefix: ClassVar[str | None] = None
+    """Prefix of the value.
+
+    TODO: probably we should get rid of prefixes here and use it only in event
+        classes.
+    """
+
     patterns: ClassVar[list[re.Pattern]] = []
+    """Patterns to match the value."""
+
     extractors: ClassVar[list[Callable[[re.Match], Self]]] = []
+    """Extractors to extract the value from the match."""
 
     @classmethod
     def from_string(cls, string: str) -> Self:
@@ -82,7 +91,7 @@ class WikidataId(Value):
 
 
 @dataclass
-class Language:
+class Language(Value):
     """Natural language of text, speach, or song."""
 
     code: str
@@ -170,7 +179,7 @@ class Subject(Value):
 
 
 @dataclass
-class Tags:
+class Tags(Value):
     """Arbitrary user tag set."""
 
     tags: set[str]
@@ -183,8 +192,12 @@ class Tags:
 
 
 @dataclass
-class ProgrammingLanguage:
-    """Programming language, e.g. `python`, `cpp`, `go`."""
+class ProgrammingLanguage(Value):
+    """Programming language, e.g. `python`, `cpp`, `go`.
+
+    For identifies it's peferrable to use GitHub Linguist scheme. See
+    https://github.com/github-linguist/linguist/blob/main/lib/linguist/languages.yml.
+    """
 
     code: str
     """Programming language identifier."""
@@ -196,7 +209,7 @@ class ProgrammingLanguage:
 
 
 @dataclass
-class OSM:
+class OSM(Value):
     """OpenStreetMap object.
 
     URL of the object is
@@ -225,7 +238,7 @@ class OSM:
 
 
 @dataclass
-class Date:
+class Date(Value):
     """Date."""
 
     day: int
@@ -250,7 +263,7 @@ class Date:
 
 
 @dataclass
-class Interval:
+class Interval(Value):
     """Time interval in seconds."""
 
     start: Timedelta | None = None
@@ -309,7 +322,7 @@ class Cost(Value):
 
 
 @dataclass
-class Distance:
+class Distance(Value):
     """Distance in meters."""
 
     value: float
@@ -326,7 +339,7 @@ class Distance:
 
 
 @dataclass
-class Kilocalories:
+class Kilocalories(Value):
     """Kilocalories."""
 
     value: float
@@ -339,7 +352,7 @@ class Kilocalories:
 
 
 @dataclass
-class Season:
+class Season(Value):
     """Season number."""
 
     number: int
@@ -350,7 +363,7 @@ class Season:
 
 
 @dataclass
-class Episode:
+class Episode(Value):
     """Episode number."""
 
     episode_id: int | str
@@ -363,7 +376,7 @@ class Episode:
 
 
 @dataclass
-class Volume:
+class Volume(Value):
     """Partial volume of some object, e.g. book."""
 
     value: float | None = None
@@ -528,7 +541,7 @@ class Volume:
 
 
 @dataclass
-class AudiobookVolume:
+class AudiobookVolume(Value):
     """Partial volume of some object, e.g. book."""
 
     from_: float | None = None
@@ -592,7 +605,7 @@ class AudiobookVolume:
 
 
 @dataclass
-class Integers:
+class Integers(Value):
     """List of integers."""
 
     values: list[int]
@@ -611,7 +624,7 @@ class Integers:
 
 
 @dataclass
-class Weights:
+class Weights(Value):
     """List of weights in kilograms."""
 
     values: list[float]
