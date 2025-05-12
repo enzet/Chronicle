@@ -52,16 +52,16 @@ end
 
 describe("Chronicle", function()
     before_each(function()
-        -- Reset mock buffer before each test.
-        mock_vim.buffer = {
-            "2024-01-01",
-            "                program @chronicle"
-        }
-        set_cursor(2)  -- Position cursor at the task line.
+        mock_vim.buffer = {}
     end)
 
-    it("should start a task", function()
+    it("should start an event", function()
 
+        mock_vim.buffer = {
+            "2024-01-01",
+            "program @chronicle"
+        }
+        set_cursor(2)  -- Position cursor at the task line.
         local mock_time = "12:34"
         os.date = function() return mock_time end
 
@@ -71,9 +71,28 @@ describe("Chronicle", function()
         )
     end)
 
-    it("should finish a task", function()
+    it("should start a task", function()
+        mock_vim.buffer = {
+            "2024-01-01",
+            "[ ] program @chronicle"
+        }
+        set_cursor(2)
 
-        mock_vim.buffer[2] = "    12:34/      program @chronicle"
+        local mock_time = "12:34"
+        os.date = function() return mock_time end
+
+        chronicle.start()
+        assert.are.equal(
+            "[ ] 12:34/      program @chronicle", get_current_line()
+        )
+    end)
+
+    it("should finish an event", function()
+
+        mock_vim.buffer = {
+            "2024-01-01",
+            "12:34/ program @chronicle"
+        }
         set_cursor(2)
 
         local mock_time = "12:35"
@@ -81,6 +100,21 @@ describe("Chronicle", function()
         chronicle.finish()
         assert.are.equal(
             "    12:34/12:35 program @chronicle", get_current_line()
+        )
+    end)
+
+    it("should finish a task", function()
+        mock_vim.buffer = {
+            "2024-01-01",
+            "[ ] 12:34/ program @chronicle"
+        }
+        set_cursor(2)
+
+        local mock_time = "12:35"
+        os.date = function() return mock_time end
+        chronicle.finish()
+        assert.are.equal(
+            "[x] 12:34/12:35 program @chronicle", get_current_line()
         )
     end)
 end) 
