@@ -229,8 +229,13 @@ class Birthday:
     """Birthday."""
 
     day: int
+    """Day of the month."""
+
     month: int
+    """Month of the year."""
+
     year: int | None = None
+    """Year."""
 
     patterns: ClassVar[list[re.Pattern]] = [
         re.compile(r"(?P<y>\d{4})?-(?P<m>\d{2})-(?P<d>\d{2})")
@@ -249,7 +254,10 @@ class Interval:
     """Time interval in seconds."""
 
     start: Timedelta | None = None
+    """Start of the interval."""
+
     end: Timedelta | None = None
+    """End of the interval."""
 
     patterns: ClassVar[list[re.Pattern]] = [INTERVAL_PATTERN]
     extractors: ClassVar[list[Callable]] = [
@@ -287,7 +295,10 @@ class Cost(Value):
     """Cost, price in some currency."""
 
     value: float
+    """Cost value."""
+
     currency: str
+    """Currency code, e.g. `usd` for United States Dollar."""
 
     patterns: ClassVar[list[re.Pattern]] = [
         re.compile(r"(?P<v>\d+(\.\d*)?)(?P<c>[a-z][a-z][a-z])")
@@ -302,6 +313,7 @@ class Distance:
     """Distance in meters."""
 
     value: float
+    """Distance value."""
 
     patterns: ClassVar[list[re.Pattern]] = [
         re.compile(r"(?P<v>\d+(\.\d+)?)m"),
@@ -318,6 +330,7 @@ class Kilocalories:
     """Kilocalories."""
 
     value: float
+    """Value in kilocalories."""
 
     patterns: ClassVar[list[re.Pattern]] = [
         re.compile(r"(?P<v>\d+(\.\d+)?)kcal")
@@ -330,6 +343,7 @@ class Season:
     """Season number."""
 
     number: int
+    """Season number."""
 
     patterns: ClassVar[list[re.Pattern]] = [re.compile(r"[Ss](\d+)")]
     extractors: ClassVar[list[Callable]] = [lambda groups: int(groups(1))]
@@ -353,13 +367,16 @@ class Volume:
     """Partial volume of some object, e.g. book."""
 
     value: float | None = None
+    """Current volume value, e.g. how many pages have been read."""
 
     from_: float | None = None
+    """Start volume value, e.g. starting page of the reading session."""
 
     to_: float | None = None
+    """End volume value, e.g. ending page of the reading session."""
 
     of: float | None = None
-    """The value of the whole object.
+    """The volume of the whole object.
 
     If `from_` and `to_` are in percent, `of` should equal 100.
     """
@@ -456,6 +473,12 @@ class Volume:
             )
 
     def get_ratio(self) -> float | None:
+        """Get ratio of the volume relative to the whole object.
+
+        E.g. for reading session of 20 pages of a 400-page book, the ratio is
+        20/400 = 0.05.
+        """
+
         if self.to_ is not None and self.from_ is not None and self.of:
             return (self.to_ - self.from_) / self.of
 
@@ -515,6 +538,7 @@ class AudiobookVolume:
     """Interval end."""
 
     measure: Literal["percent", "seconds"] | None = None
+    """Measure of the volume: percents or seconds."""
 
     of: float | None = None
     """The value of the whole object.
@@ -539,6 +563,12 @@ class AudiobookVolume:
         return hash(self.to_string())
 
     def get_ratio(self) -> float:
+        """Get ratio of the volume relative to the whole object.
+
+        E.g. for reading session of 30 minutes of a 2 hour audiobook, the ratio
+        is 30/120 = 0.25.
+        """
+
         if self.to_ is not None and self.from_ is not None:
             return (self.to_ - self.from_) / 100.0
 
