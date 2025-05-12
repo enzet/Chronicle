@@ -18,7 +18,7 @@ from chronicle.errors import (
 from chronicle.time import Moment, Timedelta
 from chronicle.value import (
     OSM,
-    Birthday,
+    Date,
     ChronicleValueException,
     Cost,
     Language,
@@ -294,7 +294,7 @@ class Person(Object):
     telegram: str | None = None
     """Telegram messenger unique identifier."""
 
-    birthday: Birthday | None = None
+    birthday: Date | None = None
     """Person birthday."""
 
     prefix: ClassVar[str] = "with"
@@ -302,7 +302,7 @@ class Person(Object):
         Arguments(["person"], "person")
         .add(Argument("name"))
         .add(Argument("telegram", prefix="tg:"))
-        .add_class_argument("birthday", Birthday)
+        .add_class_argument("birthday", Date)
     )
 
     @classmethod

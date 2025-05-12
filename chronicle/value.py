@@ -225,8 +225,8 @@ class OSM:
 
 
 @dataclass
-class Birthday:
-    """Birthday."""
+class Date:
+    """Date."""
 
     day: int
     """Day of the month."""
@@ -241,7 +241,7 @@ class Birthday:
         re.compile(r"(?P<y>\d{4})?-(?P<m>\d{2})-(?P<d>\d{2})")
     ]
     extractors: ClassVar[list[Callable]] = [
-        lambda groups: Birthday(
+        lambda groups: Date(
             day=int(groups("d")),
             month=int(groups("m")),
             year=int(groups("y")) if groups("y") else None,
