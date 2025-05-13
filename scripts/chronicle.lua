@@ -276,7 +276,9 @@ function M.finish()
     local state = M.process_line()
 
     -- Mark event as finished now.
-    state.event.end_time = M.now()
+    if state.event.end_time == nil then
+        state.event.end_time = M.now()
+    end
 
     -- If event is a task, mark it as done.
     if state.event.task_marker == "[ ]" then
