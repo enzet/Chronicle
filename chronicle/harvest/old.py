@@ -15,11 +15,12 @@ from chronicle.event.art import (
     WatchEvent,
 )
 from chronicle.event.core import Event
+from chronicle.errors import ChronicleValueError
 from chronicle.harvest.core import Importer, ImportManager
 from chronicle.objects.core import Audiobook, Book, Object, Podcast, Video
 from chronicle.time import Context, Moment, Time, Timedelta
 from chronicle.timeline import Timeline
-from chronicle.value import ChronicleValueException, Interval, Language, Volume
+from chronicle.value import Interval, Language, Volume
 
 OLD_TIME_FORMAT: str = "%d.%m.%Y %H:%M"
 
@@ -224,7 +225,7 @@ class OldImporter(Importer):
                     else:
                         return None
                     if "of" not in structure and "measure" not in structure:
-                        raise ChronicleValueException(
+                        raise ChronicleValueError(
                             "Cannot determine volume measure for "
                             f"`{structure}`."
                         )

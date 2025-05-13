@@ -1,35 +1,51 @@
-class ChronicleException(Exception):
-    """Chronicle error that should be handled."""
-
-    def __init__(self, message: str):
-        self.message = message
+"""Chronicle-specific errors."""
 
 
 class ChronicleError(Exception):
-    """Exception raised for errors in the value."""
+    """Chronicle error that should be handled."""
 
-    def __init__(self, message: str):
-        self.message = message
+    def __init__(self, message: str) -> None:
+        self.message: str = message
 
 
-class ChronicleAmbiguousArgumentError(ChronicleError):
-    """Exception raised for ambiguous argument."""
+class ChronicleSummaryError(ChronicleError):
+    """There is no enough data in the timeline to create a summary."""
+
+    def __init__(self, message: str, event=None) -> None:
+        super().__init__(message)
+        self.event = event
 
 
 class ChronicleArgumentError(ChronicleError):
     """Exception raised for argument errors."""
 
 
-class ChronicleObjectNotFoundException(ChronicleException):
+class ChronicleAmbiguousArgumentError(ChronicleArgumentError):
+    """Exception raised for ambiguous argument."""
+
+
+class ChronicleObjectNotFoundError(ChronicleError):
     """Exception raised for object not found."""
 
     def __init__(self, object_id: str) -> None:
         self.object_id = object_id
 
 
-class ChronicleCodeException(ChronicleException):
-    """Exception raised for code errors."""
+class ChronicleModelError(ChronicleError):
+    """Internal error in Chronicle model."""
 
 
-class ChronicleValueException(ChronicleException):
+class ChronicleValueError(ChronicleError):
     """Exception raised for value errors."""
+
+    def __init__(self, message: str, element=None) -> None:
+        super().__init__(message)
+        self.element = element
+
+
+class ChronicleUnknownTypeError(ChronicleValueError):
+    """Exception raised for unknown type."""
+
+
+class ChronicleParseError(ChronicleValueError):
+    """Exception raised for parse errors."""

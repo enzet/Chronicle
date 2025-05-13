@@ -12,15 +12,16 @@ from colour import Color
 from chronicle.argument import Argument, Arguments
 from chronicle.errors import (
     ChronicleArgumentError,
-    ChronicleCodeException,
-    ChronicleObjectNotFoundException,
+    ChronicleModelError,
+    ChronicleObjectNotFoundError,
+    ChronicleParseError,
+    ChronicleUnknownTypeError,
 )
 from chronicle.time import Moment, Timedelta
 from chronicle.value import (
     OSM,
-    Date,
-    ChronicleValueException,
     Cost,
+    Date,
     Language,
     ProgrammingLanguage,
     Subject,
@@ -573,7 +574,7 @@ class Book(Object):
     def __hash__(self) -> int:
         if self.title and self.author:
             return hash(self.title + "/" + self.author)
-        elif self.title:
+        if self.title:
             return hash(self.title)
 
         return 0
@@ -583,7 +584,7 @@ class Book(Object):
         if self.title:
             return self.title
 
-        raise ChronicleValueException(f"Book `{self}` has no title.")
+        return "(Unknown book)"
 
     @classmethod
     def from_value(cls, value: str) -> Self:
@@ -660,7 +661,7 @@ class Objects:
         for class_ in classes:
             for prefix in class_.arguments.prefixes:
                 if prefix in self.prefix_to_class:
-                    raise ChronicleCodeException(
+                    raise ChronicleModelError(
                         f"Prefix `{prefix}` in class `{class_.__name__}` is "
                         f"already used by `{self.prefix_to_class[prefix]}`."
                     )
@@ -686,7 +687,7 @@ class Objects:
         if object_id in self.objects:
             return self.objects[object_id]
 
-        raise ChronicleObjectNotFoundException(object_id)
+        raise ChronicleObjectNotFoundError(object_id)
 
     def parse_command(self, command: str, tokens: list[str]) -> None:
         """Parse object from its declaration command."""
@@ -697,7 +698,7 @@ class Objects:
             id_ = id_[1:]
 
         if prefix not in self.prefix_to_class:
-            raise ChronicleValueException(
+            raise ChronicleUnknownTypeError(
                 f"Class for objects with prefix `{prefix}` not found."
             )
 
@@ -705,7 +706,7 @@ class Objects:
         try:
             data = object_class.arguments.parse(tokens[3:], self)
         except ChronicleArgumentError as error:
-            raise ChronicleValueException(
+            raise ChronicleParseError(
                 f"Error parsing command `{command}`: {error}."
             ) from error
 
@@ -738,7 +739,7 @@ class Objects:
         print(f"No Wikidata ID for movie {object_.title}.")
         if object_data:
             print("  Possible candidates:")
-            items = [
+            items: list[WikidataItem] = [
                 WikidataItem.from_id(
                     int(
                         x["item"]["value"][
@@ -749,7 +750,6 @@ class Objects:
                 )
                 for x in object_data
             ]
-            items: list[WikidataItem] = list(set(items))
             for index, item in enumerate(items):
                 text: str = item.labels["en"]["value"]
                 for a in item.get_claim(Property.TITLE, cache_path):
@@ -784,9 +784,11 @@ class Objects:
                 self.fill_movie(object_, cache_path)
 
     def has_object(self, id_: str) -> bool:
+        """Check if the object with the given identifier exists."""
         return id_ in self.objects
 
-    def set_object(self, id_, object_):
+    def set_object(self, id_: str, object_: Object) -> None:
+        """Add new object to the collection."""
         self.objects[id_] = object_
 
 

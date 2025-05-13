@@ -4,7 +4,7 @@ import re
 from dataclasses import dataclass
 from typing import Any, Callable, ClassVar, Literal, Self
 
-from chronicle.errors import ChronicleValueException
+from chronicle.errors import ChronicleValueError
 from chronicle.time import INTERVAL_PATTERN, Timedelta
 
 __author__ = "Sergey Vartanov"
@@ -76,7 +76,7 @@ class Value:
             if match := pattern.match(string):
                 return cls.extractors[i](match.group)
 
-        raise ChronicleValueException(f"Unknown value: `{string}`.")
+        raise ChronicleValueError(f"Unknown value: `{string}`.")
 
 
 @dataclass
@@ -108,8 +108,8 @@ class Language(Value):
         """Verify that the language code is valid."""
 
         if self.code not in LANGUAGES:
-            raise ChronicleValueException(
-                f"Unknown language code: `{self.code}`."
+            raise ChronicleValueError(
+                f"Unknown language code: `{self.code}`.", self
             )
 
     @classmethod
@@ -452,7 +452,7 @@ class Volume(Value):
     def __hash__(self) -> int:
         return hash(self.to_string())
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.measure == "percent":
             self.of = 100.0
 
@@ -460,29 +460,30 @@ class Volume(Value):
         """Raise an error if the volume value is incorrect."""
 
         if self.from_ and self.to_ and self.from_ > self.to_:
-            raise ChronicleValueException(
+            raise ChronicleValueError(
                 "Start value should be less than end value, not "
-                f"`{self.from_}` > `{self.to_}`."
+                f"`{self.from_}` > `{self.to_}`.",
+                self,
             )
         if self.measure == "percent" and self.of != 100.0:
-            raise ChronicleValueException(
-                f"Maximum should be 100%, not `{self.of}`."
+            raise ChronicleValueError(
+                f"Maximum should be 100%, not `{self.of}`.", self
             )
         if (
             self.measure == "percent"
             and self.from_
             and (self.from_ < 0.0 or self.from_ > 100.0)
         ):
-            raise ChronicleValueException(
-                f"From should be in range 0–100%, not `{self.from_}`."
+            raise ChronicleValueError(
+                f"From should be in range 0–100%, not `{self.from_}`.", self
             )
         if (
             self.measure == "percent"
             and self.to_
             and (self.to_ < 0.0 or self.to_ > 100.0)
         ):
-            raise ChronicleValueException(
-                f"To should be in range 0–100%, not `{self.to_}`."
+            raise ChronicleValueError(
+                f"To should be in range 0–100%, not `{self.to_}`.", self
             )
 
     def get_ratio(self) -> float | None:
@@ -512,8 +513,8 @@ class Volume(Value):
                     else f"{self.from_}/{self.to_}%"
                 )
         if not self.of:
-            raise ChronicleValueException(
-                "`of` should be set for custom measure."
+            raise ChronicleValueError(
+                "`of` should be set for custom measure.", self
             )
 
         return f"{self.from_}/{self.to_}/{self.of}"
@@ -585,7 +586,7 @@ class AudiobookVolume(Value):
         if self.to_ is not None and self.from_ is not None:
             return (self.to_ - self.from_) / 100.0
 
-        raise ChronicleValueException()
+        raise ChronicleValueError("`from_` and `to_` should be set.", self)
 
     def to_command(self) -> str:
         match self.measure:
@@ -593,7 +594,7 @@ class AudiobookVolume(Value):
                 return f"{self.from_}/{self.to_}%"
             case "seconds":
                 return f"{self.from_}/{self.to_}s"
-        raise ChronicleValueException(f"Unknown measure `{self.measure}`.")
+        raise ChronicleValueError(f"Unknown measure `{self.measure}`.", self)
 
     def to_string(self) -> str:
         match self.measure:
@@ -601,7 +602,7 @@ class AudiobookVolume(Value):
                 return f"{self.from_}–{self.to_}%"
             case "seconds":
                 return f"{self.from_}–{self.to_}s"
-        raise ChronicleValueException(f"Unknown measure `{self.measure}`.")
+        raise ChronicleValueError(f"Unknown measure `{self.measure}`.", self)
 
 
 @dataclass

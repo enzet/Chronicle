@@ -6,12 +6,12 @@ from dataclasses import dataclass
 from typing import ClassVar, override
 
 from chronicle.argument import Argument, Arguments
+from chronicle.errors import ChronicleValueError
 from chronicle.event.core import Event
 from chronicle.objects.core import Object, Person, Project, Service
 from chronicle.summary.core import Summary
 from chronicle.time import Timedelta
 from chronicle.value import (
-    ChronicleValueException,
     Cost,
     Language,
     ProgrammingLanguage,
@@ -144,10 +144,14 @@ class LearnEvent(Event):
     @override
     def register_summary(self, summary: Summary) -> None:
         if not self.subject:
-            raise ChronicleValueException(f"Event {self} doesn't have subject.")
+            raise ChronicleValueError(
+                f"Event {self} doesn't have subject.", self
+            )
 
         if not isinstance(self.subject, Subject):
-            raise ChronicleValueException(f"Event {self} has invalid subject.")
+            raise ChronicleValueError(
+                f"Event {self} has invalid subject.", self
+            )
 
         if duration := self.get_duration():
             summary.register_learn(duration, self.subject, self.service)
