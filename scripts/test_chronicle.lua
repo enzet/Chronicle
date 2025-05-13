@@ -21,7 +21,11 @@ chronicle.insert = function(line)
 end
 
 chronicle.insert_at = function(line, line_number)
-    table.insert(mock_vim.buffer, line_number + 1, line)
+    if line_number > #mock_vim.buffer then
+        table.insert(mock_vim.buffer, line)
+    else
+        table.insert(mock_vim.buffer, line_number + 1, line)
+    end
 end
 
 chronicle.notify = function(message)
@@ -40,6 +44,10 @@ chronicle.get_current_line = function()
     return mock_vim.buffer[mock_vim.cursor[1]]
 end
 
+chronicle.now = function()
+    return "12:34"
+end
+
 -- Helper to simulate cursor movement.
 local function set_cursor(line, column)
     mock_vim.cursor = {line, column or 0}
@@ -48,6 +56,12 @@ end
 -- Helper to get current line.
 local function get_current_line()
     return mock_vim.buffer[mock_vim.cursor[1]]
+end
+
+local function compare(expected, actual)
+    for i, line in ipairs(expected) do
+        assert.are.equal(line, actual[i])
+    end
 end
 
 describe("Chronicle", function()
@@ -59,11 +73,10 @@ describe("Chronicle", function()
 
         mock_vim.buffer = {
             "2024-01-01",
+            "",
             "program @chronicle"
         }
-        set_cursor(2)  -- Position cursor at the task line.
-        local mock_time = "12:34"
-        os.date = function() return mock_time end
+        set_cursor(3)
 
         chronicle.start()
         assert.are.equal(
@@ -74,12 +87,10 @@ describe("Chronicle", function()
     it("should start a task", function()
         mock_vim.buffer = {
             "2024-01-01",
+            "",
             "[ ] program @chronicle"
         }
-        set_cursor(2)
-
-        local mock_time = "12:34"
-        os.date = function() return mock_time end
+        set_cursor(3)
 
         chronicle.start()
         assert.are.equal(
@@ -91,30 +102,52 @@ describe("Chronicle", function()
 
         mock_vim.buffer = {
             "2024-01-01",
-            "12:34/ program @chronicle"
+            "",
+            "12:33/ program @chronicle"
         }
-        set_cursor(2)
+        set_cursor(3)
 
-        local mock_time = "12:35"
-        os.date = function() return mock_time end
         chronicle.finish()
         assert.are.equal(
-            "    12:34/12:35 program @chronicle", get_current_line()
+            "    12:33/12:34 program @chronicle", get_current_line()
         )
     end)
 
     it("should finish a task", function()
         mock_vim.buffer = {
             "2024-01-01",
-            "[ ] 12:34/ program @chronicle"
+            "",
+            "[ ] 12:33/ program @chronicle"
         }
-        set_cursor(2)
+        set_cursor(3)
 
-        local mock_time = "12:35"
-        os.date = function() return mock_time end
         chronicle.finish()
         assert.are.equal(
-            "[x] 12:34/12:35 program @chronicle", get_current_line()
+            "[x] 12:33/12:34 program @chronicle", get_current_line()
+        )
+    end)
+
+    it("should finish a recurring task", function()
+        mock_vim.buffer = {
+            "2024-01-01",
+            "",
+            "[ ] 12:33/ program @chronicle !every_day",
+        }
+        set_cursor(3)
+
+        chronicle.finish()
+
+        compare(
+            {
+                "2024-01-01",
+                "",
+                "[x] 12:33/12:34 program @chronicle !every_day",
+                "",
+                "2024-01-02",
+                "",
+                "[ ]             program @chronicle !every_day",
+            },
+            mock_vim.buffer
         )
     end)
 end) 

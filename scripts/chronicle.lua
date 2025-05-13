@@ -76,6 +76,10 @@ function M.get_cursor_line()
     return vim.api.nvim_win_get_cursor(0)[1]
 end
 
+function M.now()
+    return os.date("%H:%M")
+end
+
 -- Parse line with event or task.
 local function parse_event_line(line)
 
@@ -185,7 +189,7 @@ function M.repeat_task(event, current_date)
         local os_date = os.time({
             year = tonumber(year), month = tonumber(month), day = tonumber(day)
         })
-        local new_date = os_date + interval * 86400 -- Add interval days
+        local new_date = os_date + interval * 86400
         return new_date
     end
 
@@ -212,7 +216,7 @@ function M.repeat_task(event, current_date)
 
     -- Search lines forwards for the next date.
     local found_line_number = nil
-    for i = get_cursor_line(), #lines do
+    for i = M.get_cursor_line(), #lines do
         local l = lines[i]
         if l:match("^%d%d%d%d%-%d%d%-%d%d$") then
             local year, month, day = l:match("(%d+)-(%d+)-(%d+)")
@@ -240,9 +244,10 @@ function M.repeat_task(event, current_date)
 
     -- If line number not found, insert new line at the end.
     if found_line_number == nil then
-        M.insert_at(os.date("%Y-%m-%d", next_date), #lines + 1)
-        M.insert_at("", #lines + 2)
-        found_line_number = #lines + 3
+        M.insert_at("", #lines + 1)
+        M.insert_at(os.date("%Y-%m-%d", next_date), #lines + 2)
+        M.insert_at("", #lines + 3)
+        found_line_number = #lines + 4
     end
 
     -- Insert new task.
@@ -261,7 +266,7 @@ function M.start()
     end
 
     -- Mark event as started now.
-    state.event.start_time = os.date("%H:%M")
+    state.event.start_time = M.now()
 
     M.replace(event_to_line(state.event))
 end
@@ -271,7 +276,7 @@ function M.finish()
     local state = M.process_line()
 
     -- Mark event as finished now.
-    state.event.end_time = os.date("%H:%M")
+    state.event.end_time = M.now()
 
     -- If event is a task, mark it as done.
     if state.event.task_marker == "[ ]" then
@@ -292,7 +297,7 @@ function M.pause()
     local is_task = state.event.task_marker == "[ ]"
 
     -- Mark event as finished now.
-    state.event.end_time = os.date("%H:%M")
+    state.event.end_time = M.now()
 
     -- If event is a task, make it a normal event.
     if is_task then
