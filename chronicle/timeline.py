@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from rich import box
 from rich.table import Table
 
-from chronicle.errors import ChronicleValueException
+from chronicle.errors import ChronicleValueError
 from chronicle.event.common import PayEvent, SleepEvent
 from chronicle.event.core import Event
 from chronicle.event.place import PlaceEvent
@@ -128,13 +128,13 @@ class Timeline:
                 )
                 time.is_assumed = True
             else:
-                raise ChronicleValueException(
+                raise ChronicleValueError(
                     f"Not recognized as event or object: `{command}`, "
                     f"tokens: {tokens}. No time or context specified for event."
                 )
 
         if len(tokens) == 1:
-            raise ChronicleValueException(
+            raise ChronicleValueError(
                 f"Not recognized as event or object: `{command}`: not enough "
                 f"words."
             )
@@ -145,8 +145,9 @@ class Timeline:
             )
             self.events.append(event)
         else:
-            raise ChronicleValueException(
-                f"No event class for prefix `{prefix}` in command `{command}`."
+            raise ChronicleValueError(
+                f"No event class for prefix `{prefix}` in command `{command}`.",
+                self,
             )
 
     def get_commands(self) -> list[str]:

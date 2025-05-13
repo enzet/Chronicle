@@ -10,7 +10,7 @@ from typing import Any, ClassVar, Self
 from chronicle.argument import Arguments
 from chronicle.errors import (
     ChronicleArgumentError,
-    ChronicleObjectNotFoundException,
+    ChronicleObjectNotFoundError,
 )
 from chronicle.objects.core import Objects
 from chronicle.summary.core import Summary
@@ -59,11 +59,11 @@ class Event:
             raise ChronicleArgumentError(
                 f"Cannot parse command `{command}`."
             ) from error
-        except ChronicleObjectNotFoundException as e:
-            raise ChronicleObjectNotFoundException(
-                f"Object with id `{e.object_id}` not found, needed to parse "
-                f"`{cls.__name__}` from command `{command}`."
-            ) from e
+        except ChronicleObjectNotFoundError as error:
+            raise ChronicleObjectNotFoundError(
+                f"Object with id `{error.object_id}` not found, needed to "
+                f"parse `{cls.__name__}` from command `{command}`."
+            ) from error
         try:
             return cls(time=time, source=(command, parsed), **parsed)
         except TypeError as e:

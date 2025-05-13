@@ -2,9 +2,11 @@
 .idea
 .pytest_cache
 .venv
+.vscode
 Chronicle.egg-info
 __pycache__
 build.sh
 cache
 commands.txt
+doc/
 work
