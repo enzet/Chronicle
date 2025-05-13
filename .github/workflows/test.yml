@@ -7,12 +7,30 @@ on:
     branches: [main]
 
 jobs:
-  build:
+  python-tests:
+    name: Python Tests
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Set up Python 3.12
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[dev]
+    - name: Test with pytest
+      run: |
+        pytest -v
+
+  lint:
+    name: Code Style & Linting
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
       with:
         python-version: "3.12"
     - name: Install dependencies
@@ -25,6 +43,18 @@ jobs:
     - name: Lint with Flake8
       run: |
         flake8 --max-line-length=80 --ignore=ANN002,ANN003,ANN101,ANN102,E203,F403,F405,W503 chronicle/ tests/
-    - name: Test with pytest
+
+  lua-tests:
+    name: Lua Tests
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: leafo/gh-actions-lua@v11
+    - uses: leafo/gh-actions-luarocks@v5
+    - name: Install Busted
       run: |
-        pytest -v
+        luarocks install busted
+    - name: Run Lua tests
+      working-directory: scripts
+      run: |
+        busted test_chronicle.lua

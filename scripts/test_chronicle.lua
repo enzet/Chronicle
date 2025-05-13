@@ -150,4 +150,32 @@ describe("Chronicle", function()
             mock_vim.buffer
         )
     end)
+
+    it("should finish a recurring task", function()
+        mock_vim.buffer = {
+            "2024-01-01",
+            "",
+            "[ ] 12:33/ program @chronicle !every_day",
+            "",
+            "2024-01-03",
+        }
+        set_cursor(3)
+
+        chronicle.finish()
+
+        compare(
+            {
+                "2024-01-01",
+                "",
+                "[x] 12:33/12:34 program @chronicle !every_day",
+                "",
+                "2024-01-02",
+                "",
+                "[ ]             program @chronicle !every_day",
+                "",
+                "2024-01-03",
+            },
+            mock_vim.buffer
+        )
+    end)
 end) 
