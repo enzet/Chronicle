@@ -46,6 +46,10 @@ class ChronicleValueError(ChronicleError):
 class ChronicleUnknownTypeError(ChronicleValueError):
     """Exception raised for unknown type."""
 
+    def __init__(self, message: str, type_: str) -> None:
+        super().__init__(message)
+        self.type_: str = type_
+
 
 class ChronicleParseError(ChronicleValueError):
     """Exception raised for parse errors."""

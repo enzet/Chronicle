@@ -699,7 +699,7 @@ class Objects:
 
         if prefix not in self.prefix_to_class:
             raise ChronicleUnknownTypeError(
-                f"Class for objects with prefix `{prefix}` not found."
+                f"Class for objects with prefix `{prefix}` not found.", prefix
             )
 
         object_class: type[Object] = self.prefix_to_class[prefix]

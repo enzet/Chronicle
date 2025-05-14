@@ -7,6 +7,7 @@ from pathlib import Path
 
 from rich.console import Console
 
+from chronicle.errors import ChronicleUnknownTypeError
 from chronicle.harvest.apple_health import AppleHealthImportManager
 from chronicle.harvest.arc import ArcImportManager
 from chronicle.harvest.core import ImportManager
@@ -147,9 +148,22 @@ def main() -> None:
             if file_name.endswith(".chr"):
                 logging.info("Importing data from `%s`.", file_name)
                 parser: CommandParser = CommandParser(timeline)
+                unknown_types: list[ChronicleUnknownTypeError] = []
                 with Path(file_name).open(encoding="utf-8") as input_file:
                     for line in input_file.readlines():
-                        parser.parse_command(line[:-1].strip())
+                        try:
+                            parser.parse_command(line[:-1].strip())
+                        except ChronicleUnknownTypeError as error:
+                            unknown_types.append(error)
+                if unknown_types:
+                    logging.warning(
+                        "%d unknown types in file `%s`: %s.",
+                        len(unknown_types),
+                        file_name,
+                        ", ".join(
+                            set(f"`{error.type_}`" for error in unknown_types)
+                        ),
+                    )
             elif file_name.endswith(".vcf"):
                 from chronicle.harvest.vcf import VcfImporter
 

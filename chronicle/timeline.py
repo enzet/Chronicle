@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from rich import box
 from rich.table import Table
 
-from chronicle.errors import ChronicleValueError
+from chronicle.errors import ChronicleUnknownTypeError, ChronicleValueError
 from chronicle.event.common import PayEvent, SleepEvent
 from chronicle.event.core import Event
 from chronicle.event.place import PlaceEvent
@@ -145,9 +145,9 @@ class Timeline:
             )
             self.events.append(event)
         else:
-            raise ChronicleValueError(
+            raise ChronicleUnknownTypeError(
                 f"No event class for prefix `{prefix}` in command `{command}`.",
-                self,
+                prefix,
             )
 
     def get_commands(self) -> list[str]:
