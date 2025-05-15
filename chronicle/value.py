@@ -21,7 +21,6 @@ LANGUAGES: dict[str, tuple[str, str]] = {
     "es": ("Spanish", "#CE6C5E"),
     "fa": ("Persian", "#FF7F50"),
     "fr": ("French", "#274766"),
-    "ge": ("Georgian", "#FF7F50"),
     "he": ("Hebrew", "#FF7F50"),
     "hi": ("Hindi", "#FF7F50"),
     "hy": ("Armenian", "#FF7F50"),
@@ -281,7 +280,7 @@ class Interval(Value):
     def from_json(cls, string: str) -> "Interval":
         start, end = string.split("/")
         return cls(
-            start=Timedelta.from_json(start), end=Timedelta.from_json(end)
+            start=Timedelta.from_code(start), end=Timedelta.from_code(end)
         )
 
     def to_json(self) -> str:
@@ -637,3 +636,14 @@ class Weights(Value):
     extractors: ClassVar[list[Callable]] = [
         lambda groups: [float(group) for group in groups(0).split(",")]
     ]
+
+
+@dataclass
+class TimedeltaList(Value):
+    """List of timedeltas."""
+
+    values: list[Timedelta]
+    """Timedeltas."""
+
+    patterns: ClassVar[list[re.Pattern]] = []
+    extractors: ClassVar[list[Callable]] = [lambda groups: []]

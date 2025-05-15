@@ -159,7 +159,7 @@ class Arguments:
                     if detected:
                         raise ChronicleAmbiguousArgumentError(
                             f"Token `{token}` is ambiguous, possible "
-                            f"arguments: `{detected.key}`, "
+                            f"argument patterns: `{detected.key}`, "
                             f"`{argument.key}`."
                         )
                     if argument.extractors is not None:

@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, override
 
+from chronicle.errors import ChronicleValueError
 from chronicle.event.art import (
     ListenAudiobookEvent,
     ListenMusicEvent,
@@ -15,7 +16,6 @@ from chronicle.event.art import (
     WatchEvent,
 )
 from chronicle.event.core import Event
-from chronicle.errors import ChronicleValueError
 from chronicle.harvest.core import Importer, ImportManager
 from chronicle.objects.core import Audiobook, Book, Object, Podcast, Video
 from chronicle.time import Context, Moment, Time, Timedelta

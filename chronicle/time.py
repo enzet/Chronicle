@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
 
-from typing import Callable, ClassVar, Optional, Self
+from typing import Callable, ClassVar, Self
 
 DELTA_PATTERN_TEXT: str = r"(\d+:)?\d?\d:\d\d"
 DELTA_PATTERN_TEXT_GROUPS: str = r"((?P<h>\d+):)?(?P<m>\d?\d):(?P<s>\d\d)"
@@ -236,16 +236,12 @@ class Timedelta:
 
     delta: timedelta = timedelta()
 
-    patterns: ClassVar[list[re.Pattern]] = [DELTA_PATTERN_GROUPS]
+    patterns: ClassVar[list[re.Pattern]] = [
+        re.compile(rf"{DELTA_PATTERN_TEXT}(,{DELTA_PATTERN_TEXT})*")
+    ]
 
     extractors: ClassVar[list[Callable]] = [
-        lambda groups: Timedelta(
-            delta=timedelta(
-                seconds=(float(groups("h")) if groups("h") else 0.0) * 3600.0
-                + float(groups("m")) * 60.0
-                + float(groups("s"))
-            )
-        )
+        lambda groups: Timedelta.from_code(groups(0))
     ]
 
     def __sub__(self, other: object) -> Self:
@@ -262,11 +258,19 @@ class Timedelta:
         return self.delta.total_seconds()
 
     @classmethod
-    def from_json(cls, code: str) -> Optional["Timedelta"]:
-        """Create time delta from JSON string."""
+    def from_code(cls, code: str) -> Self:
+        """Create time delta from string encoding."""
 
-        if not code:
-            return None
+        if "," in code:
+            total: timedelta = timedelta()
+            known_parts: int = 0
+            parts: list[str] = code.split(",")
+            for part in parts:
+                if part != "?":
+                    total += parse_delta(part)
+                    known_parts += 1
+            return cls.from_delta(total / known_parts * len(parts))
+
         return cls(parse_delta(code))
 
     @classmethod
