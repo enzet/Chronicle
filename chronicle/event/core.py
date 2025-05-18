@@ -15,7 +15,7 @@ from chronicle.errors import (
 from chronicle.objects.core import Objects
 from chronicle.summary.core import Summary
 from chronicle.time import Time, Timedelta
-from chronicle.value import Interval, Tags, TimedeltaList
+from chronicle.value import Interval, Tags
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
@@ -111,13 +111,6 @@ class Event:
             duration: Timedelta = getattr(self, "duration")
             if duration:
                 return duration.total_seconds()
-
-        if hasattr(self, "durations"):
-            durations: TimedeltaList = getattr(self, "durations")
-            if durations:
-                return sum(
-                    duration.total_seconds() for duration in durations.values
-                )
 
         if hasattr(self, "interval"):
             interval: Interval = getattr(self, "interval")

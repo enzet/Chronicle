@@ -7,7 +7,7 @@ from chronicle.event.art import (
     ListenMusicEvent,
     ListenPodcastEvent,
 )
-from chronicle.event.common import ProgramEvent, SleepEvent
+from chronicle.event.common import LearnEvent, ProgramEvent, SleepEvent
 from chronicle.event.core import Event, Objects
 from chronicle.objects.core import Audiobook, Book, Glasses, Object, Project
 from chronicle.summary.core import Summary
@@ -264,3 +264,21 @@ def test_event_clean() -> None:
     assert len(events) == 1
     assert isinstance(objects["ray_ban"], Glasses)
     assert objects["ray_ban"].name == "Ray-Ban Glasses"
+
+
+def test_event_learn() -> None:
+    """Test learning event."""
+
+    timeline: Timeline = parse(
+        """
+        service @duolingo = Duolingo
+        2000-01-01
+        learn /language/de using @duolingo 2:35,4:55
+        """
+    )
+    events: list[Event] = timeline.events
+
+    assert len(events) == 1
+    event: Event = events[0]
+    assert isinstance(event, LearnEvent)
+    assert event.get_duration() == 2 * 60 + 35 + 4 * 60 + 55

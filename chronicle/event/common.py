@@ -17,7 +17,6 @@ from chronicle.value import (
     ProgrammingLanguage,
     Subject,
     Tags,
-    TimedeltaList,
     Volume,
 )
 
@@ -131,14 +130,14 @@ class LearnEvent(Event):
     actions: float | None = None
     """Number of actions or score."""
 
-    durations: TimedeltaList | None = None
+    duration: Timedelta | None = None
     """Duration of the learning event."""
 
     arguments: ClassVar[Arguments] = (
         Arguments(["learn"], "learn")
         .add_class_argument("subject", Subject)
         .add_object_argument("service", Service)
-        .add_class_argument("durations", TimedeltaList)
+        .add_class_argument("duration", Timedelta)
         .add(Argument("actions", prefix="actions:"))
     )
 

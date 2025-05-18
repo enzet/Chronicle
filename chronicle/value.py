@@ -636,14 +636,3 @@ class Weights(Value):
     extractors: ClassVar[list[Callable]] = [
         lambda groups: [float(group) for group in groups(0).split(",")]
     ]
-
-
-@dataclass
-class TimedeltaList(Value):
-    """List of timedeltas."""
-
-    values: list[Timedelta]
-    """Timedeltas."""
-
-    patterns: ClassVar[list[re.Pattern]] = []
-    extractors: ClassVar[list[Callable]] = [lambda groups: []]
