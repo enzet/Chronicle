@@ -13,7 +13,7 @@ from chronicle.harvest.core import Importer, ImportManager
 from chronicle.objects.core import Object, Service
 from chronicle.time import Moment, Time, Timedelta
 from chronicle.timeline import Timeline
-from chronicle.value import Subject, TimedeltaList
+from chronicle.value import Subject
 
 courses: list[tuple[str, str, Subject]] = [
     ("en", "English", Subject(["language", "en"])),
@@ -144,9 +144,7 @@ class DuolingoImporter(Importer):
                             subject=subject,
                             service=service,
                             actions=actions,
-                            durations=TimedeltaList(
-                                [approximate_duration(actions, date)]
-                            ),
+                            duration=approximate_duration(actions, date),
                         )
                         timeline.events.append(event)
 

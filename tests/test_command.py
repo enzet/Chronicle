@@ -266,8 +266,8 @@ def test_event_clean() -> None:
     assert objects["ray_ban"].name == "Ray-Ban Glasses"
 
 
-def test_event_learn() -> None:
-    """Test learning event."""
+def test_event_learn_complex_duration() -> None:
+    """Test learning event with complex duration."""
 
     timeline: Timeline = parse(
         """
@@ -282,3 +282,21 @@ def test_event_learn() -> None:
     event: Event = events[0]
     assert isinstance(event, LearnEvent)
     assert event.get_duration() == 2 * 60 + 35 + 4 * 60 + 55
+
+
+def test_event_learn_unknown_duration() -> None:
+    """Test learning event with complex duration and unknown points."""
+
+    timeline: Timeline = parse(
+        """
+        service @duolingo = Duolingo
+        2000-01-01
+        learn /language/de using @duolingo 2:00,?,4:00
+        """
+    )
+    events: list[Event] = timeline.events
+
+    assert len(events) == 1
+    event: Event = events[0]
+    assert isinstance(event, LearnEvent)
+    assert event.get_duration() == ((2 + 4) / 2 * 3) * 60

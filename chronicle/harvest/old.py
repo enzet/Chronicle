@@ -50,7 +50,6 @@ class OldImportManager(ImportManager):
     def process_arguments(
         arguments: argparse.Namespace, timeline: Timeline
     ) -> None:
-
         file_path: Path
 
         if arguments.import_old:
@@ -158,7 +157,7 @@ class OldImporter(Importer):
                 duration = None
                 interval = None
                 if "duration" in data:
-                    duration = Timedelta.from_json(data["duration"])
+                    duration = Timedelta.from_code(data["duration"])
                 if "from" in data and "to" in data:
                     interval = Interval.from_json(
                         data["from"] + "/" + data["to"]
@@ -294,7 +293,7 @@ class OldMovieImporter(Importer):
 
             duration: Timedelta | None = None
             if "duration" in data:
-                duration = Timedelta.from_json(data["duration"])
+                duration = Timedelta.from_code(data["duration"])
 
             if not duration:
                 duration = Timedelta(timedelta(minutes=120))
@@ -340,7 +339,7 @@ class OldPodcastImporter(Importer):
             time: Time = Time.from_string(data["date"], Context())
             duration: Timedelta | None = None
             if "duration" in data:
-                duration = Timedelta.from_json(data["duration"])
+                duration = Timedelta.from_code(data["duration"])
             podcast: Podcast = Podcast(
                 id=data["title"],
                 title=data["title"],

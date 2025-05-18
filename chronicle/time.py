@@ -237,7 +237,7 @@ class Timedelta:
     delta: timedelta = timedelta()
 
     patterns: ClassVar[list[re.Pattern]] = [
-        re.compile(rf"{DELTA_PATTERN_TEXT}(,{DELTA_PATTERN_TEXT})*")
+        re.compile(rf"({DELTA_PATTERN_TEXT}|\?)(,({DELTA_PATTERN_TEXT}|\?))*")
     ]
 
     extractors: ClassVar[list[Callable]] = [
@@ -462,7 +462,7 @@ def parse_delta(string_delta: str) -> timedelta:
         hour = 0
         minute, second = (int(x) for x in string_delta.split(":"))
     else:
-        raise MalformedTime()
+        raise MalformedTime(string_delta)
 
     return timedelta(seconds=hour * 3600 + minute * 60 + second)
 

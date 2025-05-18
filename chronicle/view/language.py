@@ -6,6 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
+from matplotlib import pyplot as plt
 from rich import box
 from rich.console import Console
 from rich.table import Table
@@ -177,10 +178,6 @@ class LanguageLearningViewer:
     ) -> None:
         """Plot language learning progress."""
 
-        from matplotlib import pyplot as plt
-
-        stack_plot: bool = False
-
         if stack_plot:
             keys = sorted(language_data, key=lambda x: -language_data[x][-1])
             plt.stackplot(
@@ -208,7 +205,7 @@ class LanguageLearningViewer:
         self,
         languages: list[Language],
         services: list[Service],
-        data,
+        data: dict[str, list[float]],
         total_threshold: float = 0.0,
         style: str = "normal",
         colors: str = "light",
