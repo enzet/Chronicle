@@ -210,6 +210,7 @@ class LanguageLearningViewer:
         style: str = "normal",
         colors: str = "light",
     ) -> None:
+
         methods: list[str] = [
             "Read",
             "Watch",
@@ -217,7 +218,7 @@ class LanguageLearningViewer:
             "Write",
             "Speak",
             "Learn",
-        ] + [x.name for x in services]
+        ] + [x.name or x.id for x in services]
 
         total: float = 0
 
