@@ -3,7 +3,7 @@
 import re
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, ClassVar, Literal, Self
+from typing import ClassVar, Literal, Self
 
 from chronicle.errors import ChronicleValueError
 from chronicle.time import INTERVAL_PATTERN, Timedelta
@@ -117,7 +117,7 @@ class Language(Value):
         """Create language from JSON."""
         return cls(code)
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, Language):
             raise ValueError(f"Cannot compare `{self}` with `{other}`.")
         return self.code == other.code
