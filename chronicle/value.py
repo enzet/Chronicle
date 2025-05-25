@@ -1,8 +1,9 @@
 """Argument value."""
 
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable, ClassVar, Literal, Self
+from typing import Any, ClassVar, Literal, Self
 
 from chronicle.errors import ChronicleValueError
 from chronicle.time import INTERVAL_PATTERN, Timedelta

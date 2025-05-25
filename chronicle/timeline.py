@@ -1,8 +1,8 @@
 import logging
+from collections.abc import Callable
 from datetime import datetime, timedelta
 from pathlib import Path
 from re import Pattern, compile
-from typing import Callable
 
 import matplotlib.pyplot as plt
 from rich import box

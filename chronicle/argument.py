@@ -10,8 +10,9 @@ if TYPE_CHECKING:
 import copy
 import logging
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable, Self
+from typing import Any, Self
 
 from chronicle.errors import (
     ChronicleAmbiguousArgumentError,

@@ -2,10 +2,11 @@
 
 import json
 import logging
+from collections.abc import Callable
 from enum import Enum
 from pathlib import Path
 from textwrap import dedent
-from typing import Any, Callable, Self
+from typing import Any, Self
 
 import urllib3
 

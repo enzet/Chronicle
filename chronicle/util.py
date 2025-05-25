@@ -1,6 +1,6 @@
 """Utility functions."""
 
-from typing import Callable
+from collections.abc import Callable
 
 from chronicle.event.core import Event
 

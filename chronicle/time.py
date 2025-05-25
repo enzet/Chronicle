@@ -8,7 +8,8 @@ from datetime import datetime, timedelta
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
 
-from typing import Callable, ClassVar, Self
+from collections.abc import Callable
+from typing import ClassVar, Self
 
 DELTA_PATTERN_TEXT: str = r"(\d+:)?\d?\d:\d\d"
 DELTA_PATTERN_TEXT_GROUPS: str = r"((?P<h>\d+):)?(?P<m>\d?\d):(?P<s>\d\d)"

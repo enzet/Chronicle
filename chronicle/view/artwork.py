@@ -3,8 +3,8 @@
 import argparse
 import re
 from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable
 
 from rich import box
 from rich.console import Console
