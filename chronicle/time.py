@@ -3,7 +3,7 @@
 import random
 import re
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
@@ -130,6 +130,7 @@ class Moment:
             hour=self.hour or 0,
             minute=self.minute or 0,
             second=int(self.second) if self.second is not None else 0,
+            tzinfo=UTC,
         )
 
     def __lt__(self, other: object) -> bool:
@@ -153,12 +154,14 @@ class Moment:
             return None
 
         if self.month is None:
-            return datetime(year=self.year + 1, month=1, day=1)
+            return datetime(year=self.year + 1, month=1, day=1, tzinfo=UTC)
 
         if self.day is None:
             if self.month < 12:
-                return datetime(year=self.year, month=self.month + 1, day=1)
-            return datetime(year=self.year + 1, month=1, day=1)
+                return datetime(
+                    year=self.year, month=self.month + 1, day=1, tzinfo=UTC
+                )
+            return datetime(year=self.year + 1, month=1, day=1, tzinfo=UTC)
 
         if not (lower := self.get_lower()):
             return None
@@ -407,7 +410,7 @@ class Time:
         if self.end and (lower := self.end.get_lower()):
             return lower
 
-        raise MalformedTime()
+        raise MalformedTime
 
     def get_upper(self) -> datetime:
         """Get upper bound of the time."""
@@ -417,7 +420,7 @@ class Time:
         if self.start and (upper := self.start.get_upper()):
             return upper
 
-        raise MalformedTime()
+        raise MalformedTime
 
     def get_moment(self) -> datetime:
         """Get moment of the time: one of the bounds, or middle point."""
@@ -434,7 +437,7 @@ class Time:
         if self.end and (moment := self.end.get_lower()):
             return moment
 
-        raise MalformedTime()
+        raise MalformedTime
 
     def get_random(self) -> datetime:
         """Get random moment from the time."""
@@ -451,7 +454,7 @@ class Time:
         if self.end and (moment := self.end.get_random()):
             return moment
 
-        raise MalformedTime()
+        raise MalformedTime
 
 
 def parse_delta(string_delta: str) -> timedelta:
@@ -497,16 +500,16 @@ def humanize_delta(delta: timedelta) -> str:
 def start_of_day(time: datetime) -> datetime:
     """Get start of the day."""
 
-    return datetime(year=time.year, month=time.month, day=time.day)
+    return datetime(year=time.year, month=time.month, day=time.day, tzinfo=UTC)
 
 
 def start_of_month(time: datetime) -> datetime:
     """Get start of the month."""
 
-    return datetime(year=time.year, month=time.month, day=1)
+    return datetime(year=time.year, month=time.month, day=1, tzinfo=UTC)
 
 
 def start_of_year(time: datetime) -> datetime:
     """Get start of the year."""
 
-    return datetime(year=time.year, month=1, day=1)
+    return datetime(year=time.year, month=1, day=1, tzinfo=UTC)

@@ -1,6 +1,6 @@
 import logging
 from collections.abc import Callable
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from re import Pattern, compile
 
@@ -253,7 +253,7 @@ class Timeline:
         """Get events by day."""
 
         def get_first(point: datetime) -> datetime:
-            return datetime(point.year, point.month, point.day)
+            return datetime(point.year, point.month, point.day, tzinfo=UTC)
 
         def get_next(point: datetime) -> datetime:
             return point + timedelta(days=1)
@@ -266,12 +266,12 @@ class Timeline:
         """Get events by month."""
 
         def get_first(point: datetime) -> datetime:
-            return datetime(point.year, point.month, 1)
+            return datetime(point.year, point.month, 1, tzinfo=UTC)
 
         def get_next(point: datetime) -> datetime:
             if point.month == 12:
-                return datetime(point.year + 1, 1, 1)
-            return datetime(point.year, point.month + 1, 1)
+                return datetime(point.year + 1, 1, 1, tzinfo=UTC)
+            return datetime(point.year, point.month + 1, 1, tzinfo=UTC)
 
         return self.get_events_by(get_first, get_next, filter_)
 
@@ -289,7 +289,7 @@ class Timeline:
             if isinstance(x, Medication) and x.expired is not None
         ]
         for object_ in sorted(objects, key=lambda x: x.expired):
-            diff = object_.expired.get_lower() - datetime.now()
+            diff = object_.expired.get_lower() - datetime.now(UTC)
             style = ""
             if object_.color:
                 c = object_.color.hex
@@ -404,7 +404,9 @@ class Timeline:
                 print(event.to_string(self.objects))
 
     def graph(self, filter_: Callable | None = None) -> None:
-        filter_ = self.get_filter(datetime.now() - timedelta(days=30), None)
+        filter_ = self.get_filter(
+            datetime.now(UTC) - timedelta(days=30), None
+        )
 
         i = 0
         for day, events, summary in self.get_events_by_day(filter_):

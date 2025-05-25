@@ -13,7 +13,7 @@ class ImportManager(ABC):
     @abstractmethod
     def add_argument(parser: argparse._ArgumentGroup) -> None:
         """Add arguments to the parser."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @staticmethod
     @abstractmethod
@@ -21,7 +21,7 @@ class ImportManager(ABC):
         arguments: argparse.Namespace, timeline: Timeline
     ) -> None:
         """Process arguments."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class Importer(ABC):
@@ -33,4 +33,4 @@ class Importer(ABC):
 
         :param timeline: timeline to store new events
         """
-        raise NotImplementedError()
+        raise NotImplementedError

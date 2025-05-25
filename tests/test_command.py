@@ -1,6 +1,6 @@
 """Tests for command."""
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from chronicle.event.art import (
     ListenAudiobookEvent,
@@ -140,7 +140,7 @@ def test_short_time() -> None:
     timeline.objects = Objects(
         {"idiot": book, "idiot_audio": Audiobook("idiot_audio", book=book)}
     )
-    parser.context = Context(current_date=datetime(2022, 1, 2))
+    parser.context = Context(current_date=datetime(2022, 1, 2, tzinfo=UTC))
     parser.parse_command("13:00 audiobook @idiot_audio")
 
     assert len(timeline) == 1
