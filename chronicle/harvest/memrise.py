@@ -44,6 +44,7 @@ PATTERNS = (
     re.compile(r"^(.*) для начинающих$"),
 )
 TIME_PATTERN: str = "%Y-%m-%d %H:%M:%S"
+MAX_SECONDS_PER_TEST: float = 60.0
 
 
 class MemriseHTMLParser(HTMLParser):
@@ -173,7 +174,7 @@ class MemriseImporter(Importer):
             # Otherwise, we approximate the time spent on the session as 16
             # seconds per test.
             duration: Timedelta | None = None
-            if seconds_per_test >= 60:
+            if seconds_per_test >= MAX_SECONDS_PER_TEST:
                 duration = Timedelta.from_delta(
                     timedelta(seconds=float(tests) * 16.0)
                 )

@@ -50,6 +50,9 @@ WRITING_SYSTEM_NAMES = {
     "kana": "Hiragana, Katakana, and Kanji",
 }
 
+MAX_PERCENT: float = 100.0
+SECONDS_IN_DAY: float = 24.0 * 3600.0
+
 
 @dataclass
 class Value:
@@ -460,30 +463,31 @@ class Volume(Value):
     def verify(self) -> None:
         """Raise an error if the volume value is incorrect."""
 
+        message: str
         if self.from_ and self.to_ and self.from_ > self.to_:
-            message: str = (
+            message = (
                 "Start value should be less than end value, not "
                 f"`{self.from_}` > `{self.to_}`."
             )
             raise ChronicleValueError(message, self)
-        if self.measure == "percent" and self.of != 100.0:
-            message: str = f"Maximum should be 100%, not `{self.of}`."
+        if self.measure == "percent" and self.of != MAX_PERCENT:
+            message = f"Maximum should be 100%, not `{self.of}`."
             raise ChronicleValueError(message, self)
         if (
             self.measure == "percent"
             and self.from_
-            and (self.from_ < 0.0 or self.from_ > 100.0)
+            and (self.from_ < 0.0 or self.from_ > MAX_PERCENT)
         ):
-            message: str = (
+            message = (
                 f"From should be in range 0–100%, not `{self.from_}`."
             )
             raise ChronicleValueError(message, self)
         if (
             self.measure == "percent"
             and self.to_
-            and (self.to_ < 0.0 or self.to_ > 100.0)
+            and (self.to_ < 0.0 or self.to_ > MAX_PERCENT)
         ):
-            message: str = f"To should be in range 0–100%, not `{self.to_}`."
+            message = f"To should be in range 0–100%, not `{self.to_}`."
             raise ChronicleValueError(message, self)
 
     def get_ratio(self) -> float | None:

@@ -17,7 +17,13 @@ from chronicle.event.transport import TransportEvent
 from chronicle.objects.clothes import Clothes
 from chronicle.objects.core import Medication, Objects, Thing
 from chronicle.summary.core import Summary
-from chronicle.time import Context, MalformedTime, Time, humanize_delta
+from chronicle.time import (
+    MAX_MONTHS,
+    Context,
+    MalformedTime,
+    Time,
+    humanize_delta,
+)
 from chronicle.util import empty_filter
 
 PYDANTIC: bool = False
@@ -270,7 +276,7 @@ class Timeline:
             return datetime(point.year, point.month, 1, tzinfo=UTC)
 
         def get_next(point: datetime) -> datetime:
-            if point.month == 12:
+            if point.month == MAX_MONTHS:
                 return datetime(point.year + 1, 1, 1, tzinfo=UTC)
             return datetime(point.year, point.month + 1, 1, tzinfo=UTC)
 
@@ -294,7 +300,7 @@ class Timeline:
             style = ""
             if object_.color:
                 c = object_.color.hex
-                if len(c) == 4:
+                if len(c) == 4:  # noqa: PLR2004
                     c = "#" + c[1] + c[1] + c[2] + c[2] + c[3] + c[3]
             if diff.total_seconds() > 0:
                 if object_.retired:
@@ -374,7 +380,7 @@ class Timeline:
             if isinstance(object_, Thing):
                 if object_.color:
                     c = object_.color.hex
-                    if len(c) == 4:
+                    if len(c) == 4:  # noqa: PLR2004
                         c = "#" + c[1] + c[1] + c[2] + c[2] + c[3] + c[3]
                 table.add_row(
                     id_,
@@ -499,7 +505,7 @@ class CommandParser:
             # Skip planned event.
             return
 
-        if len(tokens) >= 3 and tokens[2] == "=":
+        if len(tokens) >= 3 and tokens[2] == "=":  # noqa: PLR2004
             # Parse object.
             self.timeline.objects.parse_command(command, tokens)
             return

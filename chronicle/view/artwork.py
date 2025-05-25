@@ -22,6 +22,8 @@ from chronicle.timeline import Timeline
 from chronicle.util import empty_filter, filter_by_year
 from chronicle.value import AudiobookVolume, Language, Volume
 
+EQUALS_TRESHOLD: float = 0.1
+
 
 def format_episodes(episodes: list[int | str]) -> str:
     """Get string representation of episodes."""
@@ -139,7 +141,7 @@ def equals(a: float | None, b: float | None) -> bool:
     if a is None or b is None:
         return a is None and b is None
 
-    return abs(a - b) < 0.1
+    return abs(a - b) < EQUALS_TRESHOLD
 
 
 def union_volumes(

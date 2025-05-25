@@ -18,6 +18,8 @@ DELTA_PATTERN_GROUPS: re.Pattern = re.compile(DELTA_PATTERN_TEXT_GROUPS)
 INTERVAL_PATTERN: re.Pattern = re.compile(
     rf"{DELTA_PATTERN_TEXT}/{DELTA_PATTERN_TEXT}"
 )
+MAX_MONTHS: int = 12
+DAYS_PER_YEAR: int = 365
 
 
 @dataclass
@@ -61,7 +63,7 @@ class Moment:
             moment.hour = int(time_parts[0])
             if len(time_parts) > 1:
                 moment.minute = int(time_parts[1])
-            if len(time_parts) > 2:
+            if len(time_parts) > 2:  # noqa: PLR2004
                 moment.second = float(time_parts[2])
         else:
             date = code
@@ -71,7 +73,7 @@ class Moment:
         moment.year = int(date_parts[0])
         if len(date_parts) > 1:
             moment.month = int(date_parts[1])
-        if len(date_parts) > 2:
+        if len(date_parts) > 2:  # noqa: PLR2004
             moment.day = int(date_parts[2])
 
         return moment
@@ -90,7 +92,7 @@ class Moment:
             moment.year = int(date_parts[0])
             if len(date_parts) > 1:
                 moment.month = int(date_parts[1])
-            if len(date_parts) > 2:
+            if len(date_parts) > 2:  # noqa: PLR2004
                 moment.day = int(date_parts[2])
         elif ":" in code and context and context.current_date:
             time = code
@@ -103,7 +105,7 @@ class Moment:
             moment.year = int(date_parts[0])
             if len(date_parts) > 1:
                 moment.month = int(date_parts[1])
-            if len(date_parts) > 2:
+            if len(date_parts) > 2:  # noqa: PLR2004
                 moment.day = int(date_parts[2])
 
         if time:
@@ -112,7 +114,7 @@ class Moment:
             moment.hour = int(time_parts[0])
             if len(time_parts) > 1:
                 moment.minute = int(time_parts[1])
-            if len(time_parts) > 2:
+            if len(time_parts) > 2:  # noqa: PLR2004
                 moment.second = float(time_parts[2])
 
         return moment
@@ -158,7 +160,7 @@ class Moment:
             return datetime(year=self.year + 1, month=1, day=1, tzinfo=UTC)
 
         if self.day is None:
-            if self.month < 12:
+            if self.month < MAX_MONTHS:
                 return datetime(
                     year=self.year, month=self.month + 1, day=1, tzinfo=UTC
                 )
@@ -462,7 +464,7 @@ class Time:
 def parse_delta(string_delta: str) -> timedelta:
     """Parse time delta from a string representation."""
 
-    if string_delta.count(":") == 2:
+    if string_delta.count(":") == 2:  # noqa: PLR2004
         hour, minute, second = (int(x) for x in string_delta.split(":"))
     elif string_delta.count(":") == 1:
         hour = 0
@@ -492,9 +494,9 @@ def format_delta(delta: timedelta) -> str:
 def humanize_delta(delta: timedelta) -> str:
     """Get human-readable representation of a time delta."""
 
-    if delta.days > 365 * 2:
-        return f"{delta.days // 365} years"
-    if delta.days > 365:
+    if delta.days > DAYS_PER_YEAR * 2:
+        return f"{delta.days // DAYS_PER_YEAR} years"
+    if delta.days > DAYS_PER_YEAR:
         return "1 year"
     return f"{delta.days} days"
 

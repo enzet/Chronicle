@@ -23,6 +23,8 @@ from chronicle.objects.core import (
 from chronicle.summary.core import Summary
 from chronicle.time import Timedelta
 from chronicle.value import (
+    MAX_PERCENT,
+    SECONDS_IN_DAY,
     AudiobookVolume,
     Episode,
     Interval,
@@ -293,7 +295,7 @@ class ReadEvent(Event):
             (
                 self.volume
                 and self.volume.measure == "percent"
-                and self.volume.to_ == 100.0
+                and self.volume.to_ == MAX_PERCENT
             )
             or (
                 self.volume
@@ -523,15 +525,15 @@ class ListenAudiobookEvent(Event):
         if (
             self.volume
             and self.volume.measure == "percent"
-            and self.volume.to_ == 100.0
+            and self.volume.to_ == MAX_PERCENT
             and self.audiobook
             and self.audiobook.book
         ):
             summary.register_finished_book(self.audiobook.book)
 
         if duration:
-            if duration > 24.0 * 3600.0:
-                message: str = f"Event {self} has duration {duration}."
+            if duration > SECONDS_IN_DAY:
+                message = f"Event {self} has duration {duration}."
                 raise ChronicleValueError(message, self)
             summary.register_listen(duration, language)
 

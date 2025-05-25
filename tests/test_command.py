@@ -93,7 +93,7 @@ def test_listen_audiobook() -> None:
     assert event.audiobook
     assert event.audiobook.book
     assert event.audiobook.book.title == "Idiot"
-    assert event.speed == 1.25
+    assert event.speed == 1.25  # noqa: PLR2004
     assert event.interval == Interval(
         start=Timedelta(), end=Timedelta(timedelta(minutes=10))
     )
@@ -150,7 +150,7 @@ def test_short_time() -> None:
     assert event.to_string() == "listen to audiobook Idiot"
     assert event.time.start
     assert event.time.start == event.time.end
-    assert event.time.start.hour == 13
+    assert event.time.start.hour == 13  # noqa: PLR2004
 
 
 def test_file() -> None:
@@ -172,8 +172,8 @@ def test_file() -> None:
     assert event.to_string() == "listen to audiobook Idiot"
     assert event.time.start
     assert event.time.start == event.time.end
-    assert event.time.start.year == 2000
-    assert event.time.start.hour == 13
+    assert event.time.start.year == 2000  # noqa: PLR2004
+    assert event.time.start.hour == 13  # noqa: PLR2004
 
 
 def test_file_sleep() -> None:
@@ -243,9 +243,9 @@ def test_object_book() -> None:
     assert len(objects) == 1
     assert isinstance(objects["ni_eve"], Book)
     assert objects["ni_eve"].title == "Ni d’Ève ni d’Adame"
-    assert objects["ni_eve"].volume == 186
+    assert objects["ni_eve"].volume == 186  # noqa: PLR2004
     assert objects["ni_eve"].language == Language("fr")
-    assert objects["ni_eve"].wikidata_id == 1996380
+    assert objects["ni_eve"].wikidata_id == 1996380  # noqa: PLR2004
 
 
 def test_event_clean() -> None:

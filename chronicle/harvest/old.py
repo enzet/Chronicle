@@ -169,12 +169,12 @@ class OldImporter(Importer):
                     interval=interval,
                     language=(
                         Language(data["language"])
-                        if "language" in data and data["language"]
+                        if data.get("language")
                         else None
                     ),
                     subtitles=(
                         Language(data["subtitles"])
-                        if "subtitles" in data and data["subtitles"]
+                        if data.get("subtitles")
                         else None
                     ),
                     season=data.get("season", None),
@@ -251,7 +251,7 @@ class OldImporter(Importer):
                     volume=volume,
                     language=(
                         Language(data["language"])
-                        if "language" in data and data["language"]
+                        if data.get("language")
                         else None
                     ),
                 )
@@ -309,7 +309,7 @@ class OldMovieImporter(Importer):
                 subtitles = Language(match.group("subtitles"))
             elif match := language_pattern.match(data["language"]):
                 language = Language(match.group("language"))
-            elif len(data["language"]) == 2:
+            elif len(data["language"]) == 2:  # noqa: PLR2004
                 language = Language(data["language"])
 
             event: WatchEvent = WatchEvent(
