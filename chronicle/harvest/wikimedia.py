@@ -74,7 +74,7 @@ class WikimediaImporter(Importer):
         """Load cached contributions from file."""
         cache_file: Path = self._get_cache_file()
         if cache_file.exists():
-            with open(cache_file, "r", encoding="utf-8") as input_file:
+            with open(cache_file, encoding="utf-8") as input_file:
                 data: list[dict] = json.load(input_file)
                 return data
         return []
