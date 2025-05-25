@@ -4,7 +4,7 @@ import argparse
 import re
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Callable, Union
+from typing import Callable
 
 from rich import box
 from rich.console import Console
@@ -23,7 +23,7 @@ from chronicle.util import empty_filter, filter_by_year
 from chronicle.value import AudiobookVolume, Language, Volume
 
 
-def format_episodes(episodes: list[Union[int, str]]) -> str:
+def format_episodes(episodes: list[int | str]) -> str:
     """Get string representation of episodes."""
 
     integer_episodes: list[int] = []
