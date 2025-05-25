@@ -126,16 +126,18 @@ class Arguments:
             for argument in self.arguments:
                 if token == argument.prefix:
                     if detected:
-                        raise ChronicleAmbiguousArgumentError(
+                        message: str = (
                             "Token `{token}` is ambiguous, possible arguments: "
                             f"`{detected.key}`, `{argument.key}`."
                         )
+                        raise ChronicleAmbiguousArgumentError(message)
                     if current_value:
                         if not current_key:
-                            raise ChronicleArgumentError(
+                            message: str = (
                                 f"No argument key for value `{current_value}` "
                                 f"for tokens `{tokens}`."
                             )
+                            raise ChronicleArgumentError(message)
                         load_current()
                         current_value = ""
                     current_key = argument.key
@@ -150,19 +152,21 @@ class Arguments:
                         continue
                     if current_value:
                         if not current_key:
-                            raise ChronicleArgumentError(
+                            message: str = (
                                 f"No argument key for value `{current_value}` "
                                 f"for tokens `{tokens}`."
                             )
+                            raise ChronicleArgumentError(message)
                         load_current()
                         current_key = None
                         current_value = ""
                     if detected:
-                        raise ChronicleAmbiguousArgumentError(
+                        message: str = (
                             f"Token `{token}` is ambiguous, possible "
                             f"argument patterns: `{detected.key}`, "
                             f"`{argument.key}`."
                         )
+                        raise ChronicleAmbiguousArgumentError(message)
                     if argument.extractors is not None:
                         result[argument.key] = argument.extractors[i](
                             matcher.group
@@ -182,7 +186,11 @@ class Arguments:
         return result
 
     def add(
-        self, argument: Argument, is_insert: bool = False, is_main: bool = False
+        self,
+        argument: Argument,
+        *,
+        is_insert: bool = False,
+        is_main: bool = False,
     ) -> Self:
         """Add argument to a parser."""
 
@@ -228,6 +236,7 @@ class Arguments:
         self,
         name: str,
         class_: type,
+        *,
         is_insert: bool = False,
         is_main: bool = False,
     ) -> Self:

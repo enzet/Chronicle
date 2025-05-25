@@ -122,7 +122,8 @@ class MemriseImporter(Importer):
     def import_data(self, timeline: Timeline) -> None:
         service: Object = timeline.objects.get_object("@memrise")
         if not isinstance(service, Service):
-            raise ValueError("Memrise service not found.")
+            message: str = "Memrise service not found."
+            raise ValueError(message)
 
         with self.path.open(encoding="utf-8") as input_file:
             data = input_file.read()
@@ -179,7 +180,8 @@ class MemriseImporter(Importer):
 
             subject: Subject | None = Subject.from_string(course_name)
             if not subject:
-                raise ValueError(f"Unknown course `{course_name}`.")
+                message: str = f"Unknown course `{course_name}`."
+                raise ValueError(message)
 
             event: Event = LearnEvent(
                 Time.from_moments(

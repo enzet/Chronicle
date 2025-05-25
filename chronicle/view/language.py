@@ -173,6 +173,7 @@ class LanguageLearningViewer:
         self,
         xs: list[datetime],
         language_data: dict[str, list[float]],
+        *,
         stack_plot: bool,
         total_threshold: float = 0.0,
     ) -> None:

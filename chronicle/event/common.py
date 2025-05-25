@@ -144,14 +144,12 @@ class LearnEvent(Event):
     @override
     def register_summary(self, summary: Summary) -> None:
         if not self.subject:
-            raise ChronicleValueError(
-                f"Event {self} doesn't have subject.", self
-            )
+            message: str = f"Event {self} doesn't have subject."
+            raise ChronicleValueError(message, self)
 
         if not isinstance(self.subject, Subject):
-            raise ChronicleValueError(
-                f"Event {self} has invalid subject.", self
-            )
+            message: str = f"Event {self} has invalid subject."
+            raise ChronicleValueError(message, self)
 
         if duration := self.get_duration():
             summary.register_learn(duration, self.subject, self.service)

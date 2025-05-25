@@ -661,10 +661,11 @@ class Objects:
         for class_ in classes:
             for prefix in class_.arguments.prefixes:
                 if prefix in self.prefix_to_class:
-                    raise ChronicleModelError(
+                    message: str = (
                         f"Prefix `{prefix}` in class `{class_.__name__}` is "
                         f"already used by `{self.prefix_to_class[prefix]}`."
                     )
+                    raise ChronicleModelError(message)
                 self.prefix_to_class[prefix] = class_
 
     @staticmethod
@@ -698,17 +699,17 @@ class Objects:
             id_ = id_[1:]
 
         if prefix not in self.prefix_to_class:
-            raise ChronicleUnknownTypeError(
-                f"Class for objects with prefix `{prefix}` not found.", prefix
+            message: str = (
+                f"Class for objects with prefix `{prefix}` not found."
             )
+            raise ChronicleUnknownTypeError(message, prefix)
 
         object_class: type[Object] = self.prefix_to_class[prefix]
         try:
             data = object_class.arguments.parse(tokens[3:], self)
         except ChronicleArgumentError as error:
-            raise ChronicleParseError(
-                f"Error parsing command `{command}`: {error}."
-            ) from error
+            message: str = f"Error parsing command `{command}`: {error}."
+            raise ChronicleParseError(message) from error
 
         # Create new object.
         new_object = object_class(id_, **data)

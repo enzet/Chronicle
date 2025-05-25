@@ -137,7 +137,8 @@ class Moment:
         """Compare two moments."""
 
         if not isinstance(other, Moment):
-            raise ValueError(f"Cannot compare `{self}` with `{other}`.")
+            message: str = f"Cannot compare `{self}` with `{other}`."
+            raise ValueError(message)
 
         if not (lower := self.get_lower()):
             return False
@@ -252,7 +253,8 @@ class Timedelta:
         """Subtract two time deltas."""
 
         if not isinstance(other, Timedelta):
-            raise ValueError(f"Cannot subtract `{other}` from `{self}`.")
+            message: str = f"Cannot subtract `{other}` from `{self}`."
+            raise ValueError(message)
 
         return Timedelta(self.delta - other.delta)
 

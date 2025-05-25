@@ -207,9 +207,10 @@ class OldImporter(Importer):
                         else:
                             book_object: Object = objects.get_object(book_id)
                             if not isinstance(book_object, Book):
-                                raise ValueError(
+                                message: str = (
                                     f"Expected book, got `{book_object}`."
                                 )
+                                raise ValueError(message)
                             book = book_object
 
                     data["book_id"] = book_id
@@ -224,10 +225,11 @@ class OldImporter(Importer):
                     else:
                         return None
                     if "of" not in structure and "measure" not in structure:
-                        raise ChronicleValueError(
+                        message: str = (
                             "Cannot determine volume measure for "
                             f"`{structure}`."
                         )
+                        raise ChronicleValueError(message)
                     if "of" in structure:
                         volume.of = structure["of"]
                     if "measure" in structure:

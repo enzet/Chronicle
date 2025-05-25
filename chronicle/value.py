@@ -76,7 +76,8 @@ class Value:
             if match := pattern.match(string):
                 return cls.extractors[i](match.group)
 
-        raise ChronicleValueError(f"Unknown value: `{string}`.")
+        message: str = f"Unknown value: `{string}`."
+        raise ChronicleValueError(message)
 
 
 @dataclass
@@ -108,9 +109,8 @@ class Language(Value):
         """Verify that the language code is valid."""
 
         if self.code not in LANGUAGES:
-            raise ChronicleValueError(
-                f"Unknown language code: `{self.code}`.", self
-            )
+            message: str = f"Unknown language code: `{self.code}`."
+            raise ChronicleValueError(message, self)
 
     @classmethod
     def from_json(cls, code: str) -> Self:
@@ -119,7 +119,8 @@ class Language(Value):
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Language):
-            raise ValueError(f"Cannot compare `{self}` with `{other}`.")
+            message: str = f"Cannot compare `{self}` with `{other}`."
+            raise ValueError(message)
         return self.code == other.code
 
     def to_string(self) -> str:
@@ -460,31 +461,30 @@ class Volume(Value):
         """Raise an error if the volume value is incorrect."""
 
         if self.from_ and self.to_ and self.from_ > self.to_:
-            raise ChronicleValueError(
+            message: str = (
                 "Start value should be less than end value, not "
-                f"`{self.from_}` > `{self.to_}`.",
-                self,
+                f"`{self.from_}` > `{self.to_}`."
             )
+            raise ChronicleValueError(message, self)
         if self.measure == "percent" and self.of != 100.0:
-            raise ChronicleValueError(
-                f"Maximum should be 100%, not `{self.of}`.", self
-            )
+            message: str = f"Maximum should be 100%, not `{self.of}`."
+            raise ChronicleValueError(message, self)
         if (
             self.measure == "percent"
             and self.from_
             and (self.from_ < 0.0 or self.from_ > 100.0)
         ):
-            raise ChronicleValueError(
-                f"From should be in range 0–100%, not `{self.from_}`.", self
+            message: str = (
+                f"From should be in range 0–100%, not `{self.from_}`."
             )
+            raise ChronicleValueError(message, self)
         if (
             self.measure == "percent"
             and self.to_
             and (self.to_ < 0.0 or self.to_ > 100.0)
         ):
-            raise ChronicleValueError(
-                f"To should be in range 0–100%, not `{self.to_}`.", self
-            )
+            message: str = f"To should be in range 0–100%, not `{self.to_}`."
+            raise ChronicleValueError(message, self)
 
     def get_ratio(self) -> float | None:
         """Get ratio of the volume relative to the whole object.
@@ -513,9 +513,8 @@ class Volume(Value):
                     else f"{self.from_}/{self.to_}%"
                 )
         if not self.of:
-            raise ChronicleValueError(
-                "`of` should be set for custom measure.", self
-            )
+            message: str = "`of` should be set for custom measure."
+            raise ChronicleValueError(message, self)
 
         return f"{self.from_}/{self.to_}/{self.of}"
 
@@ -586,7 +585,8 @@ class AudiobookVolume(Value):
         if self.to_ is not None and self.from_ is not None:
             return (self.to_ - self.from_) / 100.0
 
-        raise ChronicleValueError("`from_` and `to_` should be set.", self)
+        message: str = "`from_` and `to_` should be set."
+        raise ChronicleValueError(message, self)
 
     def to_command(self) -> str:
         match self.measure:
@@ -594,7 +594,8 @@ class AudiobookVolume(Value):
                 return f"{self.from_}/{self.to_}%"
             case "seconds":
                 return f"{self.from_}/{self.to_}s"
-        raise ChronicleValueError(f"Unknown measure `{self.measure}`.", self)
+        message: str = f"Unknown measure `{self.measure}`."
+        raise ChronicleValueError(message, self)
 
     def to_string(self) -> str:
         match self.measure:
@@ -602,7 +603,8 @@ class AudiobookVolume(Value):
                 return f"{self.from_}–{self.to_}%"
             case "seconds":
                 return f"{self.from_}–{self.to_}s"
-        raise ChronicleValueError(f"Unknown measure `{self.measure}`.", self)
+        message: str = f"Unknown measure `{self.measure}`."
+        raise ChronicleValueError(message, self)
 
 
 @dataclass

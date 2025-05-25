@@ -121,7 +121,8 @@ class ListenPodcastEvent(Event):
         language: Language | None = self.get_language()
 
         if not language:
-            raise ChronicleValueError(f"Event `{self}` has no language.", self)
+            message: str = f"Event `{self}` has no language."
+            raise ChronicleValueError(message, self)
 
         if duration := self.get_duration():
             summary.register_listen(duration, language)
@@ -240,7 +241,8 @@ class ReadEvent(Event):
             return self.language
         if self.book and self.book.language:
             return self.book.language
-        raise ChronicleValueError(f"Event {self} has no language.", self)
+        message: str = f"Event {self} has no language."
+        raise ChronicleValueError(message, self)
 
     @override
     def register_summary(self, summary: Summary) -> None:
@@ -313,9 +315,8 @@ class ReadEvent(Event):
         elif duration is not None:
             summary.register_read_pages(duration / 60 / 3, language)
         else:
-            raise ChronicleValueError(
-                f"Event {self} has neither pages, nor duration.", self
-            )
+            message: str = f"Event {self} has neither pages, nor duration."
+            raise ChronicleValueError(message, self)
 
         # Register reading duration.
         # TODO(enzet): Check precision of the duration instead of the arbitrary
@@ -491,13 +492,13 @@ class ListenAudiobookEvent(Event):
     def register_summary(self, summary: Summary) -> None:
         """Register this audiobook event in the summary statistics."""
         if not self.interval and not self.volume:
-            raise ChronicleSummaryError(
-                f"Event {self} has neither interval, nor volume.", self
-            )
+            message: str = f"Event {self} has neither interval, nor volume."
+            raise ChronicleSummaryError(message, self)
 
         language: Language | None = self.get_language()
         if not language:
-            raise ChronicleValueError(f"Event {self} has no language.", self)
+            message: str = f"Event {self} has no language."
+            raise ChronicleValueError(message, self)
 
         duration: float | None = None
 
@@ -505,17 +506,14 @@ class ListenAudiobookEvent(Event):
             duration = self.interval.get_duration()
         elif self.volume:
             if not self.audiobook:
-                raise ChronicleValueError(
-                    f"Cannot get audiobook for event {self}.", self
-                )
+                message: str = f"Cannot get audiobook for event {self}."
+                raise ChronicleValueError(message, self)
             if not isinstance(self.audiobook, Audiobook):
-                raise ChronicleValueError(
-                    f"{self.audiobook} is not an audiobook.", self
-                )
+                message: str = f"{self.audiobook} is not an audiobook."
+                raise ChronicleValueError(message, self)
             if not self.audiobook.duration:
-                raise ChronicleValueError(
-                    f"{self.audiobook} has no duration.", self
-                )
+                message: str = f"{self.audiobook} has no duration."
+                raise ChronicleValueError(message, self)
             duration = (
                 self.volume.get_ratio()
                 * self.audiobook.duration.total_seconds()
@@ -533,9 +531,8 @@ class ListenAudiobookEvent(Event):
 
         if duration:
             if duration > 24.0 * 3600.0:
-                raise ChronicleValueError(
-                    f"Event {self} has duration {duration}.", self
-                )
+                message: str = f"Event {self} has duration {duration}."
+                raise ChronicleValueError(message, self)
             summary.register_listen(duration, language)
 
 

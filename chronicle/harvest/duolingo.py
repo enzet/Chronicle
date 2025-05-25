@@ -104,7 +104,8 @@ class DuolingoImporter(Importer):
         """
         service: Object = timeline.objects.get_object("@duolingo")
         if not isinstance(service, Service):
-            raise ValueError("Duolingo service not found.")
+            message: str = "Duolingo service not found."
+            raise ValueError(message)
 
         with self.file_path.open(encoding="utf-8") as input_file:
             reader: Iterator[list[str]] = csv.reader(input_file)
@@ -182,7 +183,8 @@ class DuomeImporter(Importer):
         """
         service: Object = timeline.objects.get_object("@duolingo")
         if not isinstance(service, Service):
-            raise ValueError("Duolingo service not found.")
+            message: str = "Duolingo service not found."
+            raise ValueError(message)
 
         data: dict[str, list[tuple[datetime, int]]] = defaultdict(list)
 
@@ -228,7 +230,8 @@ class DuomeImporter(Importer):
                             subject = course[2]
                             break
                     if not subject:
-                        raise ValueError(f"Unknown course `{course_name}`.")
+                        message: str = f"Unknown course `{course_name}`."
+                        raise ValueError(message)
                     event: LearnEvent = LearnEvent(
                         time,
                         subject=subject,

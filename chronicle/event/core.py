@@ -56,14 +56,14 @@ class Event:
         try:
             parsed = arguments.parse(tokens, objects)
         except ChronicleArgumentError as error:
-            raise ChronicleArgumentError(
-                f"Cannot parse command `{command}`."
-            ) from error
+            message: str = f"Cannot parse command `{command}`."
+            raise ChronicleArgumentError(message) from error
         except ChronicleObjectNotFoundError as error:
-            raise ChronicleObjectNotFoundError(
+            message: str = (
                 f"Object with id `{error.object_id}` not found, needed to "
                 f"parse `{cls.__name__}` from command `{command}`."
-            ) from error
+            )
+            raise ChronicleObjectNotFoundError(message) from error
         try:
             return cls(time=time, source=(command, parsed), **parsed)
         except TypeError as e:

@@ -49,9 +49,7 @@ def type_to_class(type_: str, ending: str) -> type[Event] | None:
         if issubclass(type_, Event):
             return type_
 
-        logging.error(
-            "Class `%s` is not a subclass of `Event`.", class_name
-        )
+        logging.error("Class `%s` is not a subclass of `Event`.", class_name)
         return None
 
     logging.error("No such class: `%s`.", class_name)
@@ -91,6 +89,7 @@ class Timeline:
         command: str,
         tokens: list[str],
         context: Context | None = None,
+        *,
         is_task: bool = False,
     ) -> None:
         """Parse string command describing an event.
@@ -128,16 +127,18 @@ class Timeline:
                 )
                 time.is_assumed = True
             else:
-                raise ChronicleValueError(
+                message: str = (
                     f"Not recognized as event or object: `{command}`, "
                     f"tokens: {tokens}. No time or context specified for event."
                 )
+                raise ChronicleValueError(message)
 
         if len(tokens) == 1:
-            raise ChronicleValueError(
+            message: str = (
                 f"Not recognized as event or object: `{command}`: not enough "
                 f"words."
             )
+            raise ChronicleValueError(message)
 
         if prefix in self.prefix_to_class:
             event: Event = self.prefix_to_class[prefix].parse_command(
@@ -145,10 +146,10 @@ class Timeline:
             )
             self.events.append(event)
         else:
-            raise ChronicleUnknownTypeError(
-                f"No event class for prefix `{prefix}` in command `{command}`.",
-                prefix,
+            message: str = (
+                f"No event class for prefix `{prefix}` in command `{command}`."
             )
+            raise ChronicleUnknownTypeError(message, prefix)
 
     def get_commands(self) -> list[str]:
         """Get commands for objects and events of the whole timeline."""
@@ -404,9 +405,7 @@ class Timeline:
                 print(event.to_string(self.objects))
 
     def graph(self, filter_: Callable | None = None) -> None:
-        filter_ = self.get_filter(
-            datetime.now(UTC) - timedelta(days=30), None
-        )
+        filter_ = self.get_filter(datetime.now(UTC) - timedelta(days=30), None)
 
         i = 0
         for day, events, summary in self.get_events_by_day(filter_):
@@ -459,14 +458,6 @@ class Timeline:
                         event.get_color(),
                     )
                 )
-            # for value in data:
-            #     a, b, width, color = value
-            #     plt.barh(
-            #         xranges=[(a, b)],
-            #         yrange=(i - width / 2, width),
-            #         facecolor=color,
-            #         edgecolor=None,
-            #     )
             plt.bar(
                 x=[x[0] for x in data],
                 height=[x[1] for x in data],
