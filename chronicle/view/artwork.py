@@ -254,16 +254,23 @@ class BookViewer:
             list
         )
         for event in self.timeline.get_events(filter_=filter_):
-            if isinstance(event, ReadEvent) and event.book:
-                if not self.languages or event.get_language() in self.languages:
-                    books[event.book].append(event)
+            if (
+                isinstance(event, ReadEvent)
+                and event.book
+                and (
+                    not self.languages or event.get_language() in self.languages
+                )
+            ):
+                books[event.book].append(event)
             if (
                 isinstance(event, ListenAudiobookEvent)
                 and event.audiobook
                 and event.audiobook.book
+                and (
+                    not self.languages or event.get_language() in self.languages
+                )
             ):
-                if not self.languages or event.get_language() in self.languages:
-                    books[event.audiobook.book].append(event)
+                books[event.audiobook.book].append(event)
         return books
 
     def print_books(
@@ -371,9 +378,12 @@ class VideoViewer:
         for event in sorted(
             self.timeline.events, key=lambda e: e.time.get_lower()
         ):
-            if isinstance(event, WatchEvent) and event.video:
-                if not self.languages or event.language in self.languages:
-                    videos[event.video].append(event)
+            if (
+                isinstance(event, WatchEvent)
+                and event.video
+                and (not self.languages or event.language in self.languages)
+            ):
+                videos[event.video].append(event)
 
         for video, events in sorted(
             videos.items(), key=lambda x: get_sort_key(x[0].title or "")

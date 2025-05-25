@@ -87,9 +87,8 @@ class MemriseHTMLParser(HTMLParser):
     def handle_endtag(self, tag: str) -> None:
         if tag == "td":
             self.in_td = False
-        if tag == "tr":
-            if any(self.current_data):
-                self.data.append(self.current_data)
+        if tag == "tr" and any(self.current_data):
+            self.data.append(self.current_data)
 
 
 class MemriseImportManager(ImportManager):

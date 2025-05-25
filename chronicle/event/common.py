@@ -458,9 +458,10 @@ class ProgramEvent(Event):
     @override
     def register_summary(self, summary: Summary) -> None:
         if self.project:
-            if "work" in self.project.tags:
-                if duration := self.get_duration():
-                    summary.register_work(duration)
+            if "work" in self.project.tags and (
+                duration := self.get_duration()
+            ):
+                summary.register_work(duration)
         else:
             logging.warning(
                 "Unknown project `%s` in `%s`.", self.project, self.source

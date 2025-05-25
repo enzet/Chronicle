@@ -133,8 +133,8 @@ class OldImporter(Importer):
                         time=time,
                         podcast=podcast,
                         interval=interval,
-                        episode=data["episode"] if "episode" in data else None,
-                        season=data["season"] if "season" in data else None,
+                        episode=data.get("episode", None),
+                        season=data.get("season", None),
                     )
 
                 elif data["kind"] == "audiobook111":
@@ -284,10 +284,7 @@ class OldMovieImporter(Importer):
                 time = Time.from_string(data["date"], Context())
             time.is_assumed = True
 
-            if "title" not in data:
-                title = "---"
-            else:
-                title = data["title"]
+            title = data.get("title", "---")
 
             movie: Video = Video(id=title, title=title)
 
@@ -356,7 +353,7 @@ class OldPodcastImporter(Importer):
                 time=time,
                 podcast=podcast,
                 duration=duration,
-                episode=data["episode"] if "episode" in data else None,
-                season=data["season"] if "season" in data else None,
+                episode=data.get("episode", None),
+                season=data.get("season", None),
             )
             timeline.events.append(event)

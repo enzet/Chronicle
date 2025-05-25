@@ -304,9 +304,8 @@ class ReadEvent(Event):
                 and self.volume.of
                 and self.volume.to_ == self.volume.of
             )
-        ):
-            if self.book:
-                summary.register_finished_book(self.book)
+        ) and self.book:
+            summary.register_finished_book(self.book)
 
         # Register reading pages.
         if pages is not None:
