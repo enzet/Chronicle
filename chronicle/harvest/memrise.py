@@ -135,17 +135,17 @@ class MemriseImporter(Importer):
         actions: dict[str, int] = defaultdict(int)
 
         for (
-            course_name,
+            raw_course_name,
             _,  # Level title.
             start_time,
             completion_time,
             tests,
             _,  # Score.
         ) in parser.data:
-            if not course_name or not start_time or not completion_time:
+            if not raw_course_name or not start_time or not completion_time:
                 continue
             course_name = (
-                course_name.replace("-", " ")
+                raw_course_name.replace("-", " ")
                 .replace("_", " ")
                 .replace("  ", " ")
                 .replace("  ", " ")

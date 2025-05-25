@@ -18,8 +18,8 @@ class VcfImporter(Importer):
     @override
     def import_data(self, timeline: Timeline) -> None:
         with self.path.open(encoding="utf-8") as input_file:
-            for line in input_file.readlines():
-                line = line[:-1]
+            for raw_line in input_file.readlines():
+                line: str = raw_line[:-1]
                 if line[0] == " ":
                     continue
                 if line == "BEGIN:VCARD":

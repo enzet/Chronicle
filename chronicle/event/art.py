@@ -253,11 +253,10 @@ class ReadEvent(Event):
         language: Language
         if self.language:
             language = self.language
+        elif self.book and self.book.language:
+            language = self.book.language
         else:
-            if self.book and self.book.language:
-                language = self.book.language
-            else:
-                return
+            return
 
         # Compute duration.
         duration: float | None = self.get_duration()
@@ -493,13 +492,16 @@ class ListenAudiobookEvent(Event):
     @override
     def register_summary(self, summary: Summary) -> None:
         """Register this audiobook event in the summary statistics."""
+
+        message: str
+
         if not self.interval and not self.volume:
-            message: str = f"Event {self} has neither interval, nor volume."
+            message = f"Event {self} has neither interval, nor volume."
             raise ChronicleSummaryError(message, self)
 
         language: Language | None = self.get_language()
         if not language:
-            message: str = f"Event {self} has no language."
+            message = f"Event {self} has no language."
             raise ChronicleValueError(message, self)
 
         duration: float | None = None
@@ -508,13 +510,13 @@ class ListenAudiobookEvent(Event):
             duration = self.interval.get_duration()
         elif self.volume:
             if not self.audiobook:
-                message: str = f"Cannot get audiobook for event {self}."
+                message = f"Cannot get audiobook for event {self}."
                 raise ChronicleValueError(message, self)
             if not isinstance(self.audiobook, Audiobook):
-                message: str = f"{self.audiobook} is not an audiobook."
+                message = f"{self.audiobook} is not an audiobook."
                 raise ChronicleValueError(message, self)
             if not self.audiobook.duration:
-                message: str = f"{self.audiobook} has no duration."
+                message = f"{self.audiobook} has no duration."
                 raise ChronicleValueError(message, self)
             duration = (
                 self.volume.get_ratio()

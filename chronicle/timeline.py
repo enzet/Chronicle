@@ -325,13 +325,14 @@ class Timeline:
 
         table: str = "<div class='object-container'>"
 
-        for id_, object_ in self.objects.objects.items():
+        for raw_id, object_ in self.objects.objects.items():
             if not isinstance(object_, Thing):
                 continue
             if object_.expired:
                 continue
+            id_: str = raw_id
             if id_.startswith("@"):
-                id_ = id_[1:]
+                id_ = raw_id[1:]
             if "__" in id_:
                 id_ = id_.split("__")[0]
             # text = f"<code style='font-size: 85%; color: #AAAAAA;'>
@@ -406,8 +407,8 @@ class Timeline:
             print()
             print(day)
             print()
-            events = sorted(events, key=lambda x: x.time.get_lower())
-            for event in events:
+            sorted_events = sorted(events, key=lambda x: x.time.get_lower())
+            for event in sorted_events:
                 print(event.to_string(self.objects))
 
     def graph(self, filter_: Callable | None = None) -> None:

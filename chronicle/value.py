@@ -478,9 +478,7 @@ class Volume(Value):
             and self.from_
             and (self.from_ < 0.0 or self.from_ > MAX_PERCENT)
         ):
-            message = (
-                f"From should be in range 0–100%, not `{self.from_}`."
-            )
+            message = f"From should be in range 0–100%, not `{self.from_}`."
             raise ChronicleValueError(message, self)
         if (
             self.measure == "percent"

@@ -181,9 +181,11 @@ class DuomeImporter(Importer):
          Norwegian W 21 L 5 XP 390
         ```
         """
+        message: str
+
         service: Object = timeline.objects.get_object("@duolingo")
         if not isinstance(service, Service):
-            message: str = "Duolingo service not found."
+            message = "Duolingo service not found."
             raise ValueError(message)
 
         data: dict[str, list[tuple[datetime, int]]] = defaultdict(list)
@@ -191,15 +193,17 @@ class DuomeImporter(Importer):
         date: datetime | None = None
 
         with self.file_path.open(encoding="utf-8") as input_file:
-            for line in input_file.readlines():
-                line = line[:-1]
+            for raw_line in input_file.readlines():
+                line: str = raw_line[:-1]
                 if not line:
                     continue
                 if not line.startswith(" ") or line.startswith("\t"):
                     date = datetime.strptime(line, "%Y-%m-%d")
                 else:
                     parts: list[str] = [
-                        part for part in line.split(" ") if part.strip()
+                        part
+                        for part in line.split(" ")
+                        if part.strip()
                     ]
                     course_name_end: int = parts.index("W")
                     course_name: str = " ".join(parts[:course_name_end])
@@ -230,7 +234,7 @@ class DuomeImporter(Importer):
                             subject = course[2]
                             break
                     if not subject:
-                        message: str = f"Unknown course `{course_name}`."
+                        message = f"Unknown course `{course_name}`."
                         raise ValueError(message)
                     event: LearnEvent = LearnEvent(
                         time,
