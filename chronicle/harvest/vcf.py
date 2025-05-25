@@ -32,5 +32,5 @@ class VcfImporter(Importer):
                         data["name"] = value
 
     def add_person(self, timeline: Timeline) -> None:
-        # FIXME: Implement.
+        # TODO(enzet): Implement.
         pass

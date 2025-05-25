@@ -85,6 +85,6 @@ class ArcImporter(Importer):
                             timeline_item["activityType"],
                         )
 
-                    # FIXME: implement.
+                    # TODO(enzet): implement.
 
                     # There is also "activityType" in `timeline_item`.

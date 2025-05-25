@@ -100,8 +100,8 @@ class Arguments:
         if not self.arguments:
             return {}
 
-        # FIXME: rewrite, there should be no more than one main argument without
-        # patterns. We should check it here.
+        # TODO(enzet): rewrite, there should be no more than one main argument
+        # without patterns. We should check it here.
         main: Argument | None
         if self.main_argument:
             main = self.main_argument

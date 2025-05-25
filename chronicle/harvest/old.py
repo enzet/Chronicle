@@ -97,7 +97,7 @@ class OldImporter(Importer):
 
             if not time:
                 continue
-                # FIXME: Add warning.
+                # TODO(enzet): Add warning.
 
             event: Event | None = None
 

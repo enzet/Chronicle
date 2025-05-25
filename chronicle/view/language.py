@@ -264,7 +264,7 @@ class LanguageLearningViewer:
             )
         rows = sorted(rows, key=lambda x: -float(x[-1]))
 
-        # TODO: refactor or remove. It's just makes output more colorful.
+        # TODO(enzet): refactor or remove. It's just makes output more colorful.
         if colors == "light":
             for row in rows:
                 for index, value in enumerate(row[1:]):

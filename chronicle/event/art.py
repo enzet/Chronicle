@@ -318,7 +318,8 @@ class ReadEvent(Event):
             )
 
         # Register reading duration.
-        # FIXME: Check precision of the duration instead of the arbitrary limit.
+        # TODO(enzet): Check precision of the duration instead of the arbitrary
+        # limit.
         if duration is not None and duration < 16 * 3600.0:
             summary.register_read(duration, language)
         elif pages is not None:

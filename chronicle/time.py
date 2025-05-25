@@ -392,7 +392,7 @@ class Time:
         """Get duration of the time."""
 
         if not self.start or not self.end:
-            return 0  # FIXME
+            return 0  # TODO(enzet): fix.
 
         if self.start == self.end:
             return 0
