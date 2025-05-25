@@ -48,11 +48,11 @@ def type_to_class(type_: str, ending: str) -> type[Event] | None:
         type_: type = globals()[class_name]
         if issubclass(type_, Event):
             return type_
-        else:
-            logging.error(
-                "Class `%s` is not a subclass of `Event`.", class_name
-            )
-            return None
+
+        logging.error(
+            "Class `%s` is not a subclass of `Event`.", class_name
+        )
+        return None
 
     logging.error("No such class: `%s`.", class_name)
     return None

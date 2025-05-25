@@ -253,7 +253,7 @@ class ReadEvent(Event):
             if self.book and self.book.language:
                 language = self.book.language
             else:
-                return None
+                return
 
         # Compute duration.
         duration: float | None = self.get_duration()
