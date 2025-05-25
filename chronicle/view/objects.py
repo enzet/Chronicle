@@ -4,8 +4,11 @@ from chronicle.timeline import Timeline
 
 
 class ObjectsHtmlViewer:
+    """Viewer for objects in HTML format."""
+
     def __init__(self, timeline: Timeline) -> None:
         self.timeline = timeline
+        """Timeline to view."""
 
     def write_html(self, output_path: Path) -> None:
         with output_path.open("w+") as output_file:

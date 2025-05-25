@@ -201,9 +201,7 @@ class DuomeImporter(Importer):
                     date = datetime.strptime(line, "%Y-%m-%d")
                 else:
                     parts: list[str] = [
-                        part
-                        for part in line.split(" ")
-                        if part.strip()
+                        part for part in line.split(" ") if part.strip()
                     ]
                     course_name_end: int = parts.index("W")
                     course_name: str = " ".join(parts[:course_name_end])

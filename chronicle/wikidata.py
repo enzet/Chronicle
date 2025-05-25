@@ -142,7 +142,7 @@ def get_movie(title: str) -> str:
 def request_sparql(query: str) -> bytes:
     """
     Request Wikidata with SPARQL query.  See
-    https://www.wikidata.org/wiki/Wikidata:SPARQL_query_service
+    https://www.wikidata.org/wiki/Wikidata:SPARQL_query_service.
 
     :param query: SPARQL query
     """

@@ -24,7 +24,7 @@ __email__ = "me@enzet.ru"
 
 
 def default_pretty_printer(value: Any) -> str:
-    """Default pretty printer for arguments."""
+    """Return the value based on its type."""
 
     if isinstance(value, str):
         return value
@@ -38,7 +38,7 @@ def default_pretty_printer(value: Any) -> str:
 
 
 def default_loader(value: Any, _: Objects) -> Any:
-    """Default loader for arguments."""
+    """Return the value as is."""
     return value
 
 

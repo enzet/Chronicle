@@ -12,6 +12,8 @@ __email__ = "me@enzet.ru"
 
 @dataclass
 class Summary:
+    """Summary of the timeline events."""
+
     listen: defaultdict[Language, float] = field(
         default_factory=lambda: defaultdict(float)
     )

@@ -87,7 +87,7 @@ class Timeline:
                 self.prefix_to_class[prefix] = class_
 
     def __len__(self) -> int:
-        """Number of events."""
+        """Get number of events."""
         return len(self.events)
 
     def parse_event_command(
