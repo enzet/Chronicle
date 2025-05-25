@@ -19,7 +19,8 @@ def smooth(data: list[float | None], size: int) -> list[float]:
     """Smooth data."""
 
     replaced: list[float] = [0 if x is None else x for x in data]
-    new_data: list[float] = []
-    for index in range(len(data)):
-        new_data.append(sum(replaced[index - size + 1 : index + 1]) / size)
+    new_data: list[float] = [
+        sum(replaced[index - size + 1 : index + 1]) / size
+        for index in range(len(data))
+    ]
     return new_data

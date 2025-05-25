@@ -341,7 +341,7 @@ class Arguments:
                 logging.error("No {argument.key} of {event}.")
         return text
 
-    def replace(self, prefixes: list[str], command: str) -> "Arguments":
+    def replace(self, prefixes: list[str], command: str) -> Arguments:
         new_arguments = copy.deepcopy(self)
         new_arguments.prefixes = prefixes
         new_arguments.command = command
