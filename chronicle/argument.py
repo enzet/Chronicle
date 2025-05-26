@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from chronicle.event.core import Event
     from chronicle.objects.core import Objects
 
 import copy
@@ -328,7 +329,7 @@ class Arguments:
                 )
         return text
 
-    def to_command(self, event) -> str:
+    def to_command(self, event: Event) -> str:
         """Get command representation of event."""
 
         text: str = event.time.to_pseudo_edtf_time() + " " + self.prefixes[0]

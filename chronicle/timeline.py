@@ -477,7 +477,7 @@ class Timeline:
 class CommandParser:
     """Parser of special Chronicle commands."""
 
-    def __init__(self, timeline: Timeline | None = None):
+    def __init__(self, timeline: Timeline | None = None) -> None:
         self.timeline: Timeline = (
             timeline if timeline is not None else Timeline()
         )

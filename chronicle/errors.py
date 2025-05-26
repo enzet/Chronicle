@@ -1,5 +1,13 @@
 """Chronicle-specific errors."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from chronicle.event.core import Event
+    from chronicle.value import Value
+
 
 class ChronicleError(Exception):
     """Chronicle error that should be handled."""
@@ -11,7 +19,7 @@ class ChronicleError(Exception):
 class ChronicleSummaryError(ChronicleError):
     """There is no enough data in the timeline to create a summary."""
 
-    def __init__(self, message: str, event=None) -> None:
+    def __init__(self, message: str, event: Event | None = None) -> None:
         super().__init__(message)
         self.event = event
 
@@ -38,7 +46,7 @@ class ChronicleModelError(ChronicleError):
 class ChronicleValueError(ChronicleError):
     """Exception raised for value errors."""
 
-    def __init__(self, message: str, element=None) -> None:
+    def __init__(self, message: str, element: Value | None = None) -> None:
         super().__init__(message)
         self.element = element
 

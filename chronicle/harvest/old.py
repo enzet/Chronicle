@@ -70,7 +70,7 @@ class OldImportManager(ImportManager):
 class OldImporter(Importer):
     """Importer from old Chronicle format."""
 
-    def __init__(self, file_path: Path):
+    def __init__(self, file_path: Path) -> None:
         self.file_path: Path = file_path
 
     def import_data(self, timeline: Timeline) -> None:
@@ -265,7 +265,7 @@ class OldImporter(Importer):
 class OldMovieImporter(Importer):
     """Importer for movies from old Chronicle format."""
 
-    def __init__(self, file_path: Path):
+    def __init__(self, file_path: Path) -> None:
         self.file_path: Path = file_path
 
     def import_data(self, timeline: Timeline) -> None:
@@ -329,7 +329,7 @@ class OldMovieImporter(Importer):
 class OldPodcastImporter(Importer):
     """Importer for podcasts from old Chronicle format."""
 
-    def __init__(self, file_path: Path):
+    def __init__(self, file_path: Path) -> None:
         self.file_path: Path = file_path
 
     def import_data(self, timeline: Timeline) -> None:
