@@ -2,23 +2,22 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from chronicle.event.core import Event
-    from chronicle.objects.core import Objects
-
 import copy
 import logging
-import re
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Self
+from typing import TYPE_CHECKING, Any, Self
 
 from chronicle.errors import (
     ChronicleAmbiguousArgumentError,
     ChronicleArgumentError,
 )
+
+if TYPE_CHECKING:
+    import re
+    from collections.abc import Callable
+
+    from chronicle.event.core import Event
+    from chronicle.objects.core import Objects
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"

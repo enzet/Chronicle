@@ -1,8 +1,11 @@
 from dataclasses import dataclass
-from datetime import datetime
+from typing import TYPE_CHECKING
 
 from chronicle.timeline import Timeline
 from chronicle.util import smooth
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 
 @dataclass
