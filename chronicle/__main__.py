@@ -4,19 +4,22 @@ import argparse
 import logging
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from rich.console import Console
 
 from chronicle.errors import ChronicleUnknownTypeError
 from chronicle.harvest.apple_health import AppleHealthImportManager
 from chronicle.harvest.arc import ArcImportManager
-from chronicle.harvest.core import ImportManager
 from chronicle.harvest.duolingo import DuolingoImportManager
 from chronicle.harvest.memrise import MemriseImportManager
 from chronicle.harvest.old import OldImportManager
 from chronicle.harvest.wikimedia import WikimediaImportManager
 from chronicle.timeline import CommandParser, Timeline
 from chronicle.view.objects import ObjectsHtmlViewer
+
+if TYPE_CHECKING:
+    from chronicle.harvest.core import ImportManager
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"

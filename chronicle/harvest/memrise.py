@@ -7,15 +7,17 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from html.parser import HTMLParser
 from pathlib import Path
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from chronicle.event.common import LearnEvent
-from chronicle.event.core import Event
 from chronicle.harvest.core import Importer, ImportManager
 from chronicle.objects.core import Object, Service
 from chronicle.time import Moment, Time, Timedelta
 from chronicle.timeline import Timeline
 from chronicle.value import Subject
+
+if TYPE_CHECKING:
+    from chronicle.event.core import Event
 
 LANGUAGE_NAMES: dict[str, tuple[str, ...]] = {
     "/writing/armn": ("армянский алфавит",),

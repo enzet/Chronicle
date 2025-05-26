@@ -5,7 +5,7 @@ import json
 import re
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from chronicle.errors import ChronicleValueError
 from chronicle.event.art import (
@@ -15,12 +15,14 @@ from chronicle.event.art import (
     ReadEvent,
     WatchEvent,
 )
-from chronicle.event.core import Event
 from chronicle.harvest.core import Importer, ImportManager
 from chronicle.objects.core import Audiobook, Book, Object, Podcast, Video
 from chronicle.time import Context, Moment, Time, Timedelta
 from chronicle.timeline import Timeline
 from chronicle.value import Interval, Language, Volume
+
+if TYPE_CHECKING:
+    from chronicle.event.core import Event
 
 OLD_TIME_FORMAT: str = "%d.%m.%Y %H:%M"
 

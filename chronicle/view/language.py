@@ -5,6 +5,7 @@ from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 
 from matplotlib import pyplot as plt
 from rich import box
@@ -13,9 +14,11 @@ from rich.table import Table
 
 from chronicle.event.core import Event
 from chronicle.objects.core import Object, Service
-from chronicle.summary.core import Summary
 from chronicle.timeline import Timeline
 from chronicle.value import Language
+
+if TYPE_CHECKING:
+    from chronicle.summary.core import Summary
 
 DARK_COLOR_SCHEME = {"background": "#000000", "accent": "#EEEEEE"}
 LIGHT_COLOR_SCHEME = {"background": "#FFFFFF", "accent": "#000000"}

@@ -1,6 +1,7 @@
 """Tests for command."""
 
 from datetime import UTC, datetime, timedelta
+from typing import TYPE_CHECKING
 
 from chronicle.event.art import (
     ListenAudiobookEvent,
@@ -10,10 +11,12 @@ from chronicle.event.art import (
 from chronicle.event.common import LearnEvent, ProgramEvent, SleepEvent
 from chronicle.event.core import Event, Objects
 from chronicle.objects.core import Audiobook, Book, Glasses, Object, Project
-from chronicle.summary.core import Summary
 from chronicle.time import Context, Timedelta
 from chronicle.timeline import CommandParser, Timeline
 from chronicle.value import Interval, Language, ProgrammingLanguage
+
+if TYPE_CHECKING:
+    from chronicle.summary.core import Summary
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
