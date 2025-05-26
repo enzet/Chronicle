@@ -140,7 +140,7 @@ class Moment:
 
         if not isinstance(other, Moment):
             message: str = f"Cannot compare `{self}` with `{other}`."
-            raise ValueError(message)
+            raise TypeError(message)
 
         if not (lower := self.get_lower()):
             return False
@@ -256,7 +256,7 @@ class Timedelta:
 
         if not isinstance(other, Timedelta):
             message: str = f"Cannot subtract `{other}` from `{self}`."
-            raise ValueError(message)
+            raise TypeError(message)
 
         return Timedelta(self.delta - other.delta)
 

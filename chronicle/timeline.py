@@ -20,7 +20,7 @@ from chronicle.summary.core import Summary
 from chronicle.time import (
     MAX_MONTHS,
     Context,
-    MalformedTime,
+    MalformedTimeError,
     Time,
     humanize_delta,
 )
@@ -37,17 +37,17 @@ DATE_PATTERN: Pattern = compile(
 )
 
 
-def type_to_class(type_: str, ending: str) -> type[Event] | None:
+def type_to_class(type_id: str, ending: str) -> type[Event] | None:
     """Convert string event type into event class.
 
     E.g. `push_ups` into `PushUpsEvent`, or `_` into `StatusEvent`.
     """
     class_name: str
-    if type_ == "_":
+    if type_id == "_":
         class_name = "Status" + ending
     else:
         class_name = (
-            "".join((x[0].upper() + x[1:]) for x in type_.split("_")) + ending
+            "".join((x[0].upper() + x[1:]) for x in type_id.split("_")) + ending
         )
 
     if class_name in globals():
@@ -173,8 +173,8 @@ class Timeline:
                     commands += ["", date, ""]
                 commands.append(event.to_command())
                 last_date = date
-            except MalformedTime:
-                logging.error("Bad time for %s.", event)
+            except MalformedTimeError:
+                logging.exception("Bad time for %s.", event)
 
         return commands
 

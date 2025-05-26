@@ -69,9 +69,9 @@ class Event:
             raise ChronicleObjectNotFoundError(message) from error
         try:
             return cls(time=time, source=(command, parsed), **parsed)
-        except TypeError as e:
-            logging.error("Cannot construct class %s from %s.", cls, parsed)
-            raise e
+        except TypeError:
+            logging.exception("Cannot construct class %s from %s.", cls, parsed)
+            raise
 
     def register_summary(self, summary: Summary) -> None:
         """Register event effect on summary."""

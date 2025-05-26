@@ -9,6 +9,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 from typing import TYPE_CHECKING, override
 
+from chronicle.errors import ChronicleObjectTypeError
 from chronicle.event.common import LearnEvent
 from chronicle.harvest.core import Importer, ImportManager
 from chronicle.objects.core import Object, Service
@@ -123,10 +124,12 @@ class MemriseImporter(Importer):
 
     @override
     def import_data(self, timeline: Timeline) -> None:
-        service: Object = timeline.objects.get_object("@memrise")
+        memrise_id: str = "memrise"
+        service: Object = timeline.objects.get_object(
+            memrise_id, Service(id=memrise_id, name="Memrise")
+        )
         if not isinstance(service, Service):
-            message: str = "Memrise service not found."
-            raise ValueError(message)
+            raise ChronicleObjectTypeError(memrise_id, type(service), Service)
 
         with self.path.open(encoding="utf-8") as input_file:
             data = input_file.read()

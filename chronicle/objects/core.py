@@ -678,7 +678,9 @@ class Objects:
                 classes += Objects.get_classes(subclass)
         return classes
 
-    def get_object(self, object_id: str) -> Object:
+    def get_object(
+        self, object_id: str, default: Object | None = None
+    ) -> Object:
         """Retrieve object by its identifier.
 
         :param object_id: identifier of the object with or without `@` prefix
@@ -687,6 +689,10 @@ class Objects:
             object_id = object_id[1:]
         if object_id in self.objects:
             return self.objects[object_id]
+
+        if default:
+            self.objects[object_id] = default
+            return default
 
         raise ChronicleObjectNotFoundError(object_id)
 

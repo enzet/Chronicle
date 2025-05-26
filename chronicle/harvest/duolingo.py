@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, override
 
+from chronicle.errors import ChronicleObjectTypeError
 from chronicle.event.common import LearnEvent
 from chronicle.harvest.core import Importer, ImportManager
 from chronicle.objects.core import Object, Service
@@ -104,10 +105,12 @@ class DuolingoImporter(Importer):
         date, other columns are XP values. First row is a header, containing
         course identifiers.
         """
-        service: Object = timeline.objects.get_object("@duolingo")
+        duolingo_id: str = "duolingo"
+        service: Object = timeline.objects.get_object(
+            duolingo_id, Service(id=duolingo_id, name="Duolingo")
+        )
         if not isinstance(service, Service):
-            message: str = "Duolingo service not found."
-            raise ValueError(message)
+            raise ChronicleObjectTypeError(duolingo_id, type(service), Service)
 
         with self.file_path.open(encoding="utf-8") as input_file:
             reader: Iterator[list[str]] = csv.reader(input_file)
@@ -183,12 +186,12 @@ class DuomeImporter(Importer):
          Norwegian W 21 L 5 XP 390
         ```
         """
-        message: str
-
-        service: Object = timeline.objects.get_object("@duolingo")
+        duolingo_id: str = "duolingo"
+        service: Object = timeline.objects.get_object(
+            duolingo_id, Service(id=duolingo_id, name="Duolingo")
+        )
         if not isinstance(service, Service):
-            message = "Duolingo service not found."
-            raise ValueError(message)
+            raise ChronicleObjectTypeError(duolingo_id, type(service), Service)
 
         data: dict[str, list[tuple[datetime, int]]] = defaultdict(list)
 

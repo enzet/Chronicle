@@ -323,7 +323,7 @@ class Arguments:
                     else:
                         text += string
             except AttributeError:
-                logging.error(
+                logging.exception(
                     "Cannot print command for %s of %s.", argument.key, value
                 )
         return text

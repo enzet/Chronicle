@@ -39,6 +39,21 @@ class ChronicleObjectNotFoundError(ChronicleError):
         self.object_id = object_id
 
 
+class ChronicleObjectTypeError(ChronicleError):
+    """Exception raised for object with wrong type."""
+
+    def __init__(
+        self, object_id: str, actual_type: type, expected_type: type
+    ) -> None:
+        super().__init__(
+            f"Object with id `{object_id}` is of type `{actual_type.__name__}`,"
+            f" expected `{expected_type.__name__}`"
+        )
+        self.object_id = object_id
+        self.actual_type = actual_type
+        self.expected_type = expected_type
+
+
 class ChronicleModelError(ChronicleError):
     """Internal error in Chronicle model."""
 

@@ -185,9 +185,7 @@ class LanguageLearningViewer:
         if stack_plot:
             keys = sorted(language_data, key=lambda x: -language_data[x][-1])
             plt.stackplot(
-                xs,
-                *[language_data[key] for key in keys],
-                labels=list(keys),
+                xs, *[language_data[key] for key in keys], labels=list(keys)
             )
             plt.legend(loc="upper left")
             plt.show()
