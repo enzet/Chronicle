@@ -36,6 +36,9 @@ class Event:
     source: Any = None
     """Source was used to create this event."""
 
+    is_task: bool = False
+    """Whether the event is a task (planned event)."""
+
     tags: set[str] = field(default_factory=set)
     """Arbitrary user tag set for an event."""
 

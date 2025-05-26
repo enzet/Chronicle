@@ -5,7 +5,7 @@ from collections.abc import Callable
 from chronicle.event.core import Event
 
 
-def empty_filter(event: Event) -> bool:
+def empty_filter(_: Event) -> bool:
     """Empty filter."""
     return True
 

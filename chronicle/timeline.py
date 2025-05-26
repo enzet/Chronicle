@@ -111,6 +111,7 @@ class Timeline:
         time: Time | None
         prefix: str
         parameters: list[str]
+        message: str
 
         try:
             time = Time.from_string(tokens[0], context)
@@ -133,14 +134,14 @@ class Timeline:
                 )
                 time.is_assumed = True
             else:
-                message: str = (
+                message = (
                     f"Not recognized as event or object: `{command}`, "
                     f"tokens: {tokens}. No time or context specified for event."
                 )
                 raise ChronicleValueError(message)
 
         if len(tokens) == 1:
-            message: str = (
+            message = (
                 f"Not recognized as event or object: `{command}`: not enough "
                 f"words."
             )
@@ -150,9 +151,10 @@ class Timeline:
             event: Event = self.prefix_to_class[prefix].parse_command(
                 time, command, parameters, self.objects
             )
+            event.is_task = is_task
             self.events.append(event)
         else:
-            message: str = (
+            message = (
                 f"No event class for prefix `{prefix}` in command `{command}`."
             )
             raise ChronicleUnknownTypeError(message, prefix)

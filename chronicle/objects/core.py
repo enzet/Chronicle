@@ -79,7 +79,7 @@ class Object:
         return camel_to_snake(self.__class__.__name__)
 
     @classmethod
-    def from_value(cls, value: str) -> Self:
+    def from_value(cls, _value: str) -> Self:
         """Create an object from a string value."""
         return cls(None)
 
