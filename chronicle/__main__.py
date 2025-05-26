@@ -164,7 +164,7 @@ def main() -> None:
                         len(unknown_types),
                         file_name,
                         ", ".join(
-                            set(f"`{error.type_}`" for error in unknown_types)
+                            {f"`{error.type_}`" for error in unknown_types}
                         ),
                     )
             elif file_name.endswith(".vcf"):

@@ -74,7 +74,7 @@ class WikimediaImporter(Importer):
         """Load cached contributions from file."""
         cache_file: Path = self._get_cache_file()
         if cache_file.exists():
-            with open(cache_file, encoding="utf-8") as input_file:
+            with cache_file.open(encoding="utf-8") as input_file:
                 data: list[dict] = json.load(input_file)
                 return data
         return []
@@ -82,7 +82,7 @@ class WikimediaImporter(Importer):
     def _save_cache(self, data: list[dict]) -> None:
         """Save contributions to cache file."""
         self.cache_path.mkdir(parents=True, exist_ok=True)
-        with open(self._get_cache_file(), "w", encoding="utf-8") as output_file:
+        with self._get_cache_file().open("w", encoding="utf-8") as output_file:
             json.dump(data, output_file, ensure_ascii=False, indent=2)
 
     def _create_event(self, contrib: dict) -> WikiContributionEvent:

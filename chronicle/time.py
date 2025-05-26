@@ -233,7 +233,7 @@ class Moment:
         )
 
 
-class MalformedTime(Exception):
+class MalformedTimeError(Exception):
     """Exception raised when time is malformed."""
 
 
@@ -414,7 +414,7 @@ class Time:
         if self.end and (lower := self.end.get_lower()):
             return lower
 
-        raise MalformedTime
+        raise MalformedTimeError
 
     def get_upper(self) -> datetime:
         """Get upper bound of the time."""
@@ -424,7 +424,7 @@ class Time:
         if self.start and (upper := self.start.get_upper()):
             return upper
 
-        raise MalformedTime
+        raise MalformedTimeError
 
     def get_moment(self) -> datetime:
         """Get moment of the time: one of the bounds, or middle point."""
@@ -441,7 +441,7 @@ class Time:
         if self.end and (moment := self.end.get_lower()):
             return moment
 
-        raise MalformedTime
+        raise MalformedTimeError
 
     def get_random(self) -> datetime:
         """Get random moment from the time."""
@@ -458,7 +458,7 @@ class Time:
         if self.end and (moment := self.end.get_random()):
             return moment
 
-        raise MalformedTime
+        raise MalformedTimeError
 
 
 def parse_delta(string_delta: str) -> timedelta:
@@ -470,7 +470,7 @@ def parse_delta(string_delta: str) -> timedelta:
         hour = 0
         minute, second = (int(x) for x in string_delta.split(":"))
     else:
-        raise MalformedTime(string_delta)
+        raise MalformedTimeError(string_delta)
 
     return timedelta(seconds=hour * 3600 + minute * 60 + second)
 

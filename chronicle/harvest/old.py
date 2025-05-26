@@ -115,7 +115,8 @@ class OldImporter(Importer):
                 elif data["kind"] == "podcast":
                     title = data["title"]
                     language = Language(data["language"])
-                    assert "from" in data and "to" in data
+                    assert "from" in data
+                    assert "to" in data
                     interval = Interval.from_json(
                         data["from"] + "/" + data["to"]
                     )

@@ -97,7 +97,7 @@ class Event:
         """Get color of an event."""
 
         if hasattr(self, "color"):
-            color: str = getattr(self, "color")
+            color: str = self.color
             return color
 
         # Default event color is gray, to be seen on the white and on the
@@ -111,12 +111,12 @@ class Event:
         `self.interval.get_duration()`, but it should be done explicitly.
         """
         if hasattr(self, "duration"):
-            duration: Timedelta = getattr(self, "duration")
+            duration: Timedelta = self.duration
             if duration:
                 return duration.total_seconds()
 
         if hasattr(self, "interval"):
-            interval: Interval = getattr(self, "interval")
+            interval: Interval = self.interval
             if interval:
                 return interval.get_duration()
 

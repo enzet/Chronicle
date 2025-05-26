@@ -187,7 +187,7 @@ class LanguageLearningViewer:
             plt.stackplot(
                 xs,
                 *[language_data[key] for key in keys],
-                labels=[key for key in keys],
+                labels=list(keys),
             )
             plt.legend(loc="upper left")
             plt.show()

@@ -129,7 +129,7 @@ class Timeline:
                 end: datetime = context.current_date + timedelta(days=1)
                 time = Time.from_string(
                     f"{start.year}-{start.month}-{start.day}T00:00/"
-                    + f"{end.year}-{end.month}-{end.day}T00:00",
+                    f"{end.year}-{end.month}-{end.day}T00:00",
                     context,
                 )
                 time.is_assumed = True
@@ -405,7 +405,7 @@ class Timeline:
         return table
 
     def print(self) -> None:
-        for day, events, summary in self.get_events_by_day():
+        for day, events, _summary in self.get_events_by_day():
             print()
             print(day)
             print()
@@ -417,7 +417,7 @@ class Timeline:
         filter_ = self.get_filter(datetime.now(UTC) - timedelta(days=30), None)
 
         i = 0
-        for day, events, summary in self.get_events_by_day(filter_):
+        for day, events, _summary in self.get_events_by_day(filter_):
             i += 1
             data: list[tuple[float, float, float, str]] = []
             for event in events:
