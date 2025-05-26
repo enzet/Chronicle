@@ -74,16 +74,6 @@ class Argument:
     """HTML printer."""
 
 
-def one_pattern_argument(name: str, class_: type, index: int = 0) -> Argument:
-    """Create an argument with one pattern."""
-
-    return Argument(
-        name,
-        patterns=class_.patterns,
-        extractors=[lambda x: class_.from_json(x(index))],
-    )
-
-
 class Arguments:
     """Arguments parser."""
 
@@ -118,22 +108,29 @@ class Arguments:
 
         def load_current() -> None:
             """Load current argument."""
+            if not current_loader:
+                message = f"No loader for argument `{current_key}`."
+                raise ChronicleArgumentError(message)
+            if not current_key:
+                message = "No key for argument."
+                raise ChronicleArgumentError(message)
             result[current_key] = current_loader(current_value, objects)
 
         for token in tokens:
             detected: Argument | None = None
+            message: str
 
             for argument in self.arguments:
                 if token == argument.prefix:
                     if detected:
-                        message: str = (
+                        message = (
                             "Token `{token}` is ambiguous, possible arguments: "
                             f"`{detected.key}`, `{argument.key}`."
                         )
                         raise ChronicleAmbiguousArgumentError(message)
                     if current_value:
                         if not current_key:
-                            message: str = (
+                            message = (
                                 f"No argument key for value `{current_value}` "
                                 f"for tokens `{tokens}`."
                             )
@@ -152,7 +149,7 @@ class Arguments:
                         continue
                     if current_value:
                         if not current_key:
-                            message: str = (
+                            message = (
                                 f"No argument key for value `{current_value}` "
                                 f"for tokens `{tokens}`."
                             )
@@ -161,7 +158,7 @@ class Arguments:
                         current_key = None
                         current_value = ""
                     if detected:
-                        message: str = (
+                        message = (
                             f"Token `{token}` is ambiguous, possible "
                             f"argument patterns: `{detected.key}`, "
                             f"`{argument.key}`."
@@ -310,12 +307,13 @@ class Arguments:
                 continue
             try:
                 v = getattr(value, argument.key)
+                string: str
                 if argument.command_printer:
-                    string: str = argument.command_printer(v)
+                    string = argument.command_printer(v)
                 elif getattr(v, "to_command", None):
-                    string: str = v.to_command()
+                    string = v.to_command()
                 else:
-                    string: str = str(v)
+                    string = str(v)
 
                 if string:
                     if text:
@@ -336,14 +334,15 @@ class Arguments:
             if hasattr(event, argument.key):
                 if getattr(event, argument.key):
                     v = getattr(event, argument.key)
+                    string: str
                     if argument.command_printer:
-                        string: str = argument.command_printer(v)
+                        string = argument.command_printer(v)
                     elif getattr(v, "to_command", None):
-                        string: str = v.to_command()
+                        string = v.to_command()
                     elif isinstance(v, float):
-                        string: str = f"{v:.2f}"
+                        string = f"{v:.2f}"
                     else:
-                        string: str = str(v)
+                        string = str(v)
                     if string:
                         text += " " + string
             else:

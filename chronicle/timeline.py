@@ -270,7 +270,7 @@ class Timeline:
         return self.get_events_by(get_first, get_next, filter_)
 
     def get_events_by_month(
-        self, filter_: Callable
+        self, filter_: Callable[[Event], bool] | None = None
     ) -> list[tuple[datetime, list[Event], Summary]]:
         """Get events by month."""
 
@@ -281,6 +281,19 @@ class Timeline:
             if point.month == MAX_MONTHS:
                 return datetime(point.year + 1, 1, 1, tzinfo=UTC)
             return datetime(point.year, point.month + 1, 1, tzinfo=UTC)
+
+        return self.get_events_by(get_first, get_next, filter_)
+
+    def get_events_by_year(
+        self, filter_: Callable[[Event], bool] | None = None
+    ) -> list[tuple[datetime, list[Event], Summary]]:
+        """Get events by year."""
+
+        def get_first(point: datetime) -> datetime:
+            return datetime(point.year, 1, 1, tzinfo=UTC)
+
+        def get_next(point: datetime) -> datetime:
+            return datetime(point.year + 1, 1, 1, tzinfo=UTC)
 
         return self.get_events_by(get_first, get_next, filter_)
 
@@ -297,7 +310,7 @@ class Timeline:
             for x in self.objects.objects.values()
             if isinstance(x, Medication) and x.expired is not None
         ]
-        for object_ in sorted(objects, key=lambda x: x.expired):
+        for object_ in sorted(objects, key=lambda x: x.expired.get_lower()):
             diff = object_.expired.get_lower() - datetime.now(UTC)
             style = ""
             if object_.color:

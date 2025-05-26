@@ -12,6 +12,7 @@ from rich import box
 from rich.console import Console
 from rich.table import Table
 
+from chronicle.errors import ChronicleObjectTypeError
 from chronicle.event.core import Event
 from chronicle.objects.core import Object, Service
 from chronicle.timeline import Timeline
@@ -24,6 +25,8 @@ DARK_COLOR_SCHEME = {"background": "#000000", "accent": "#EEEEEE"}
 LIGHT_COLOR_SCHEME = {"background": "#FFFFFF", "accent": "#000000"}
 COLOR_SCHEME = DARK_COLOR_SCHEME
 
+SECONDS_IN_HOUR: float = 3600.0
+
 
 @dataclass
 class LanguageLearningViewer:
@@ -34,9 +37,8 @@ class LanguageLearningViewer:
     def process_command(self, arguments: argparse.Namespace) -> None:
         """Process language command."""
 
-        if arguments.interval == 0:
-            filter_ = None
-        else:
+        filter_: Callable[[Event], bool] | None = None
+        if arguments.interval != 0:
             filter_ = Timeline.get_filter(
                 from_date=datetime.now() - timedelta(days=arguments.interval),
                 to_date=None,
@@ -54,9 +56,17 @@ class LanguageLearningViewer:
             Language(x) for x in arguments.exclude_languages
         }
 
-        services: list[Object] = [
-            self.timeline.objects.get_object(x) for x in arguments.services
-        ]
+        services: list[Service] = []
+        for service_id in arguments.services:
+            service: Object = self.timeline.objects.get_object(
+                service_id, Service(id=service_id, name=service_id)
+            )
+            if not isinstance(service, Service):
+                raise ChronicleObjectTypeError(
+                    service_id, type(service), Service
+                )
+            services.append(service)
+
         languages = {x for x in languages if x not in excluded_languages}
         xs, data, language_data = self.construct_data(
             filter_, languages, services
@@ -75,7 +85,7 @@ class LanguageLearningViewer:
 
         total__ = []
         for index, _ in enumerate(xs):
-            s = 0
+            s: float = 0.0
             for key in data:
                 s += data[key][index]
             total__.append(s)
@@ -95,15 +105,15 @@ class LanguageLearningViewer:
                 self.plot_languages(
                     xs,
                     language_data,
-                    arguments.stack,
+                    stack_plot=arguments.stack,
                     total_threshold=arguments.margin,
                 )
 
     def construct_data(
         self,
-        filter_: Callable[[Event], bool],
+        filter_: Callable[[Event], bool] | None,
         languages: set[Language],
-        services: list[Object],
+        services: list[Service],
     ) -> tuple[list[datetime], dict[str, list[float]], dict[str, list[float]]]:
         """Construct data for plotting language learning progress."""
 
@@ -125,49 +135,62 @@ class LanguageLearningViewer:
                         and service in summary.learn_language[language]
                     ):
                         data[f"{language.code}_{service.name}"].append(
-                            summary.learn_language[language][service] / 3600.0
+                            summary.learn_language[language][service]
+                            / SECONDS_IN_HOUR
                         )
                         language_total += (
-                            summary.learn_language[language][service] / 3600.0
+                            summary.learn_language[language][service]
+                            / SECONDS_IN_HOUR
                         )
                     else:
                         data[f"{language.code}_{service.name}"].append(0.0)
 
                 # Add other learning data.
                 if language in summary.learn_language:
-                    sum_ = 0
+                    sum_: float = 0.0
                     for service in summary.learn_language[language]:
                         if service not in services:
                             sum_ += summary.learn_language[language][service]
-                    data[f"{language.code}_Learn"].append(sum_ / 3600.0)
-                    language_total += sum_ / 3600.0
+                    data[f"{language.code}_Learn"].append(
+                        sum_ / SECONDS_IN_HOUR
+                    )
+                    language_total += sum_ / SECONDS_IN_HOUR
                 else:
                     data[f"{language.code}_Learn"].append(0.0)
 
-                listen: float = summary.listen.get(language, 0.0) / 3600.0
+                listen: float = (
+                    summary.listen.get(language, 0.0) / SECONDS_IN_HOUR
+                )
                 data[f"{language.code}_Listen"].append(listen)
                 language_total += listen
 
-                watch: float = summary.watch.get(language, 0.0) / 3600.0
+                watch: float = (
+                    summary.watch.get(language, 0.0) / SECONDS_IN_HOUR
+                )
                 data[f"{language.code}_Watch"].append(watch)
                 language_total += watch
 
                 read: float = 0.0
-                read += summary.read.get(language, 0.0) / 3600.0
+                read += summary.read.get(language, 0.0) / SECONDS_IN_HOUR
                 data[f"{language.code}_Read"].append(read)
                 language_total += read
 
                 write: float = 0.0
-                write += summary.write.get(language, 0.0) / 3600.0
-                write += summary.write_words.get(language, 0.0) * 2.0 / 3600.0
+                write += summary.write.get(language, 0.0) / SECONDS_IN_HOUR
+                write += (
+                    summary.write_words.get(language, 0.0)
+                    * 2.0
+                    / SECONDS_IN_HOUR
+                )
                 language_total += write
                 data[f"{language.code}_Write"].append(write)
 
                 data[f"{language.code}_Speak"].append(
-                    summary.speak.get(language, 0.0) / 3600.0
+                    summary.speak.get(language, 0.0) / SECONDS_IN_HOUR
                 )
-                language_total += summary.speak.get(language, 0.0) / 3600.0
-
+                language_total += (
+                    summary.speak.get(language, 0.0) / SECONDS_IN_HOUR
+                )
                 language_data[language.code].append(language_total)
 
         return xs, data, language_data
@@ -194,8 +217,8 @@ class LanguageLearningViewer:
                 language = Language(key)
                 if ys[-1] > total_threshold:
                     plt.plot(
-                        xs,
-                        [y if y else None for y in ys],
+                        xs,  # type: ignore[arg-type]
+                        [y if y else None for y in ys],  # type: ignore[arg-type]
                         label=language.to_string(),
                         color=language.get_color(),
                     )
@@ -205,7 +228,7 @@ class LanguageLearningViewer:
 
     def print_table(
         self,
-        languages: list[Language],
+        languages: set[Language],
         services: list[Service],
         data: dict[str, list[float]],
         total_threshold: float = 0.0,
@@ -241,17 +264,17 @@ class LanguageLearningViewer:
         table.add_column("Total", justify="right")
 
         max_: float = 0.0
-        rows: list[str] = []
+        rows: list[list[str]] = []
 
         for language in languages:
             row: list[str] = [language.to_string()]
             row_total: float = 0.0
             for method in methods:
-                value: float = data[language.code + "_" + method][-1]
-                if value:
-                    max_ = max(max_, value)
-                    row.append(f"{value:.1f}")
-                    row_total += value
+                time: float = data[language.code + "_" + method][-1]
+                if time:
+                    max_ = max(max_, time)
+                    row.append(f"{time:.1f}")
+                    row_total += time
                 else:
                     row.append("")
             row.append(f"{row_total:.1f}")

@@ -7,21 +7,28 @@ else
     exit 1
 fi
 
-python_files="chronicle tests"
+python_files="chronicle/ tests/"
 
 echo "Checking code format with Black..."
-if ! black -l 80 --check ${python_files}; then
-    black -l 80 --diff --color ${python_files}
+if ! black --check ${python_files}; then
+    black --diff --color ${python_files}
     echo "FAIL"
     exit 1
 fi
 
-# Link with Flake8.
+echo "Checking types with mypy..."
+if ! mypy ${python_files}; then
+    echo "FAIL"
+    exit 1
+fi
 
-echo "Lint with Flake8..."
-flake8 \
-    --max-line-length=80 \
-    --ignore=ANN002,ANN003,ANN101,ANN102,E203,F403,F405,W503 \
-    ${python_files} \
-    || { echo "FAIL"; exit 1; }
+echo "Linting with Ruff..."
+if ! ruff check; then
+    echo "FAIL"
+    exit 1
+fi
 
+echo "Run pytest..."
+pytest -v || { echo "FAIL"; exit 1; }
+
+echo "OK"

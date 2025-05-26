@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from chronicle.event.core import Event
-    from chronicle.value import Value
 
 
 class ChronicleError(Exception):
@@ -61,7 +60,7 @@ class ChronicleModelError(ChronicleError):
 class ChronicleValueError(ChronicleError):
     """Exception raised for value errors."""
 
-    def __init__(self, message: str, element: Value | None = None) -> None:
+    def __init__(self, message: str, element: Any | None = None) -> None:
         super().__init__(message)
         self.element = element
 

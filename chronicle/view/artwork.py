@@ -203,6 +203,7 @@ class BookViewer:
     ) -> None:
         """Print finished books."""
 
+        filter_: Callable[[Event], bool]
         if arguments.year == 0:
             filter_ = empty_filter
             title = "Finished books"

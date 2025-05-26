@@ -5,14 +5,18 @@ from collections.abc import Callable
 from chronicle.event.core import Event
 
 
-def empty_filter(_: Event) -> bool:
+def empty_filter(event: Event) -> bool:  # noqa: ARG001
     """Empty filter."""
     return True
 
 
 def filter_by_year(year: int) -> Callable[[Event], bool]:
     """Filter by year."""
-    return lambda event: event.time.year == year
+
+    def filter_(event: Event) -> bool:
+        return event.time.get_moment().year == year
+
+    return filter_
 
 
 def smooth(data: list[float | None], size: int) -> list[float]:

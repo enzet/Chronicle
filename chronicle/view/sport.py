@@ -50,7 +50,7 @@ class SportViewer:
         ]
 
         ys: list[list[float | None]] = [[] for _ in types]
-        ys_total: list[float] = []
+        ys_total: list[float | None] = []
         for day, _, summary in self.timeline.get_events_by_day():
             xs.append(day)
             total: float = 0.0
@@ -62,21 +62,26 @@ class SportViewer:
 
         for index, type_ in enumerate(types):
             plt.plot(
-                xs,
-                ys[index],
+                xs,  # type: ignore[arg-type]
+                ys[index],  # type: ignore[arg-type]
                 points[index],
                 color=colors[index],
                 fillstyle="none",
                 label=type_,
             )
             plt.plot(
-                xs,
+                xs,  # type: ignore[arg-type]
                 smooth(ys[index], 7),
                 color=colors[index],
                 alpha=0.1,
                 linewidth=1,
             )
-        plt.plot(xs, smooth(ys_total, 7), color="#000000", linewidth=1)
+        plt.plot(
+            xs,  # type: ignore[arg-type]
+            smooth(ys_total, 7),
+            color="#000000",
+            linewidth=1,
+        )
         plt.ylim(0, None)
         plt.legend()
         plt.show()

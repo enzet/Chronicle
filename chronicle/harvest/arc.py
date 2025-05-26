@@ -1,9 +1,9 @@
 """Harvest data from the Arc iOS application."""
 
 import argparse
+import gzip
 import json
 import shutil
-import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from typing import override
@@ -57,9 +57,11 @@ class ArcImporter(Importer):
         for path in (self.path / "JSON" / "Daily").iterdir():
             new_path = self.cache_path / path.name
             shutil.copyfile(path, new_path)
-            subprocess.run(
-                ["gzip", "--decompress", "--force", new_path], check=True
-            )
+            with (
+                gzip.open(new_path, "rb") as input_file,
+                new_path.open("wb") as output_file,
+            ):
+                output_file.write(input_file.read())
 
         for path in self.cache_path.iterdir():
             with path.open() as input_file:

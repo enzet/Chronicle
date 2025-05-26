@@ -22,9 +22,9 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "black~=24.4.2",
-    "isort~=6.0.1",
-    "flake8~=6.1.0",
+    "mypy~=1.15.0",
     "pytest~=8.3.4",
+    "ruff~=0.4.2",
 ]
 
 [project.urls]
@@ -40,12 +40,58 @@ packages = ["chronicle"]
 line-length = 80
 skip-magic-trailing-comma = true
 
-[tool.isort]
-profile = "black"
-
 [tool.mypy]
 python_version = "3.12"
 disable_error_code = ["import-untyped"]
 disallow_untyped_defs = true  # Report functions without type annotations.
 disallow_untyped_decorators = true  # Ensure decorators have types.
 warn_return_any = true  # Warn if return type is inferred as `Any`.
+
+[tool.ruff]
+lint.select = ["ALL"]
+lint.ignore = [
+    "ANN101",  # Rule is deleted, type of `self` can be inferred.
+    "C901",  # Too complex functions are allowed.
+    "COM812",  # Trailing comma not in Black style.
+    "D105",  # Missing docstring in magic method is allowed.
+    "D107",  # Missing docstring in `__init__` method is allowed.
+    "D202",  # No blank line after function docstring is allowed.
+    "D203",  # Blank line is not required before class docstring.
+    "D213",  # New line after """ is not needed.
+    "FIX002",  # Todo markers are allowed.
+    "PLR0911",  # Too many return statements are allowed.
+    "PLR0912",  # Too many branches are allowed.
+    "PLR0913",  # Too many arguments are allowed.
+    "PLR0915",  # Too many statements are allowed.
+    "S101",  # Asserts are allowed in tests.
+    "TD003",  # Issues for todos are not required.
+
+    # New:
+    "ANN102",  # Type of `self` can be inferred.
+
+    # Chronicle-specific.
+    "RUF001",  # Chronicle contains ambiguous symbols.
+    "RUF003",  # Chronicle contains ambiguous symbols.
+
+    # TODO(enzet): resolve later:
+    "ANN401",
+    "D100",
+    "D102",
+    "D104",
+    "D200",
+    "D205",
+    "D212",
+    "D400",
+    "DTZ005",
+    "DTZ007",
+    "S311",
+    "S603",
+    "T201",
+]
+
+# Allow autofix for all enabled rules (when `--fix` is used).
+lint.fixable = ["ALL"]
+lint.unfixable = []
+
+# Same line length as Black.
+line-length = 80

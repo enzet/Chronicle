@@ -704,17 +704,16 @@ class Objects:
         if id_.startswith("@"):
             id_ = id_[1:]
 
+        message: str
         if prefix not in self.prefix_to_class:
-            message: str = (
-                f"Class for objects with prefix `{prefix}` not found."
-            )
+            message = f"Class for objects with prefix `{prefix}` not found."
             raise ChronicleUnknownTypeError(message, prefix)
 
         object_class: type[Object] = self.prefix_to_class[prefix]
         try:
             data = object_class.arguments.parse(tokens[3:], self)
         except ChronicleArgumentError as error:
-            message: str = f"Error parsing command `{command}`: {error}."
+            message = f"Error parsing command `{command}`: {error}."
             raise ChronicleParseError(message) from error
 
         # Create new object.
@@ -735,6 +734,9 @@ class Objects:
 
     def fill_movie(self, object_: Video, cache_path: Path) -> None:
         """Fill Wikidata ID and other data for a movie."""
+
+        if not object_.title:
+            return
 
         object_data: dict = json.loads(
             get_data(

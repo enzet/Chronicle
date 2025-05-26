@@ -40,9 +40,10 @@ jobs:
     - name: Check Code Style with Black
       run: |
         black --check chronicle/ tests/
-    - name: Lint with Flake8
+    - name: Lint with Ruff
       run: |
-        flake8 --max-line-length=80 --ignore=ANN002,ANN003,ANN101,ANN102,E203,F403,F405,W503 chronicle/ tests/
+        ruff check chronicle/ tests/
+        ruff check --fix chronicle/ tests/
 
   lua-tests:
     name: Lua Tests
