@@ -1,0 +1,32 @@
+name: Lua Tests
+
+on:
+  workflow_dispatch:  # Allows manual triggering from GitHub UI.
+  push:
+    paths:
+      - 'scripts/**'  # Only run when Lua files change.
+      - '.github/workflows/lua-tests.yml'
+  pull_request:
+    paths:
+      - 'scripts/**'
+      - '.github/workflows/lua-tests.yml'
+
+jobs:
+  lua-tests:
+    name: Lua Tests
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Lua
+      uses: leafo/gh-actions-lua@v11
+      with:
+        luaVersion: '5.4'
+    - name: Set up LuaRocks
+      uses: leafo/gh-actions-luarocks@v5
+    - name: Install LuaUnit
+      run: |
+        luarocks install luaunit
+    - name: Run Lua tests
+      working-directory: scripts
+      run: |
+        lua test_chronicle.lua 
