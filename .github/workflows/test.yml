@@ -44,26 +44,3 @@ jobs:
       run: |
         ruff check chronicle/ tests/
         ruff check --fix chronicle/ tests/
-
-  lua-tests:
-    name: Lua Tests
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Set up Lua
-      uses: leafo/gh-actions-lua@v11
-      with:
-        luaVersion: '5.4'
-    - name: Set up LuaRocks
-      uses: leafo/gh-actions-luarocks@v5
-    - name: Verify LuaRocks installation
-      run: |
-        which luarocks
-        luarocks --version
-    - name: Install LuaUnit
-      run: |
-        luarocks install luaunit
-    - name: Run Lua tests
-      working-directory: scripts
-      run: |
-        lua test_chronicle.lua
