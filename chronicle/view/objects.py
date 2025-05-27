@@ -1,3 +1,5 @@
+"""View objects in HTML format."""
+
 from pathlib import Path
 
 from chronicle.timeline import Timeline

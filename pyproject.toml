@@ -72,7 +72,6 @@ lint.ignore = [
 
     # TODO(enzet): resolve later:
     "ANN401",
-    "D100",
     "D102",
     "D104",
     "D200",

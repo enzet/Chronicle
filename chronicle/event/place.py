@@ -1,3 +1,5 @@
+"""Events representing being at some place."""
+
 import re
 from dataclasses import dataclass, field
 from typing import ClassVar
