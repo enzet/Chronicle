@@ -1,3 +1,5 @@
+"""Timeline, containing events and objects."""
+
 import logging
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta

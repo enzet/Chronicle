@@ -1,3 +1,5 @@
+"""View shows."""
+
 import argparse
 from dataclasses import dataclass
 from typing import TYPE_CHECKING

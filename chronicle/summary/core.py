@@ -1,3 +1,5 @@
+"""Summary of the timeline events."""
+
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import timedelta
