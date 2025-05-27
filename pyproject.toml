@@ -21,7 +21,6 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "black~=24.4.2",
     "mypy~=1.15.0",
     "pytest~=8.3.4",
     "ruff~=0.4.2",
@@ -35,10 +34,6 @@ chronicle = "chronicle.__main__:main"
 
 [tool.setuptools]
 packages = ["chronicle"]
-
-[tool.black]
-line-length = 80
-skip-magic-trailing-comma = true
 
 [tool.mypy]
 python_version = "3.12"
@@ -93,5 +88,4 @@ lint.ignore = [
 lint.fixable = ["ALL"]
 lint.unfixable = []
 
-# Same line length as Black.
 line-length = 80

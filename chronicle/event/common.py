@@ -143,7 +143,6 @@ class LearnEvent(Event):
 
     @override
     def register_summary(self, summary: Summary) -> None:
-
         message: str
 
         if not self.subject:

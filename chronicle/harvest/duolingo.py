@@ -79,7 +79,6 @@ class DuolingoImportManager(ImportManager):
     def process_arguments(
         arguments: argparse.Namespace, timeline: Timeline
     ) -> None:
-
         file_path: Path
 
         if arguments.import_duolingo:

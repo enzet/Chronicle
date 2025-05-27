@@ -235,7 +235,6 @@ class LanguageLearningViewer:
         style: str = "normal",
         colors: str = "light",
     ) -> None:
-
         methods: list[str] = [
             "Read",
             "Watch",
