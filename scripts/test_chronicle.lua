@@ -1,7 +1,7 @@
 -- Tests for Lua Neovim script for Chronicle.
--- Run with: `busted scripts/test_chronicle.lua`.
+-- Run with: `lua scripts/test_chronicle.lua`.
 
-local busted = require("busted")
+local luaunit = require('luaunit')
 local chronicle = require("chronicle")
 
 -- Mock Vim API.
@@ -59,123 +59,132 @@ local function get_current_line()
 end
 
 local function compare(expected, actual)
+    luaunit.assertEquals(#expected, #actual, "Buffer length mismatch")
     for i, line in ipairs(expected) do
-        assert.are.equal(line, actual[i])
+        luaunit.assertEquals(line, actual[i], "Line " .. i .. " mismatch")
     end
 end
 
-describe("Chronicle", function()
-    before_each(function()
-        mock_vim.buffer = {}
-    end)
+-- Test suite
+TestChronicle = {}  -- Make it global so luaunit can find it
 
-    it("should start an event", function()
+function TestChronicle:setUp()
+    -- Reset mock buffer before each test
+    mock_vim.buffer = {}
+end
 
-        mock_vim.buffer = {
+function TestChronicle:test_start_event()
+    mock_vim.buffer = {
+        "2024-01-01",
+        "",
+        "program @chronicle"
+    }
+    set_cursor(3)
+
+    chronicle.start()
+    luaunit.assertEquals(
+        "    12:34/      program @chronicle",
+        get_current_line()
+    )
+end
+
+function TestChronicle:test_start_task()
+    mock_vim.buffer = {
+        "2024-01-01",
+        "",
+        "[ ] program @chronicle"
+    }
+    set_cursor(3)
+
+    chronicle.start()
+    luaunit.assertEquals(
+        "[ ] 12:34/      program @chronicle",
+        get_current_line()
+    )
+end
+
+function TestChronicle:test_finish_event()
+    mock_vim.buffer = {
+        "2024-01-01",
+        "",
+        "12:33/ program @chronicle"
+    }
+    set_cursor(3)
+
+    chronicle.finish()
+    luaunit.assertEquals(
+        "    12:33/12:34 program @chronicle",
+        get_current_line()
+    )
+end
+
+function TestChronicle:test_finish_task()
+    mock_vim.buffer = {
+        "2024-01-01",
+        "",
+        "[ ] 12:33/ program @chronicle"
+    }
+    set_cursor(3)
+
+    chronicle.finish()
+    luaunit.assertEquals(
+        "[x] 12:33/12:34 program @chronicle",
+        get_current_line()
+    )
+end
+
+function TestChronicle:test_finish_recurring_task()
+    mock_vim.buffer = {
+        "2024-01-01",
+        "",
+        "[ ] 12:33/ program @chronicle !every_day",
+    }
+    set_cursor(3)
+
+    chronicle.finish()
+
+    compare(
+        {
             "2024-01-01",
             "",
-            "program @chronicle"
-        }
-        set_cursor(3)
+            "[x] 12:33/12:34 program @chronicle !every_day",
+            "",
+            "2024-01-02",
+            "",
+            "[ ]             program @chronicle !every_day",
+        },
+        mock_vim.buffer
+    )
+end
 
-        chronicle.start()
-        assert.are.equal(
-            "    12:34/      program @chronicle", get_current_line()
-        )
-    end)
+function TestChronicle:test_finish_recurring_task_with_future_date()
+    mock_vim.buffer = {
+        "2024-01-01",
+        "",
+        "[ ] 12:33/ program @chronicle !every_day",
+        "",
+        "2024-01-03",
+    }
+    set_cursor(3)
 
-    it("should start a task", function()
-        mock_vim.buffer = {
+    chronicle.finish()
+
+    compare(
+        {
             "2024-01-01",
             "",
-            "[ ] program @chronicle"
-        }
-        set_cursor(3)
-
-        chronicle.start()
-        assert.are.equal(
-            "[ ] 12:34/      program @chronicle", get_current_line()
-        )
-    end)
-
-    it("should finish an event", function()
-
-        mock_vim.buffer = {
-            "2024-01-01",
+            "[x] 12:33/12:34 program @chronicle !every_day",
             "",
-            "12:33/ program @chronicle"
-        }
-        set_cursor(3)
-
-        chronicle.finish()
-        assert.are.equal(
-            "    12:33/12:34 program @chronicle", get_current_line()
-        )
-    end)
-
-    it("should finish a task", function()
-        mock_vim.buffer = {
-            "2024-01-01",
+            "2024-01-02",
             "",
-            "[ ] 12:33/ program @chronicle"
-        }
-        set_cursor(3)
-
-        chronicle.finish()
-        assert.are.equal(
-            "[x] 12:33/12:34 program @chronicle", get_current_line()
-        )
-    end)
-
-    it("should finish a recurring task", function()
-        mock_vim.buffer = {
-            "2024-01-01",
-            "",
-            "[ ] 12:33/ program @chronicle !every_day",
-        }
-        set_cursor(3)
-
-        chronicle.finish()
-
-        compare(
-            {
-                "2024-01-01",
-                "",
-                "[x] 12:33/12:34 program @chronicle !every_day",
-                "",
-                "2024-01-02",
-                "",
-                "[ ]             program @chronicle !every_day",
-            },
-            mock_vim.buffer
-        )
-    end)
-
-    it("should finish a recurring task", function()
-        mock_vim.buffer = {
-            "2024-01-01",
-            "",
-            "[ ] 12:33/ program @chronicle !every_day",
+            "[ ]             program @chronicle !every_day",
             "",
             "2024-01-03",
-        }
-        set_cursor(3)
+        },
+        mock_vim.buffer
+    )
+end
 
-        chronicle.finish()
-
-        compare(
-            {
-                "2024-01-01",
-                "",
-                "[x] 12:33/12:34 program @chronicle !every_day",
-                "",
-                "2024-01-02",
-                "",
-                "[ ]             program @chronicle !every_day",
-                "",
-                "2024-01-03",
-            },
-            mock_vim.buffer
-        )
-    end)
-end) 
+-- Run the tests
+luaunit.LuaUnit.verbosity = 2  -- Add verbosity for better output
+os.exit(luaunit.LuaUnit.run()) 
