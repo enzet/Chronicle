@@ -9,6 +9,8 @@ description = "Time line"
 authors = [
     { name = "Sergey Vartanov", email = "me@enzet.ru" }
 ]
+license = { text = "MIT" }
+readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "colour",
