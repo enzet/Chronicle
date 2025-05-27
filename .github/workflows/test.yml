@@ -54,21 +54,16 @@ jobs:
       uses: leafo/gh-actions-lua@v11
       with:
         luaVersion: '5.4'
-    - name: Cache LuaRocks
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/luarocks
-        key: ${{ runner.os }}-luarocks-${{ hashFiles('**/rockspec') }}
-        restore-keys: |
-          ${{ runner.os }}-luarocks-
+    - name: Set up LuaRocks
+      uses: leafo/gh-actions-luarocks@v5
+    - name: Verify LuaRocks installation
+      run: |
+        which luarocks
+        luarocks --version
     - name: Install LuaUnit
       run: |
-        luarocks config --local lua_version 5.4
-        luarocks --local install luaunit
+        luarocks install luaunit
     - name: Run Lua tests
-      env:
-        LUA_PATH: "~/.luarocks/share/lua/5.4/?.lua;~/.luarocks/share/lua/5.4/?/init.lua;;"
-        LUA_CPATH: "~/.luarocks/lib/lua/5.4/?.so;;"
       working-directory: scripts
       run: |
         lua test_chronicle.lua
