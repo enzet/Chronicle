@@ -13,12 +13,12 @@ license = { text = "MIT" }
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "colour",
+    "colour~=0.1.5",
     "pydantic~=1.10.2",
     "requests~=2.32.3",
     "urllib3~=1.26.6",
-    "matplotlib",
-    "rich",
+    "matplotlib~=3.9.3",
+    "rich~=13.9.4",
 ]
 
 [project.optional-dependencies]
