@@ -20,6 +20,8 @@ from chronicle.value import Interval, Tags
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
 
+logger: logging.Logger = logging.getLogger(__name__)
+
 
 @dataclass
 class Event:
@@ -70,7 +72,7 @@ class Event:
         try:
             return cls(time=time, source=(command, parsed), **parsed)
         except TypeError:
-            logging.exception("Cannot construct class %s from %s.", cls, parsed)
+            logger.exception("Cannot construct class %s from %s.", cls, parsed)
             raise
 
     def register_summary(self, summary: Summary) -> None:
