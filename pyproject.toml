@@ -20,6 +20,11 @@ dependencies = [
     "matplotlib~=3.9.3",
     "rich~=13.9.4",
 ]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
 
 [project.optional-dependencies]
 dev = [
