@@ -4,7 +4,8 @@ import logging
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from re import Pattern, compile
+from re import Pattern
+from re import compile as re_compile
 
 import matplotlib.pyplot as plt
 from rich import box
@@ -36,7 +37,7 @@ __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
 
 
-DATE_PATTERN: Pattern = compile(
+DATE_PATTERN: Pattern = re_compile(
     r"(\d\d\d\d-\d\d-\d\d)( (Mo|Tu|We|Th|Fr|Sa|Su))?"
 )
 
@@ -539,12 +540,8 @@ class CommandParser:
         parameters: list[str] = tokens
         task_prefixes: list[str] = ["[x]", "[-]", "[/]"]
 
-        if (
-            (tokens
-            and tokens[0] in task_prefixes)
-            or (len(tokens) > 1
-            and tokens[0] == "["
-            and tokens[1] == "]")
+        if (tokens and tokens[0] in task_prefixes) or (
+            len(tokens) > 1 and tokens[0] == "[" and tokens[1] == "]"
         ):
             # Parse task (planned event).
             is_task = True

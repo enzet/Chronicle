@@ -216,10 +216,10 @@ class Arguments:
         argument: Argument = Argument(name)
 
         assert (
-            (hasattr(class_, "patterns")
-            and hasattr(class_, "extractors"))
-            or hasattr(class_, "prefix")
-        ), f"{class_.__name__} should have patterns, extractors or prefix."
+            hasattr(class_, "patterns") and hasattr(class_, "extractors")
+        ) or hasattr(class_, "prefix"), (
+            f"{class_.__name__} should have patterns, extractors or prefix."
+        )
 
         if hasattr(class_, "patterns"):
             argument.patterns = class_.patterns

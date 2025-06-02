@@ -96,8 +96,7 @@ class PodcastViewer:
             else:
                 episodes = [str(event.episode) for event in events]
                 Console().print(
-                    f"[bold]{podcast.title}[/bold]: "
-                    f"{format_episodes(episodes)}"
+                    f"[bold]{podcast.title}[/bold]: {format_episodes(episodes)}"
                 )
 
 
