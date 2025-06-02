@@ -685,8 +685,7 @@ class Objects:
 
         :param object_id: identifier of the object with or without `@` prefix
         """
-        if object_id.startswith("@"):
-            object_id = object_id[1:]
+        object_id = object_id.removeprefix("@")
         if object_id in self.objects:
             return self.objects[object_id]
 
@@ -701,8 +700,7 @@ class Objects:
 
         prefix: str = tokens[0]
         id_: str = tokens[1]
-        if id_.startswith("@"):
-            id_ = id_[1:]
+        id_ = id_.removeprefix("@")
 
         message: str
         if prefix not in self.prefix_to_class:

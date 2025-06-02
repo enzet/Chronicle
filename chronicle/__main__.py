@@ -153,7 +153,7 @@ def main() -> None:
                 parser: CommandParser = CommandParser(timeline)
                 unknown_types: list[ChronicleUnknownTypeError] = []
                 with Path(file_name).open(encoding="utf-8") as input_file:
-                    for line in input_file.readlines():
+                    for line in input_file:
                         try:
                             parser.parse_command(line[:-1].strip())
                         except ChronicleUnknownTypeError as error:
