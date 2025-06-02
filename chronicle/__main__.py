@@ -24,6 +24,8 @@ if TYPE_CHECKING:
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
 
+logger: logging.Logger = logging.getLogger(__name__)
+
 
 def main() -> None:
     """Chronicle entry point."""
@@ -142,14 +144,14 @@ def main() -> None:
     elif arguments.logging == "debug":
         logging.basicConfig(level=logging.DEBUG)
 
-    logging.info("Starting Chronicle.")
+    logger.info("Starting Chronicle.")
 
     timeline: Timeline = Timeline()
 
     if arguments.input:
         for file_name in arguments.input:
             if file_name.endswith(".chr"):
-                logging.info("Importing data from `%s`.", file_name)
+                logger.info("Importing data from `%s`.", file_name)
                 parser: CommandParser = CommandParser(timeline)
                 unknown_types: list[ChronicleUnknownTypeError] = []
                 with Path(file_name).open(encoding="utf-8") as input_file:
@@ -159,7 +161,7 @@ def main() -> None:
                         except ChronicleUnknownTypeError as error:
                             unknown_types.append(error)
                 if unknown_types:
-                    logging.warning(
+                    logger.warning(
                         "%d unknown types in file `%s`: %s.",
                         len(unknown_types),
                         file_name,
@@ -173,7 +175,7 @@ def main() -> None:
                 importer = VcfImporter(Path(file_name))
                 importer.import_data(timeline)
             else:
-                logging.critical("Unknown format of file `%s`.", file_name)
+                logger.critical("Unknown format of file `%s`.", file_name)
                 sys.exit(1)
 
     for manager in import_managers:

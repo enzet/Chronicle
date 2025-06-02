@@ -22,6 +22,8 @@ if TYPE_CHECKING:
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
 
+logger: logging.Logger = logging.getLogger(__name__)
+
 
 def default_pretty_printer(value: Any) -> str:
     """Return the value based on its type."""
@@ -321,7 +323,7 @@ class Arguments:
                     else:
                         text += string
             except AttributeError:
-                logging.exception(
+                logger.exception(
                     "Cannot print command for %s of %s.", argument.key, value
                 )
         return text
@@ -346,7 +348,7 @@ class Arguments:
                     if string:
                         text += " " + string
             else:
-                logging.error("No {argument.key} of {event}.")
+                logger.error("No {argument.key} of {event}.")
         return text
 
     def replace(self, prefixes: list[str], command: str) -> Arguments:

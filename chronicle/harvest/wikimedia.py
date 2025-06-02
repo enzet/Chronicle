@@ -15,6 +15,8 @@ from chronicle.harvest.core import Importer, ImportManager
 from chronicle.time import Moment, Time
 from chronicle.timeline import Timeline
 
+logger: logging.Logger = logging.getLogger(__name__)
+
 
 class WikimediaImportManager(ImportManager):
     """Manager for Wikimedia import."""
@@ -41,7 +43,7 @@ class WikimediaImportManager(ImportManager):
         """Process arguments."""
         for value in arguments.import_wikimedia:
             username, url = value.split("@")
-            logging.info("Importing Wikimedia contributions for `%s`.", url)
+            logger.info("Importing Wikimedia contributions for `%s`.", url)
             WikimediaImporter(
                 url=url,
                 username=username,

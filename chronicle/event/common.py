@@ -23,6 +23,8 @@ from chronicle.value import (
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
 
+logger: logging.Logger = logging.getLogger(__name__)
+
 
 @dataclass
 class DoEvent(Event):
@@ -463,7 +465,7 @@ class ProgramEvent(Event):
             ):
                 summary.register_work(duration)
         else:
-            logging.warning(
+            logger.warning(
                 "Unknown project `%s` in `%s`.", self.project, self.source
             )
 

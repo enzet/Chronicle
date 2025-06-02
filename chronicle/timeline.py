@@ -28,6 +28,8 @@ from chronicle.time import (
 )
 from chronicle.util import empty_filter
 
+logger: logging.Logger = logging.getLogger(__name__)
+
 PYDANTIC: bool = False
 
 __author__ = "Sergey Vartanov"
@@ -57,10 +59,10 @@ def type_to_class(type_id: str, ending: str) -> type[Event] | None:
         if issubclass(type_, Event):
             return type_
 
-        logging.error("Class `%s` is not a subclass of `Event`.", class_name)
+        logger.error("Class `%s` is not a subclass of `Event`.", class_name)
         return None
 
-    logging.error("No such class: `%s`.", class_name)
+    logger.error("No such class: `%s`.", class_name)
     return None
 
 
@@ -176,7 +178,7 @@ class Timeline:
                 commands.append(event.to_command())
                 last_date = date
             except MalformedTimeError:
-                logging.exception("Bad time for %s.", event)
+                logger.exception("Bad time for %s.", event)
 
         return commands
 

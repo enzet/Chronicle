@@ -13,6 +13,8 @@ import urllib3
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
 
+logger: logging.Logger = logging.getLogger(__name__)
+
 
 class Item(Enum):
     """Wikidata item, main documentary unit of Wikidata."""
@@ -183,7 +185,7 @@ def get_data(cache_path: Path, function: Callable, argument: str) -> bytes:
     if cache_path.exists():
         with cache_path.open("rb") as input_file:
             return input_file.read()
-    logging.info("Request %s.", cache_path)
+    logger.info("Request %s.", cache_path)
     data: bytes = function(argument)
     with cache_path.open("wb") as output_file:
         output_file.write(data)
