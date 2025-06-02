@@ -365,8 +365,7 @@ class Timeline:
             if object_.link:
                 link: str = object_.link
                 for prefix in "https://", "http://", "www.":
-                    if link.startswith(prefix):
-                        link = link[len(prefix) :]
+                    link = link.removeprefix(prefix)
                 link = link[: link.find("/")]
                 text += (
                     "<br /><a style='font-size: 85%;' "
@@ -471,8 +470,7 @@ class Timeline:
                 lower: datetime = event.time.get_lower()
                 upper: datetime = event.time.get_upper()
 
-                if upper > day + timedelta(days=1):
-                    upper = day + timedelta(days=1)
+                upper = min(upper, day + timedelta(days=1))
 
                 data.append(
                     (
@@ -540,11 +538,11 @@ class CommandParser:
         task_prefixes: list[str] = ["[x]", "[-]", "[/]"]
 
         if (
-            tokens
-            and tokens[0] in task_prefixes
-            or len(tokens) > 1
+            (tokens
+            and tokens[0] in task_prefixes)
+            or (len(tokens) > 1
             and tokens[0] == "["
-            and tokens[1] == "]"
+            and tokens[1] == "]")
         ):
             # Parse task (planned event).
             is_task = True
