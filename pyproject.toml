@@ -30,7 +30,7 @@ classifiers = [
 dev = [
     "mypy~=1.15.0",
     "pytest~=8.3.4",
-    "ruff~=0.4.2",
+    "ruff~=0.11.12",
 ]
 
 [project.urls]
@@ -52,7 +52,6 @@ warn_return_any = true  # Warn if return type is inferred as `Any`.
 [tool.ruff]
 lint.select = ["ALL"]
 lint.ignore = [
-    "ANN101",  # Rule is deleted, type of `self` can be inferred.
     "C901",  # Too complex functions are allowed.
     "COM812",  # Trailing comma not in Black style.
     "D105",  # Missing docstring in magic method is allowed.
@@ -67,9 +66,6 @@ lint.ignore = [
     "PLR0915",  # Too many statements are allowed.
     "S101",  # Asserts are allowed in tests.
     "TD003",  # Issues for todos are not required.
-
-    # New:
-    "ANN102",  # Type of `self` can be inferred.
 
     # Chronicle-specific.
     "RUF001",  # Chronicle contains ambiguous symbols.
