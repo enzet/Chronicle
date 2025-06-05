@@ -64,7 +64,7 @@ class Event:
             message: str = f"Cannot parse command `{command}`."
             raise ChronicleArgumentError(message) from error
         except ChronicleObjectNotFoundError as error:
-            message: str = (
+            message = (
                 f"Object with id `{error.object_id}` not found, needed to "
                 f"parse `{cls.__name__}` from command `{command}`."
             )
@@ -99,7 +99,7 @@ class Event:
         """Get color of an event."""
 
         if hasattr(self, "color"):
-            color: str = self.color
+            color: str = getattr(self, "color")  # noqa: B009
             return color
 
         # Default event color is gray, to be seen on the white and on the
@@ -113,12 +113,12 @@ class Event:
         `self.interval.get_duration()`, but it should be done explicitly.
         """
         if hasattr(self, "duration"):
-            duration: Timedelta = self.duration
+            duration: Timedelta = getattr(self, "duration")  # noqa: B009
             if duration:
                 return duration.total_seconds()
 
         if hasattr(self, "interval"):
-            interval: Interval = self.interval
+            interval: Interval = getattr(self, "interval")  # noqa: B009
             if interval:
                 return interval.get_duration()
 

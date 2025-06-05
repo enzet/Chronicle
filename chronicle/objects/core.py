@@ -311,7 +311,7 @@ class Person(Object):
         return cls(None, name=value)
 
 
-SERVICE_NAMES = {"duolingo": "Duolingo", "memrise": "Memrise"}
+SERVICE_NAMES: dict[str, str] = {"duolingo": "Duolingo", "memrise": "Memrise"}
 
 
 @dataclass
@@ -616,7 +616,7 @@ class Audiobook(Object):
     language: Language | None = None
     """Language of the audiobook."""
 
-    duration: timedelta | None = None
+    duration: Timedelta | None = None
     """Duration of the audiobook."""
 
     reader: str | None = None
