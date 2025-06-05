@@ -179,19 +179,57 @@ function M.process_line()
     }
 end
 
+-- Get next date.
+local function get_next_date(current_date, interval)
+    local year, month, day = current_date:match("(%d+)-(%d+)-(%d+)")
+    local os_date = os.time({
+        year = tonumber(year), month = tonumber(month), day = tonumber(day)
+    })
+    local new_date = os_date + interval * 86400
+    return new_date
+end
+
+-- Get max day of month.
+local function max_day_of_month(month)
+    if month == 2 then
+        return 28
+    end
+    if month == 4 or month == 6 or month == 9 or month == 11 then
+        return 30
+    end
+    return 31
+end
+
+-- Get next month.
+local function get_next_month(current_date)
+    local year, month, day = current_date:match("(%d+)-(%d+)-(%d+)")
+    local year_number = tonumber(year)
+    local month_number = tonumber(month) + 1
+    local day_number = tonumber(day)
+    if month_number > 12 then
+        month_number = 1
+        year_number = year_number + 1
+    end
+    if day_number > max_day_of_month(month_number) then
+        day_number = max_day_of_month(month_number)
+    end
+    local new_date = os.time({
+        year = year_number, month = month_number, day = day_number
+    })
+    return new_date
+end
+
+-- Get next year.
+local function get_next_year(current_date)
+    local year, month, day = current_date:match("(%d+)-(%d+)-(%d+)")
+    return os.time({
+        year = tonumber(year) + 1, month = tonumber(month), day = tonumber(day)
+    })
+end
+
 function M.repeat_task(event, current_date)
 
     local lines = M.get_all_lines()
-
-    -- Get next date.
-    local function get_next_date(current_date, interval)
-        local year, month, day = current_date:match("(%d+)-(%d+)-(%d+)")
-        local os_date = os.time({
-            year = tonumber(year), month = tonumber(month), day = tonumber(day)
-        })
-        local new_date = os_date + interval * 86400
-        return new_date
-    end
 
     local new_task = ("[ ]             %s"):format(event.content)
 
@@ -205,8 +243,9 @@ function M.repeat_task(event, current_date)
     elseif event.repeat_tag == "week" then
         next_date = get_next_date(current_date, 7)
     elseif event.repeat_tag == "month" then
-        -- TODO: reimplement this.
-        next_date = get_next_date(current_date, 30)
+        next_date = get_next_month(current_date)
+    elseif event.repeat_tag == "year" then
+        next_date = get_next_year(current_date)
     end
 
     if next_date == nil then

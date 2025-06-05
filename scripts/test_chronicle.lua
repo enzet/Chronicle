@@ -80,7 +80,6 @@ function TestChronicle:test_start_event()
         "program @chronicle"
     }
     set_cursor(3)
-
     chronicle.start()
     luaunit.assertEquals(
         "    12:34/      program @chronicle",
@@ -95,7 +94,6 @@ function TestChronicle:test_start_task()
         "[ ] program @chronicle"
     }
     set_cursor(3)
-
     chronicle.start()
     luaunit.assertEquals(
         "[ ] 12:34/      program @chronicle",
@@ -110,7 +108,6 @@ function TestChronicle:test_finish_event()
         "12:33/ program @chronicle"
     }
     set_cursor(3)
-
     chronicle.finish()
     luaunit.assertEquals(
         "    12:33/12:34 program @chronicle",
@@ -125,7 +122,6 @@ function TestChronicle:test_finish_task()
         "[ ] 12:33/ program @chronicle"
     }
     set_cursor(3)
-
     chronicle.finish()
     luaunit.assertEquals(
         "[x] 12:33/12:34 program @chronicle",
@@ -180,6 +176,54 @@ function TestChronicle:test_finish_recurring_task_with_future_date()
             "[ ]             program @chronicle !every_day",
             "",
             "2024-01-03",
+        },
+        mock_vim.buffer
+    )
+end
+
+function TestChronicle:test_finish_recurring_task_with_month_interval()
+    mock_vim.buffer = {
+        "2024-01-31",
+        "",
+        "[ ] 12:33/ program @chronicle !every_month",
+    }
+    set_cursor(3)
+
+    chronicle.finish()
+
+    compare(
+        {
+            "2024-01-31",
+            "",
+            "[x] 12:33/12:34 program @chronicle !every_month",
+            "",
+            "2024-02-28",
+            "",
+            "[ ]             program @chronicle !every_month",
+        },
+        mock_vim.buffer
+    )
+end
+
+function TestChronicle:test_finish_recurring_task_with_year_interval()
+    mock_vim.buffer = {
+        "2024-01-01",
+        "",
+        "[ ] 12:33/ program @chronicle !every_year",
+    }
+    set_cursor(3)
+
+    chronicle.finish()
+
+    compare(
+        {
+            "2024-01-01",
+            "",
+            "[x] 12:33/12:34 program @chronicle !every_year",
+            "",
+            "2025-01-01",
+            "",
+            "[ ]             program @chronicle !every_year",
         },
         mock_vim.buffer
     )
