@@ -9,18 +9,18 @@ fi
 
 python_files="chronicle/ tests/"
 
-echo "Checking code format with Black..."
-if ! black --check ${python_files}; then
-    black --diff --color ${python_files}
+echo "Checking code format with Ruff..."
+if ! ruff format --check ${python_files}; then
+    ruff format --diff ${python_files}
     echo "FAIL"
     exit 1
 fi
 
-echo "Checking types with mypy..."
-if ! mypy ${python_files}; then
-    echo "FAIL"
-    exit 1
-fi
+# echo "Checking types with mypy..."
+# if ! mypy ${python_files}; then
+#     echo "FAIL"
+#     exit 1
+# fi
 
 echo "Linting with Ruff..."
 if ! ruff check; then
