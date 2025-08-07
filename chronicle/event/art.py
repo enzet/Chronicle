@@ -246,22 +246,9 @@ class ReadEvent(Event):
         message: str = f"Event {self} has no language."
         raise ChronicleValueError(message, self)
 
-    @override
-    def register_summary(self, summary: Summary) -> None:
-        # Use language from the event or language of the book.
+    def get_pages(self) -> float | None:
+        """Get number of pages read."""
 
-        language: Language
-        if self.language:
-            language = self.language
-        elif self.book and self.book.language:
-            language = self.book.language
-        else:
-            return
-
-        # Compute duration.
-        duration: float | None = self.get_duration()
-
-        # Compute pages.
         pages: float | None = None
         if (
             self.volume
@@ -289,6 +276,25 @@ class ReadEvent(Event):
             if self.volume.to_ is not None and self.volume.from_ is not None:
                 pages = self.volume.to_ - self.volume.from_
 
+        return pages
+
+    @override
+    def register_summary(self, summary: Summary) -> None:
+        # Use language from the event or language of the book.
+
+        language: Language
+        if self.language:
+            language = self.language
+        elif self.book and self.book.language:
+            language = self.book.language
+        else:
+            return
+
+        # Compute duration.
+        duration: float | None = self.get_duration()
+
+        pages: float | None = self.get_pages()
+
         # Register finished book.
         if (
             (
@@ -313,19 +319,12 @@ class ReadEvent(Event):
         # Register reading pages.
         if pages is not None:
             summary.register_read_pages(pages, language)
-        elif duration is not None:
-            summary.register_read_pages(duration / 60 / 3, language)
-        else:
-            message: str = f"Event {self} has neither pages, nor duration."
-            raise ChronicleValueError(message, self)
 
         # Register reading duration.
         # TODO(enzet): Check precision of the duration instead of the arbitrary
         # limit.
         if duration is not None and duration < 16 * 3600.0:
             summary.register_read(duration, language)
-        elif pages is not None:
-            summary.register_read(pages * 60 * 3, language)
 
 
 @dataclass
