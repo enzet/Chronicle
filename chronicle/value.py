@@ -32,6 +32,7 @@ LANGUAGES: dict[str, tuple[str, str]] = {
     "ko": ("Korean", "#FF7F50"),
     "la": ("Latin", "#888888"),
     "no": ("Norwegian", "#FF7F50"),
+    "nb": ("Norwegian Bokmål", "#FF7F50"),
     "po": ("Polish", "#FF7F50"),
     "pt": ("Portuguese", "#FF7F50"),
     "rsl": ("Russian Sign Language", "#FF7F50"),

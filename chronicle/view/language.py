@@ -12,6 +12,7 @@ from rich import box
 from rich.console import Console
 from rich.table import Table
 
+from chronicle.approximation import Approximation
 from chronicle.errors import ChronicleObjectTypeError
 from chronicle.event.core import Event
 from chronicle.objects.core import Object, Service
@@ -21,9 +22,15 @@ from chronicle.value import Language
 if TYPE_CHECKING:
     from chronicle.summary.core import Summary
 
-DARK_COLOR_SCHEME = {"background": "#000000", "accent": "#EEEEEE"}
-LIGHT_COLOR_SCHEME = {"background": "#FFFFFF", "accent": "#000000"}
-COLOR_SCHEME = DARK_COLOR_SCHEME
+DARK_COLOR_SCHEME: dict[str, str] = {
+    "background": "#000000",
+    "accent": "#EEEEEE",
+}
+LIGHT_COLOR_SCHEME: dict[str, str] = {
+    "background": "#FFFFFF",
+    "accent": "#000000",
+}
+COLOR_SCHEME: dict[str, str] = DARK_COLOR_SCHEME
 
 SECONDS_IN_HOUR: float = 3600.0
 
@@ -44,6 +51,9 @@ class LanguageLearningViewer:
                 to_date=None,
             )
         total_summary: Summary = self.timeline.get_summary(filter_)
+
+        approximation: Approximation = Approximation(self.timeline)
+        approximation.approximate_reading_speed()
 
         keys: set[Language] = (
             set(total_summary.listen.keys())
@@ -213,7 +223,9 @@ class LanguageLearningViewer:
             plt.legend(loc="upper left")
             plt.show()
         else:
-            for key, ys in language_data.items():
+            for key, ys in sorted(
+                language_data.items(), key=lambda x: -x[1][-1]
+            ):
                 language = Language(key)
                 if ys[-1] > total_threshold:
                     plt.plot(
