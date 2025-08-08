@@ -203,7 +203,11 @@ class Timeline:
         summary: Summary = Summary()
 
         for event in self.get_events(filter_=filter_):
-            event.register_summary(summary)
+            try:
+                event.register_summary(summary)
+            except Exception:
+                logger.exception("Cannot register summary for `%s`.", event)
+                raise
 
         return summary
 
