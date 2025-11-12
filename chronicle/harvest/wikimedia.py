@@ -94,6 +94,7 @@ class WikimediaImporter(Importer):
         )
         return WikiContributionEvent(
             Time.from_moment(Moment.from_datetime(timestamp)),
+            source=contrib,
             page_title=contrib["title"],
             difference=contrib["sizediff"],
             is_new="new" in contrib,
