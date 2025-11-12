@@ -41,6 +41,8 @@ class WikimediaImportManager(ImportManager):
         arguments: argparse.Namespace, timeline: Timeline
     ) -> None:
         """Process arguments."""
+        if not arguments.import_wikimedia:
+            return
         for value in arguments.import_wikimedia:
             username, url = value.split("@")
             logger.info("Importing Wikimedia contributions for `%s`.", url)
