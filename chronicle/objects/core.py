@@ -207,10 +207,30 @@ class Place(Object):
     osm: OSM | None = None
     """Link to the OpenStreetMap object."""
 
+    latitude: float | None = None
+    """Latitude of the city."""
+
+    longitude: float | None = None
+    """Longitude of the city."""
+
+    wikidata_id: int | None = None
+    """Wikidata entity identifier."""
+
     arguments: ClassVar[Arguments] = (
         Arguments(["place"], "place")
         .add(Argument("name"))
         .add_class_argument("osm", OSM)
+        .add(
+            Argument(
+                "latitude", prefix="lat:", loader=lambda value, _: float(value)
+            )
+        )
+        .add(
+            Argument(
+                "longitude", prefix="lon:", loader=lambda value, _: float(value)
+            )
+        )
+        .add_class_argument("wikidata_id", WikidataId)
     )
 
 
@@ -227,14 +247,53 @@ class ArtObject(Object):
 
 
 @dataclass
-class Country(Object):
+class Country(Place):
+    """A country."""
+
+    prefix: ClassVar[str] = "in"
+
+    arguments: ClassVar[Arguments] = Place.arguments.replace(
+        ["country"], "country"
+    )
+
+
+@dataclass
+class City(Place):
     """A country."""
 
     name: str | None = None
     """Name of the country."""
 
-    arguments: ClassVar[Arguments] = Arguments(["country"], "country").add(
-        Argument("name")
+    country: Country | None = None
+    """Country of the city."""
+
+    arguments: ClassVar[Arguments] = (
+        Place.arguments.replace(["city"], "city")
+        .add(Argument("name"))
+        .add_object_argument("country", Country)
+    )
+
+
+@dataclass
+class Mountain(Place):
+    """A mountain or a peak."""
+
+    name: str | None = None
+    """Name of a mountain or a peak."""
+
+    height: float | None = None
+    """Height above the sea level."""
+
+    arguments: ClassVar[Arguments] = (
+        Place.arguments.replace(["mountain"], "mountain")
+        .add(Argument("name"))
+        .add(
+            Argument(
+                "height",
+                patterns=[re.compile(r"(\d+(\.\d+)?)m")],
+                extractors=[lambda groups: float(groups(1))],
+            )
+        )
     )
 
 
@@ -242,9 +301,12 @@ class Country(Object):
 class Airport(Place):
     """An airport."""
 
+    city: City | None = None
+    """City of the airport."""
+
     arguments: ClassVar[Arguments] = Place.arguments.replace(
         ["airport"], "airport"
-    )
+    ).add_object_argument("city", City)
 
 
 @dataclass
