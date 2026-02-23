@@ -41,7 +41,7 @@ LANGUAGE_NAMES: dict[str, tuple[str, ...]] = {
     "/language/rsl": ("русский жестовый язык", "ржя"),
     "/language/sv": ("swedish",),
 }
-PATTERNS = (
+PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"^(.*) \d+$"),
     re.compile(r"^(.*) \(часть \d+\)$"),
     re.compile(r"^(.*) для начинающих$"),
@@ -184,15 +184,16 @@ class MemriseImporter(Importer):
                     timedelta(seconds=float(tests) * 16.0)
                 )
 
-            subject: Subject | None = Subject.from_string(course_name)
-            if not subject:
-                message: str = f"Unknown course `{course_name}`."
-                raise ValueError(message)
+            subject: Subject = Subject.from_string(course_name)
+
+            # Hard fix Memrise data inconsistency.
+            end = max(end, start)
 
             event: Event = LearnEvent(
                 Time.from_moments(
                     Moment.from_datetime(start), Moment.from_datetime(end)
                 ),
+                source=f"memrise {start}/{end} {course_name}",
                 subject=subject,
                 service=service,
                 actions=float(tests),
