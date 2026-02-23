@@ -90,6 +90,47 @@ class Object:
         """Get command representation of an object."""
         return self.arguments.to_object_command(self)
 
+    @classmethod
+    def get_vim_syntax(cls) -> str:
+        """Get syntax definition of the object in Vim format."""
+        name: str = cls.__name__.removesuffix("Event")
+
+        prefix: str = name[0].lower()
+        for c in name[1:]:
+            prefix += ("_" + c.lower()) if "A" <= c <= "Z" else c
+
+        syntax: str = f"highlight link {name}Arguments chronicleEventValue\n"
+        syntax += f"highlight link {name}Prefix Prefix\n"
+
+        for argument in cls.arguments.arguments:
+            if argument.patterns:
+                for pattern in argument.patterns:
+                    pattern_text: str = pattern.pattern
+                    pattern_text = pattern_text.replace("/", "\\/")
+                    pattern_text = re.sub(r"\?P<.*>", "", pattern_text)
+                    syntax += (
+                        f"syntax match {name}Arguments "
+                        f"/\\v{pattern_text}/ contained"
+                        "\n"
+                    )
+            if argument.prefix:
+                syntax += (
+                    f"syntax match {name}Prefix "
+                    f"/\\v{argument.prefix}/ contained"
+                    "\n"
+                )
+
+        syntax += (
+            f"syntax region {name}Line"
+            " matchgroup=TypeFormat"
+            f" start=/{prefix}\\s*/"
+            " end=/$/"
+            f" contains={name}Arguments,{name}Prefix"
+            ",chronicleVariable"
+            "\n"
+        )
+        return syntax
+
 
 @dataclass
 class Thing(Object):
