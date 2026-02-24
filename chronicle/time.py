@@ -225,6 +225,20 @@ class Moment:
     def __str__(self) -> str:
         return self.to_string()
 
+    def __sub__(self, other: object) -> float:
+        """Subtract two moments."""
+        if not isinstance(other, Moment):
+            message: str = f"Cannot subtract `{other}` from `{self}`."
+            raise TypeError(message)
+        return (self.get_lower() - other.get_lower()).total_seconds()
+
+    def __add__(self, other: object) -> Self:
+        """Add two moments."""
+        if isinstance(other, timedelta):
+            return self.get_lower() + other
+        message: str = f"Cannot add `{other}` to `{self}`."
+        raise TypeError(message)
+
     @classmethod
     def from_datetime(cls, date: datetime) -> Self:
         """Create moment from datetime."""
