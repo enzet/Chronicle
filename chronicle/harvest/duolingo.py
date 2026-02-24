@@ -6,7 +6,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Literal, override
 
 from chronicle.errors import ChronicleObjectTypeError
 from chronicle.event.common import LearnEvent
@@ -19,22 +19,26 @@ from chronicle.value import Subject
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
+
+MODE: Literal["one_event", "one_event_per_day"] = "one_event_per_day"
+
+
 courses: list[tuple[str, str, Subject]] = [
     ("en", "English", Subject(["language", "en"])),
-    ("en_ar", "Arabic", Subject(["writing", "arab"])),
+    ("en_ar", "Arabic", Subject(["script", "arab"])),
     ("en_de", "German", Subject(["language", "de"])),
     ("en_eo", "Esperanto", Subject(["language", "eo"])),
     ("en_es", "Spanish", Subject(["language", "es"])),
     ("en_fr", "French", Subject(["language", "fr"])),
-    ("en_he", "Hebrew", Subject(["writing", "hebr"])),
-    ("en_hi", "Hindi", Subject(["writing", "deva"])),
+    ("en_he", "Hebrew", Subject(["script", "hebr"])),
+    ("en_hi", "Hindi", Subject(["script", "deva"])),
     ("en_it", "Italian", Subject(["language", "it"])),
     ("en_ja", "Japanese", Subject(["language", "ja"])),
-    ("en_ko", "Korean", Subject(["writing", "hang"])),
+    ("en_ko", "Korean", Subject(["script", "hang"])),
     ("en_la", "Latin", Subject(["language", "la"])),
     ("en_la2", "Latin2", Subject(["language", "la"])),
-    ("en_no", "Norwegian", Subject(["language", "no"])),
-    ("en_no2", "Norwegian2", Subject(["language", "no"])),
+    ("en_no", "Norwegian", Subject(["language", "nb"])),
+    ("en_no2", "Norwegian2", Subject(["language", "nb"])),
     ("ru_de", "German (ru)", Subject(["language", "de"])),
     ("ru_es", "Spanish (ru)", Subject(["language", "es"])),
     ("ru_fr", "French (ru)", Subject(["language", "fr"])),
@@ -142,21 +146,98 @@ class DuolingoImporter(Importer):
                     course_value: int = int(value)
                     actions: int = course_value - last_values.get(course_id, 0)
                     if last_date and actions > 0:
+                        if MODE == "one_event":
+                            add_event(
+                                timeline,
+                                date,
+                                last_date,
+                                actions,
+                                subject,
+                                service,
+                                course_id,
+                            )
+                        elif MODE == "one_event_per_day":
+                            add_events(
+                                timeline,
+                                date,
+                                last_date,
+                                actions,
+                                subject,
+                                service,
+                                course_id,
+                            )
+                        else:
+                            message = f"Unknown mode `{MODE}`."
+                            raise ValueError(message)
+
+                        """
                         start: Moment = Moment.from_datetime(last_date)
                         end: Moment = Moment.from_datetime(date)
                         time: Time = Time.from_moments(start, end)
                         event: LearnEvent = LearnEvent(
                             time,
+                            source=course_id,
                             subject=subject,
                             service=service,
                             actions=actions,
                             duration=approximate_duration(actions, date),
                         )
                         timeline.events.append(event)
+                        """
 
                     last_values[course_id] = course_value
 
                 last_date = date
+
+
+def add_event(
+    timeline: Timeline,
+    date: datetime,
+    previous_date: datetime,
+    actions: int,
+    subject: Subject,
+    service: Service,
+    course_name: str,
+) -> None:
+    time: Time = Time.from_moments(
+        Moment.from_datetime(previous_date),
+        Moment.from_datetime(date),
+    )
+    event: LearnEvent = LearnEvent(
+        time,
+        source="duolingo " + course_name,
+        subject=subject,
+        service=service,
+        actions=actions,
+        duration=approximate_duration(actions, date),
+    )
+    timeline.events.append(event)
+
+
+def add_events(
+    timeline: Timeline,
+    date: datetime,
+    previous_date: datetime,
+    actions: int,
+    subject: Subject,
+    service: Service,
+    course_name: str,
+) -> None:
+    days: int = int((date - previous_date).total_seconds() / 24 / 3600)
+    for day in range(days):
+        current_time: Time = Time.from_moments(
+            Moment.from_datetime(previous_date + timedelta(days=day)),
+            Moment.from_datetime(previous_date + timedelta(days=day + 1)),
+        )
+        event: LearnEvent = LearnEvent(
+            current_time,
+            source="duolingo " + course_name,
+            subject=subject,
+            service=service,
+            actions=actions,
+            duration=approximate_duration(actions / days, date),
+        )
+        timeline.events.append(event)
 
 
 @dataclass
@@ -229,7 +310,7 @@ class DuomeImporter(Importer):
                     actions: int = value - previous_value
                     start: Moment = Moment.from_datetime(previous_date)
                     end: Moment = Moment.from_datetime(date)
-                    time: Time = Time.from_moments(start, end)
+                    Time.from_moments(start, end)
                     subject: Subject | None = None
                     for course in courses:
                         if course[1] == course_name:
@@ -238,13 +319,30 @@ class DuomeImporter(Importer):
                     if not subject:
                         message = f"Unknown course `{course_name}`."
                         raise ValueError(message)
-                    event: LearnEvent = LearnEvent(
-                        time,
-                        subject=subject,
-                        service=service,
-                        actions=actions,
-                        duration=approximate_duration(actions, date),
-                    )
-                    timeline.events.append(event)
+
+                    if MODE == "one_event":
+                        add_event(
+                            timeline,
+                            date,
+                            previous_date,
+                            actions,
+                            subject,
+                            service,
+                            course_name,
+                        )
+                    elif MODE == "one_event_per_day":
+                        add_events(
+                            timeline,
+                            date,
+                            previous_date,
+                            actions,
+                            subject,
+                            service,
+                            course_name,
+                        )
+                    else:
+                        message = f"Unknown mode `{MODE}`."
+                        raise ValueError(message)
+
                 previous_date = date
                 previous_value = value
