@@ -158,12 +158,14 @@ class CountableSportEvent(SportEvent):
     ).add(Argument("count", loader=lambda value, _: int(value)), is_insert=True)
 
     @override
-    def register_summary(self, summary: Summary) -> None:
+    def register_summary(
+        self, summary: Summary, ratio: float = 1.0, is_main: bool = True
+    ) -> None:
         name: str = self.arguments.command
         if name == "abs":
             name = "abs_"
         if self.count is not None:
-            setattr(summary, name, getattr(summary, name) + self.count)
+            setattr(summary, name, getattr(summary, name) + self.count * ratio)
 
 
 @dataclass

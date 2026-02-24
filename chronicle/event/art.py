@@ -51,19 +51,27 @@ class ListenEvent(Event):
     language: Language | None = None
     """Language of the audio content."""
 
+    service: Service | None = None
+    """Service used to listen to the audio content."""
+
     arguments: ClassVar[Arguments] = (
         Arguments(["listen"], "listen")
         .add(Argument("title"))
         .add_class_argument("duration", Timedelta)
         .add_class_argument("language", Language)
+        .add_object_argument("service", Service)
     )
 
     @override
-    def register_summary(self, summary: Summary) -> None:
+    def register_summary(
+        self, summary: Summary, ratio: float = 1.0, is_main: bool = True
+    ) -> None:
         if self.language:
             duration: float | None = self.get_duration()
             if duration:
-                summary.register_listen(duration, self.language)
+                summary.register_listen(
+                    duration * ratio, self.language, self.service
+                )
 
 
 @dataclass
@@ -88,6 +96,9 @@ class ListenPodcastEvent(Event):
     duration: Timedelta | None = None
     """Duration of the podcast listening session."""
 
+    service: Service | None = None
+    """Service used to listen to the podcast."""
+
     arguments: ClassVar[Arguments] = (
         Arguments(["podcast"], "listen to podcast")
         .add_object_argument("podcast", Podcast)
@@ -95,6 +106,7 @@ class ListenPodcastEvent(Event):
         .add_class_argument("episode", Episode)
         .add_class_argument("interval", Interval)
         .add_class_argument("duration", Timedelta)
+        .add_object_argument("service", Service)
         .add(
             Argument(
                 "speed",
@@ -119,7 +131,9 @@ class ListenPodcastEvent(Event):
         return None
 
     @override
-    def register_summary(self, summary: Summary) -> None:
+    def register_summary(
+        self, summary: Summary, ratio: float = 1.0, is_main: bool = True
+    ) -> None:
         language: Language | None = self.get_language()
 
         if not language:
@@ -127,7 +141,8 @@ class ListenPodcastEvent(Event):
             raise ChronicleValueError(message, self)
 
         if duration := self.get_duration():
-            summary.register_listen(duration, language)
+            service: Service | None = self.service or self.podcast.service
+            summary.register_listen(duration * ratio, language, service)
 
 
 @dataclass
@@ -263,14 +278,19 @@ class ReadEvent(Event):
             "pages",
             "screens",
             "slides",
+            "words",
         ):
-            coef: float = 1.0
-            if self.volume.measure in (
-                "screens",
-                "slides",
-                "four_inches_pages",
-            ):
-                coef = 0.5
+            match self.volume.measure:
+                case "screens":
+                    coef = 0.5
+                case "slides":
+                    coef = 0.5
+                case "four_inches_pages":
+                    coef = 0.5
+                case "words":
+                    coef = 1.0 / 2000.0 * 6.5
+                case "pages":
+                    coef = 1.0
             if self.volume and self.volume.value:
                 pages = self.volume.value * coef
             if self.volume.to_ is not None and self.volume.from_ is not None:
@@ -279,7 +299,9 @@ class ReadEvent(Event):
         return pages
 
     @override
-    def register_summary(self, summary: Summary) -> None:
+    def register_summary(
+        self, summary: Summary, ratio: float = 1.0, is_main: bool = True
+    ) -> None:
         # Use language from the event or language of the book.
 
         language: Language
@@ -297,34 +319,45 @@ class ReadEvent(Event):
 
         # Register finished book.
         if (
-            (
-                self.volume
-                and self.volume.measure == "percent"
-                and self.volume.to_ == MAX_PERCENT
+            is_main
+            and (
+                (
+                    self.volume
+                    and self.volume.measure == "percent"
+                    and self.volume.to_ == MAX_PERCENT
+                )
+                or (
+                    self.volume
+                    and self.book
+                    and self.book.volume
+                    and self.volume.to_ == self.book.volume
+                )
+                or (
+                    self.volume
+                    and self.volume.of
+                    and self.volume.to_ == self.volume.of
+                )
             )
-            or (
-                self.volume
-                and self.book
-                and self.book.volume
-                and self.volume.to_ == self.book.volume
-            )
-            or (
-                self.volume
-                and self.volume.of
-                and self.volume.to_ == self.volume.of
-            )
-        ) and self.book:
+            and self.book
+        ):
             summary.register_finished_book(self.book)
 
         # Register reading pages.
         if pages is not None:
-            summary.register_read_pages(pages, language)
+            summary.register_read_pages(pages * ratio, language)
+        elif duration is not None:
+            summary.register_read_pages(duration / 60 / 3 * ratio, language)
+        else:
+            message: str = f"Event {self} has neither pages, nor duration."
+            raise ChronicleValueError(message, self)
 
         # Register reading duration.
         # TODO(enzet): Check precision of the duration instead of the arbitrary
         # limit.
         if duration is not None and duration < 16 * 3600.0:
-            summary.register_read(duration, language)
+            summary.register_read(duration * ratio, language)
+        elif pages is not None:
+            summary.register_read(pages * 60 * 5 * ratio, language)
 
 
 @dataclass
@@ -352,7 +385,11 @@ class StandupEvent(Event):
     )
 
     @override
-    def register_summary(self, summary: Summary) -> None:
+    def register_summary(
+        self, summary: Summary, ratio: float = 1.0, is_main: bool = True
+    ) -> None:
+        if not is_main:
+            return
         id_: str = self.title or self.artist or "standup"
         summary.register_show(Standup(id_, artist=self.artist))
 
@@ -409,12 +446,16 @@ class WatchEvent(Event):
     )
 
     @override
-    def register_summary(self, summary: Summary) -> None:
+    def register_summary(
+        self, summary: Summary, ratio: float = 1.0, is_main: bool = True
+    ) -> None:
         language: Language | None = (
             self.subtitles if self.subtitles else self.language
         )
         if language:
-            summary.register_watch(self.get_duration(), language)
+            summary.register_watch(
+                self.get_duration() * ratio, language, self.service
+            )
 
         subject: Subject | None = None
         if self.subject:
@@ -422,7 +463,9 @@ class WatchEvent(Event):
         elif self.video and self.video.subject:
             subject = self.video.subject
         if subject:
-            summary.register_learn(self.get_duration(), subject, self.service)
+            summary.register_learn(
+                self.get_duration() * ratio, subject, self.service
+            )
 
     def get_duration(self) -> float:
         """Get duration of the watching session in seconds."""
@@ -469,11 +512,15 @@ class ListenAudiobookEvent(Event):
     speed: float | None = None
     """Playback speed multiplier."""
 
+    service: Service | None = None
+    """Service used to listen to the audiobook."""
+
     arguments: ClassVar[Arguments] = (
         Arguments(["audiobook"], "listen to audiobook")
         .add_object_argument("audiobook", Audiobook)
         .add_class_argument("interval", Interval)
         .add_class_argument("volume", AudiobookVolume)
+        .add_object_argument("service", Service)
         .add(
             Argument(
                 "speed",
@@ -489,7 +536,9 @@ class ListenAudiobookEvent(Event):
         return self.audiobook.get_language() if self.audiobook else None
 
     @override
-    def register_summary(self, summary: Summary) -> None:
+    def register_summary(
+        self, summary: Summary, ratio: float = 1.0, is_main: bool = True
+    ) -> None:
         """Register this audiobook event in the summary statistics."""
 
         message: str
@@ -523,7 +572,7 @@ class ListenAudiobookEvent(Event):
             )
 
         # Register finished audiobook.
-        if (
+        if is_main and (
             self.volume
             and self.volume.measure == "percent"
             and self.volume.to_ == MAX_PERCENT
@@ -536,7 +585,7 @@ class ListenAudiobookEvent(Event):
             if duration > SECONDS_IN_DAY:
                 message = f"Event {self} has duration {duration}."
                 raise ChronicleValueError(message, self)
-            summary.register_listen(duration, language)
+            summary.register_listen(duration * ratio, language, self.service)
 
 
 @dataclass
@@ -551,8 +600,10 @@ class BalletEvent(Event):
     ).add_object_argument("ballet", Ballet)
 
     @override
-    def register_summary(self, summary: Summary) -> None:
-        if self.ballet:
+    def register_summary(
+        self, summary: Summary, ratio: float = 1.0, is_main: bool = True
+    ) -> None:
+        if is_main and self.ballet:
             summary.register_show(self.ballet)
 
 
@@ -573,7 +624,11 @@ class ConcertEvent(Event):
     )
 
     @override
-    def register_summary(self, summary: Summary) -> None:
+    def register_summary(
+        self, summary: Summary, ratio: float = 1.0, is_main: bool = True
+    ) -> None:
+        if not is_main:
+            return
         if self.concert:
             summary.register_show(self.concert)
         else:
@@ -592,7 +647,11 @@ class OperaEvent(Event):
     ).add_object_argument("opera", Opera)
 
     @override
-    def register_summary(self, summary: Summary) -> None:
+    def register_summary(
+        self, summary: Summary, ratio: float = 1.0, is_main: bool = True
+    ) -> None:
+        if not is_main:
+            return
         if self.opera:
             summary.register_show(self.opera)
 
