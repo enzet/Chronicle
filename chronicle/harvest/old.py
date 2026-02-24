@@ -16,7 +16,14 @@ from chronicle.event.art import (
     WatchEvent,
 )
 from chronicle.harvest.core import Importer, ImportManager
-from chronicle.objects.core import Audiobook, Book, Object, Podcast, Video
+from chronicle.objects.core import (
+    Audiobook,
+    Book,
+    Object,
+    Podcast,
+    Service,
+    Video,
+)
 from chronicle.time import Context, Moment, Time, Timedelta
 from chronicle.timeline import Timeline
 from chronicle.value import Interval, Language, Volume
@@ -110,7 +117,7 @@ class OldImporter(Importer):
             if data["type"] == "listen":
                 if data.get("kind") in ("music111", "song111", None):
                     data["kind"] = "music"
-                    event = ListenMusicEvent(time=time)
+                    event = ListenMusicEvent(time=time, source=data)
 
                 elif data["kind"] == "podcast":
                     title = data["title"]
@@ -131,13 +138,22 @@ class OldImporter(Importer):
                         ):
                             podcast = object_
                             break
+                    if "service" in data:
+                        service = objects.get_object(data["service"])
+                        if not isinstance(service, Service):
+                            message: str = f"Expected service, got `{service}`."
+                            raise ChronicleValueError(message, data)
+                    else:
+                        service = None
                     objects.set_object(podcast_id, podcast)
                     event = ListenPodcastEvent(
                         time=time,
+                        source=data,
                         podcast=podcast,
                         interval=interval,
                         episode=data.get("episode", None),
                         season=data.get("season", None),
+                        service=service,
                     )
 
                 elif data["kind"] == "audiobook111":
@@ -149,7 +165,9 @@ class OldImporter(Importer):
                     audiobook = Audiobook(id="audio_" + book_id, book=book)
                     objects.set_object(book_id, book)
                     objects.set_object("audio_" + book_id, audiobook)
-                    event = ListenAudiobookEvent(time=time, audiobook=audiobook)
+                    event = ListenAudiobookEvent(
+                        time=time, source=data, audiobook=audiobook
+                    )
 
             elif data["type"] == "watch":
                 if "movie_id" not in data and "title" in data:
@@ -165,8 +183,16 @@ class OldImporter(Importer):
                     interval = Interval.from_json(
                         data["from"] + "/" + data["to"]
                     )
+                if "service" in data:
+                    service = objects.get_object(data["service"])
+                    if not isinstance(service, Service):
+                        message: str = f"Expected service, got `{service}`."
+                        raise ChronicleValueError(message, data)
+                else:
+                    service = None
                 event = WatchEvent(
                     time=time,
+                    source=data,
                     video=movie,
                     duration=duration,
                     interval=interval,
@@ -182,6 +208,7 @@ class OldImporter(Importer):
                     ),
                     season=data.get("season", None),
                     episode=data.get("episode", None),
+                    service=service,
                 )
 
             elif data["type"] == "read":
@@ -210,9 +237,7 @@ class OldImporter(Importer):
                         else:
                             book_object: Object = objects.get_object(book_id)
                             if not isinstance(book_object, Book):
-                                message: str = (
-                                    f"Expected book, got `{book_object}`."
-                                )
+                                message = f"Expected book, got `{book_object}`."
                                 raise ValueError(message)
                             book = book_object
 
@@ -250,6 +275,7 @@ class OldImporter(Importer):
 
                 event = ReadEvent(
                     time=time,
+                    source=data,
                     book=book,
                     volume=volume,
                     language=(
@@ -315,14 +341,24 @@ class OldMovieImporter(Importer):
             elif len(data["language"]) == 2:  # noqa: PLR2004
                 language = Language(data["language"])
 
+            if "service" in data:
+                service = timeline.objects.get_object(data["service"])
+                if not isinstance(service, Service):
+                    message: str = f"Expected service, got `{service}`."
+                    raise ChronicleValueError(message, data)
+            else:
+                service = None
+
             event: WatchEvent = WatchEvent(
                 time=time,
+                source=data,
                 video=movie,
                 duration=duration,
                 language=language,
                 subtitles=subtitles,
                 episode=data.get("episode", None),
                 season=data.get("season", None),
+                service=service,
             )
             timeline.events.append(event)
 
@@ -356,9 +392,11 @@ class OldPodcastImporter(Importer):
                     break
             event: ListenPodcastEvent = ListenPodcastEvent(
                 time=time,
+                source=data,
                 podcast=podcast,
                 duration=duration,
                 episode=data.get("episode", None),
                 season=data.get("season", None),
+                service=timeline.objects.get_object("@podcasts"),
             )
             timeline.events.append(event)
