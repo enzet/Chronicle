@@ -124,7 +124,7 @@ class TransportPlaceEvent(PlaceEvent):
     """Event representing being at a transport place."""
 
     arguments: ClassVar[Arguments] = PlaceEvent.arguments.replace(
-        ["transport"], "transport"
+        ["transport_place"], "transport_place"
     )
     color: ClassVar[str] = "#000088"
 
