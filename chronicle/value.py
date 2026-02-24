@@ -5,6 +5,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import ClassVar, Literal, Self
 
+from colour import Color
+
 from chronicle.errors import ChronicleValueError
 from chronicle.time import INTERVAL_PATTERN, Timedelta
 
@@ -12,34 +14,37 @@ __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
 
 LANGUAGES: dict[str, tuple[str, str]] = {
-    "ar": ("Arabic", "#FF7F50"),
-    "be": ("Belarusian", "#FF7F50"),
-    "da": ("Danish", "#FF7F50"),
-    "de": ("German", "#DFA398"),
-    "el": ("Greek", "#FF7F50"),
-    "en": ("English", "#FF7F50"),
-    "eo": ("Esperanto", "#608F66"),
+    "ar": ("Arabic", "#286035"),
+    "be": ("Belarusian", "#CB2E3F"),
+    "da": ("Danish", "#061A57"),
+    "de": ("German", "#F7D046"),
+    "el": ("Greek", "#2A5DA9"),
+    "en": ("English", "#071B65"),
+    "eo": ("Esperanto", "#44982A"),
     "es": ("Spanish", "#CE6C5E"),
-    "fa": ("Persian", "#FF7F50"),
-    "fr": ("French", "#274766"),
-    "he": ("Hebrew", "#FF7F50"),
-    "hi": ("Hindi", "#FF7F50"),
-    "hy": ("Armenian", "#FF7F50"),
-    "is": ("Icelandic", "#FF7F50"),
-    "it": ("Italian", "#FF7F50"),
-    "ja": ("Japanese", "#CA1717"),
-    "ka": ("Georgian", "#FF7F50"),
-    "ko": ("Korean", "#FF7F50"),
-    "la": ("Latin", "#888888"),
-    "no": ("Norwegian", "#FF7F50"),
-    "nb": ("Norwegian Bokmål", "#FF7F50"),
-    "po": ("Polish", "#FF7F50"),
-    "pt": ("Portuguese", "#FF7F50"),
-    "rsl": ("Russian Sign Language", "#FF7F50"),
-    "ru": ("Russian", "#FF7F50"),
-    "sv": ("Swedish", "#FF7F50"),
-    "uk": ("Ukrainian", "#FF7F50"),
-    "zh": ("Chinese", "#FF7F50"),
+    "fa": ("Persian", "#D73E3E"),
+    "fr": ("French", "#4193C3"),
+    "he": ("Hebrew", "#1334B2"),
+    "hi": ("Hindi", "#E7695A"),
+    "hy": ("Armenian", "#E8AD3B"),
+    "is": ("Icelandic", "#205098"),
+    "it": ("Italian", "#41914D"),
+    "ja": ("Japanese", "#AE232F"),
+    "ka": ("Georgian", "#EA3323"),
+    "ko": ("Korean", "#1B449C"),
+    "la": ("Latin", "#FDF351"),
+    # "no": ("Norwegian", "#061A57"),
+    "nb": ("Norwegian Bokmål", "#061A57"),
+    "no": ("Norwegian", "#061A57"),
+    "po": ("Polish", "#CB2E3F"),
+    "pt": ("Portuguese", "#2B6519"),
+    "rsl": ("Russian Sign Language", "#1335A1"),
+    "ru": ("Russian", "#1335A1"),
+    "sv": ("Swedish", "#205090"),
+    "th": ("Thai", "#2D2A4A"),
+    "tr": ("Turkish", "#888888"),
+    "uk": ("Ukrainian", "#F9D849"),
+    "zh": ("Chinese", "#DB352F"),
 }
 
 WRITING_SYSTEM_NAMES = {
@@ -93,6 +98,15 @@ class WikidataId(Value):
 
     patterns: ClassVar[list[re.Pattern]] = [re.compile(r"Q\d+")]
     extractors: ClassVar[list[Callable]] = [lambda groups: int(groups(0)[1:])]
+
+
+COLOR_SCHEME_DARK_BLUE: list[Color] = [
+    Color("#4a28b2"),
+    Color("#2b1040"),
+    Color("#442375"),
+    Color("#3641a9"),
+    Color("#201249"),
+]
 
 
 @dataclass
