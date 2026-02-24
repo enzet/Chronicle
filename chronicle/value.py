@@ -162,6 +162,30 @@ class Language(Value):
 
 
 @dataclass
+class Script(Value):
+    """Script of a language."""
+
+    code: str
+    """Script code."""
+
+    def get_language(self) -> Language | None:
+        match self.code:
+            case "arab":
+                return Language("ar")
+            case "deva":
+                return Language("hi")
+            case "hang":
+                return Language("ko")
+            case "hebr":
+                return Language("he")
+            case "kana":
+                return Language("ja")
+
+        msg = f"Unknown script code: `{self.code}`."
+        raise ChronicleValueError(msg, self)
+
+
+@dataclass
 class Subject(Value):
     """Categorised subject."""
 
@@ -183,10 +207,16 @@ class Subject(Value):
         """Check if the subject is a language."""
         return self.subject[0] == "language"
 
+    def is_script(self) -> bool:
+        """Check if the subject is a script."""
+        return self.subject[0] == "script"
+
     def get_language(self) -> Language | None:
         """Get language from the subject."""
         if self.is_language() and len(self.subject) > 1:
             return Language(self.subject[1])
+        if self.is_script() and len(self.subject) > 1:
+            return Script(self.subject[1]).get_language()
         return None
 
     def __hash__(self) -> int:
