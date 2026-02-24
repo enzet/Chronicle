@@ -35,7 +35,7 @@ class Event:
     time: Time
     """Point in time or time span when event is occurred."""
 
-    source: Any = None
+    source: Any
     """Source was used to create this event."""
 
     is_task: bool = False
@@ -75,7 +75,46 @@ class Event:
             logger.exception("Cannot construct class %s from %s.", cls, parsed)
             raise
 
-    def register_summary(self, summary: Summary) -> None:
+    @classmethod
+    def get_vim_syntax(cls) -> str:
+        """Get syntax definition of the event in Vim format."""
+        name: str = cls.__name__.removesuffix("Event")
+
+        prefix: str = name[0].lower()
+        for c in name[1:]:
+            prefix += ("_" + c.lower()) if "A" <= c <= "Z" else c
+
+        class_arguments: str = cls.arguments.get_vim_syntax()
+
+        syntax: str = f"highlight link {name}Arguments chronicleEventValue\n"
+
+        for argument in cls.arguments.arguments:
+            if not argument.patterns:
+                continue
+            for pattern in argument.patterns:
+                pattern_text: str = pattern.pattern
+                pattern_text = pattern_text.replace("/", "\\/")
+                syntax += (
+                    f"syntax match {name}Arguments /{pattern_text}/ contained\n"
+                )
+
+        syntax += (
+            f"syntax region {name}Line"
+            " matchgroup=TypeFormat"
+            f" start=/{prefix}\\s*/"
+            " end=/$/"
+            f" contains={name}Arguments,"
+            "chronicleVariable,"
+            "chronicleTask,"
+            "chronicleLink,"
+            "chronicleComment,"
+            "Tag" + (("," + class_arguments) if class_arguments else "") + "\n"
+        )
+        return syntax
+
+    def register_summary(
+        self, summary: Summary, ratio: float = 1.0, *, is_main: bool = True
+    ) -> None:
         """Register event effect on summary."""
 
     def to_string(self) -> str:
@@ -102,8 +141,8 @@ class Event:
             color: str = getattr(self, "color")  # noqa: B009
             return color
 
-        # Default event color is gray, to be seen on the white and on the
-        # black background.
+        # Default event color is gray, to be seen on the white and on the black
+        # background.
         return "#888888"
 
     def get_duration(self) -> float | None:

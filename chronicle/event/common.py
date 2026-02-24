@@ -74,9 +74,11 @@ class CookEvent(Event):
     )
 
     @override
-    def register_summary(self, summary: Summary) -> None:
+    def register_summary(
+        self, summary: Summary, ratio: float = 1.0, is_main: bool = True
+    ) -> None:
         """Register unique dish."""
-        if self.dish:
+        if is_main and self.dish:
             summary.register_dish(self.dish)
 
 
@@ -144,7 +146,9 @@ class LearnEvent(Event):
     )
 
     @override
-    def register_summary(self, summary: Summary) -> None:
+    def register_summary(
+        self, summary: Summary, ratio: float = 1.0, is_main: bool = True
+    ) -> None:
         message: str
 
         if not self.subject:
@@ -156,7 +160,7 @@ class LearnEvent(Event):
             raise ChronicleValueError(message, self)
 
         if duration := self.get_duration():
-            summary.register_learn(duration, self.subject, self.service)
+            summary.register_learn(duration * ratio, self.subject, self.service)
 
 
 @dataclass
@@ -178,6 +182,9 @@ class WriteEvent(Event):
     person: Person | None = None
     """Person you were writing to."""
 
+    service: Service | None = None
+    """Service used to write the document."""
+
     arguments: ClassVar[Arguments] = (
         Event.arguments.replace(["write"], "write")
         .add(Argument("title"), is_main=True)
@@ -185,18 +192,25 @@ class WriteEvent(Event):
         .add_class_argument("duration", Timedelta)
         .add_class_argument("volume", Volume)
         .add_object_argument("person", Person)
+        .add_object_argument("service", Service)
     )
 
     @override
-    def register_summary(self, summary: Summary) -> None:
+    def register_summary(
+        self, summary: Summary, ratio: float = 1.0, is_main: bool = True
+    ) -> None:
         if not self.language:
             return
 
         if not self.get_duration() and self.volume:
             if self.volume.measure == "words" and self.volume.value:
-                summary.register_write_words(self.volume.value, self.language)
+                summary.register_write_words(
+                    self.volume.value * ratio, self.language, self.service
+                )
         elif duration := self.get_duration():
-            summary.register_write(duration, self.language)
+            summary.register_write(
+                duration * ratio, self.language, self.service
+            )
 
 
 @dataclass
@@ -254,9 +268,11 @@ class SpeakEvent(Event):
     )
 
     @override
-    def register_summary(self, summary: Summary) -> None:
+    def register_summary(
+        self, summary: Summary, ratio: float = 1.0, is_main: bool = True
+    ) -> None:
         if self.language and (duration := self.get_duration()):
-            summary.register_speak(duration, self.language)
+            summary.register_speak(duration * ratio, self.language)
 
 
 @dataclass
@@ -458,12 +474,14 @@ class ProgramEvent(Event):
     )
 
     @override
-    def register_summary(self, summary: Summary) -> None:
+    def register_summary(
+        self, summary: Summary, ratio: float = 1.0, is_main: bool = True
+    ) -> None:
         if self.project:
             if "work" in self.project.tags and (
                 duration := self.get_duration()
             ):
-                summary.register_work(duration)
+                summary.register_work(duration * ratio)
         else:
             logger.warning(
                 "Unknown project `%s` in `%s`.", self.project, self.source
@@ -476,9 +494,11 @@ class SleepEvent(Event):
     arguments: ClassVar[Arguments] = Arguments(["sleep"], "sleep")
 
     @override
-    def register_summary(self, summary: Summary) -> None:
+    def register_summary(
+        self, summary: Summary, ratio: float = 1.0, is_main: bool = True
+    ) -> None:
         if duration := self.get_duration():
-            summary.register_sleep(duration)
+            summary.register_sleep(duration * ratio)
 
     @override
     def get_color(self) -> str:
