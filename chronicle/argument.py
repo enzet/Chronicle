@@ -84,6 +84,7 @@ class Arguments:
         self.command: str = command
         self.arguments: list[Argument] = []
         self.main_argument: Argument | None = None
+        self.class_argument_names: list[str] = []
 
     def parse(self, tokens: list[str], objects: Objects) -> dict[str, Any]:
         """Parse arguments from command."""
@@ -213,6 +214,8 @@ class Arguments:
 
         Value class should specify patterns and extractors. E.g. language.
         """
+        self.class_argument_names.append(class_.__name__)
+
         argument: Argument = Argument(name)
 
         assert (
@@ -229,6 +232,7 @@ class Arguments:
             argument.prefix = class_.prefix
 
         self.arguments.append(argument)
+
         return self
 
     def add_object_argument(
@@ -297,6 +301,10 @@ class Arguments:
                 if string:
                     text += " " + string
         return text
+
+    def get_vim_syntax(self) -> str:
+        """Get syntax of arguments in Vim format."""
+        return ",".join(self.class_argument_names)
 
     def to_object_command(self, value: Any) -> str:
         """Convert entity with arguments to normalized command."""
