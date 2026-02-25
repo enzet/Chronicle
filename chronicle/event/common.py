@@ -143,6 +143,7 @@ class LearnEvent(Event):
         .add_object_argument("service", Service)
         .add_class_argument("duration", Timedelta)
         .add(Argument("actions", prefix="actions:"))
+        .add_class_argument("tags", Tags)
     )
 
     @override
