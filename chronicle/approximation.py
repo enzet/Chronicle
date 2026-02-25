@@ -7,8 +7,8 @@ from rich import print as rich_print
 from rich.table import Table
 
 from chronicle.event.art import ReadEvent
+from chronicle.event.core import Event
 from chronicle.objects.core import Book, Language
-from chronicle.timeline import Timeline
 
 DEBUG: bool = False
 
@@ -24,7 +24,7 @@ class PagesTime:
         return PagesTime(self.pages + other.pages, self.time + other.time)
 
     def get_speed(self) -> float:
-        """Get reading speed."""
+        """Get reading speed in pages per hour."""
         return self.pages / self.time * 3600.0
 
     def get_pages_and_time(self) -> str:
@@ -34,8 +34,6 @@ class PagesTime:
 @dataclass
 class Approximation:
     """Approximation for the events in the timeline."""
-
-    timeline: Timeline
 
     language_to_data: dict[Language, PagesTime] = field(
         default_factory=lambda: defaultdict(PagesTime)
@@ -47,10 +45,10 @@ class Approximation:
         default_factory=lambda: defaultdict(PagesTime)
     )
 
-    def approximate_reading_speed(self) -> None:
+    def approximate_reading_speed(self, events: list[Event]) -> None:
         """Approximate reading speed."""
 
-        for event in self.timeline.get_events():
+        for event in events:
             if not isinstance(event, ReadEvent):
                 continue
 
@@ -69,7 +67,8 @@ class Approximation:
             self.language_year_to_data[event.get_language()][
                 event.time.get_moment().year
             ] += data
-            self.book_to_data[event.book] += data
+            if event.book:
+                self.book_to_data[event.book] += data
 
         if DEBUG:
             table = Table(title="Reading speed by language")
@@ -112,7 +111,7 @@ class Approximation:
             rich_print(table)
 
     def get_speed(self, book: Book, year: int | None = None) -> float | None:
-        """Get approximated reading speed for a book."""
+        """Get approximated reading speed in pages per hour for a book."""
 
         if book in self.book_to_data:
             return self.book_to_data[book].get_speed()
