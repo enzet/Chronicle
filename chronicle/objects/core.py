@@ -423,8 +423,19 @@ class Service(Object):
     name: str | None = None
     """Name of the service."""
 
-    arguments: ClassVar[Arguments] = Arguments(["service"], "service").add(
-        Argument("name")
+    color: Color | None = None
+    """Main color of the service."""
+
+    arguments: ClassVar[Arguments] = (
+        Arguments(["service"], "service")
+        .add(Argument("name"))
+        .add(
+            Argument(
+                "color",
+                prefix="color:",
+                loader=lambda value, _: Color("#" + value),
+            )
+        )
     )
     prefix: ClassVar[str] = "using"
 
@@ -615,6 +626,9 @@ class Podcast(Object):
     is_adapted: bool = False
     """Whether the podcast uses simplified language for educational purposes."""
 
+    service: Service | None = None
+    """Service that is usually used to listen to the podcast."""
+
     @override
     def __hash__(self) -> int:
         return super().__hash__()
@@ -635,6 +649,7 @@ class Podcast(Object):
         .add(Argument("title"))
         .add_class_argument("language", Language)
         .add_class_argument("wikidata_id", WikidataId)
+        .add_object_argument("service", Service)
     )
 
 
