@@ -228,7 +228,6 @@ class Timeline:
         :param get_first: function to get starting point
         :param get_next: function to get next point
         """
-
         filtered_events = self.get_events(filter_)
 
         if not filtered_events:
@@ -237,38 +236,82 @@ class Timeline:
         min_time: datetime = min(x.time.get_lower() for x in filtered_events)
         max_time: datetime = max(x.time.get_upper() for x in filtered_events)
 
-        sorted_events: list[Event] = sorted(
-            filtered_events, key=lambda x: x.time.get_lower()
-        )
-        point: datetime = get_first(min_time)
-        index: int = 0
-        events: list[tuple[datetime, list[Event], Summary]] = []
-        interval_events: list[Event]
+        start_point: datetime = get_first(min_time)
+        end_point: datetime = get_next(get_first(max_time))
+        length = (end_point - start_point).total_seconds()
 
+        point: datetime = start_point
+        points: list[tuple[datetime, datetime]] = []
         while point < max_time:
-            interval_events = []
-            while sorted_events[index].time.get_lower() < get_next(point):
-                interval_events.append(sorted_events[index])
-                index += 1
-                if index >= len(sorted_events):
-                    break
+            next_point: datetime = get_next(point)
+            points.append((point, next_point))
+            point = next_point
 
-            summary: Summary = Summary()
-            for event in interval_events:
+        result_dict: dict[datetime, tuple[list[Event], Summary]] = {}
+        for point in points:
+            result_dict[point[0]] = ([], Summary())
+
+        assert points[0][0] == start_point
+        assert points[-1][1] == end_point
+
+        for event in filtered_events:
+            event_start: datetime = event.time.get_lower()
+            left_index: int = int(
+                (event_start - start_point).total_seconds()
+                / length
+                * len(points)
+            )
+            while points[left_index][1] < event_start:
+                left_index += 1
+            while points[left_index][0] > event_start and left_index > 0:
+                left_index -= 1
+
+            event_end: datetime = event.time.get_upper()
+            right_index: int = int(
+                (event_end - start_point).total_seconds() / length * len(points)
+            )
+            while points[right_index][1] < event_end:
+                right_index += 1
+            while points[right_index][0] > event_end and right_index > 0:
+                right_index -= 1
+
+            event_size = event_end - event_start
+
+            if left_index == right_index:
+                events, summary = result_dict[points[left_index][0]]
                 event.register_summary(summary)
+                events.append(event)
+            else:
+                events, summary = result_dict[points[left_index][0]]
+                ratio = (points[left_index][1] - event_start) / (event_size)
+                assert 0 <= ratio <= 1
+                event.register_summary(summary, ratio)
+                events.append(event)
 
-            events.append((point, interval_events, summary))
-            if index >= len(sorted_events):
-                break
+                for index in range(left_index + 1, right_index):
+                    events, summary = result_dict[points[index][0]]
+                    ratio = (points[index][1] - points[index][0]) / (event_size)
+                    assert 0 <= ratio <= 1
+                    event.register_summary(summary, ratio, is_main=False)
+                    events.append(event)
 
-            point = get_next(point)
+                events, summary = result_dict[points[right_index][0]]
+                ratio = (event_end - points[right_index][0]) / (event_size)
+                assert 0 <= ratio <= 1
+                event.register_summary(summary, ratio, is_main=False)
+                events.append(event)
 
-        return events
+        print("Events by done.")
+        return [
+            (point[0], result_dict[point[0]][0], result_dict[point[0]][1])
+            for point in points
+        ]
 
     def get_events_by_day(
         self, filter_: Callable | None = None
     ) -> list[tuple[datetime, list[Event], Summary]]:
         """Get events by day."""
+        print("Getting events by day...")
 
         def get_first(point: datetime) -> datetime:
             return datetime(point.year, point.month, point.day, tzinfo=UTC)
@@ -278,10 +321,27 @@ class Timeline:
 
         return self.get_events_by(get_first, get_next, filter_)
 
+    def get_events_by_week(
+        self, filter_: Callable[[Event], bool] | None = None
+    ) -> list[tuple[datetime, list[Event], Summary]]:
+        """Get events by week."""
+        print("Getting events by week...")
+
+        def get_first(point: datetime) -> datetime:
+            day_of_week = point.weekday()
+            point = point - timedelta(days=day_of_week)
+            return datetime(point.year, point.month, point.day, tzinfo=UTC)
+
+        def get_next(point: datetime) -> datetime:
+            return point + timedelta(days=7)
+
+        return self.get_events_by(get_first, get_next, filter_)
+
     def get_events_by_month(
         self, filter_: Callable[[Event], bool] | None = None
     ) -> list[tuple[datetime, list[Event], Summary]]:
         """Get events by month."""
+        print("Getting events by month...")
 
         def get_first(point: datetime) -> datetime:
             return datetime(point.year, point.month, 1, tzinfo=UTC)
@@ -293,10 +353,31 @@ class Timeline:
 
         return self.get_events_by(get_first, get_next, filter_)
 
+    def get_events_by_period(
+        self,
+        period: str,
+        filter_: Callable[[Event], bool] | None = None,
+    ) -> list[tuple[datetime, list[Event], Summary]]:
+        """Get events by period."""
+
+        match period:
+            case "day":
+                return self.get_events_by_day(filter_)
+            case "week":
+                return self.get_events_by_week(filter_)
+            case "month":
+                return self.get_events_by_month(filter_)
+            case "year":
+                return self.get_events_by_year(filter_)
+            case _:
+                message: str = f"Unknown period: `{period}`."
+                raise ValueError(message)
+
     def get_events_by_year(
         self, filter_: Callable[[Event], bool] | None = None
     ) -> list[tuple[datetime, list[Event], Summary]]:
         """Get events by year."""
+        print("Getting events by year...")
 
         def get_first(point: datetime) -> datetime:
             return datetime(point.year, 1, 1, tzinfo=UTC)
