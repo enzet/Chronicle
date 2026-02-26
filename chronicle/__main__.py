@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 from rich.console import Console
 
+from chronicle.approximation import Approximation
 from chronicle.errors import ChronicleUnknownTypeError
 from chronicle.harvest.apple_health import AppleHealthImportManager
 from chronicle.harvest.arc import ArcImportManager
@@ -177,6 +178,9 @@ def main() -> None:
             else:
                 logger.critical("Unknown format of file `%s`.", file_name)
                 sys.exit(1)
+
+    approximation: Approximation = Approximation()
+    approximation.approximate_reading_speed(timeline.get_events())
 
     for manager in import_managers:
         manager.process_arguments(arguments, timeline)
