@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from rich import box
 from rich.table import Table
 
+from chronicle.approximation import Approximation
 from chronicle.errors import ChronicleUnknownTypeError, ChronicleValueError
 from chronicle.event.common import PayEvent, SleepEvent
 from chronicle.event.core import Event
@@ -79,6 +80,9 @@ class Timeline:
 
         self.objects: Objects = Objects()
         """Collection of event-related objects."""
+
+        self.approximation: Approximation = Approximation(self)
+        """Approximation of the timeline."""
 
         self.prefix_to_class: dict[str, type[Event]] = {}
         """Mapping from command prefixes to event classes."""
