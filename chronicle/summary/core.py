@@ -4,6 +4,8 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import timedelta
 
+from colour import Color
+
 from chronicle.objects.core import Book, Object, Service
 from chronicle.time import format_delta
 from chronicle.value import Language, Subject
@@ -16,8 +18,8 @@ __email__ = "me@enzet.ru"
 class Summary:
     """Summary of the timeline events."""
 
-    listen: defaultdict[Language, float] = field(
-        default_factory=lambda: defaultdict(float)
+    listen: defaultdict[Language, defaultdict[Service, float]] = field(
+        default_factory=lambda: defaultdict(lambda: defaultdict(float))
     )
     """Listening something in seconds."""
 
@@ -41,13 +43,13 @@ class Summary:
     )
     """Reading something in pages."""
 
-    write: defaultdict[Language, float] = field(
-        default_factory=lambda: defaultdict(float)
+    write: defaultdict[Language, defaultdict[Service, float]] = field(
+        default_factory=lambda: defaultdict(lambda: defaultdict(float))
     )
     """Writing something in seconds."""
 
-    write_words: defaultdict[Language, float] = field(
-        default_factory=lambda: defaultdict(float)
+    write_words: defaultdict[Language, defaultdict[Service, float]] = field(
+        default_factory=lambda: defaultdict(lambda: defaultdict(float))
     )
     """Writing something in words."""
 
@@ -56,8 +58,8 @@ class Summary:
     )
     """Speaking something in seconds."""
 
-    watch: defaultdict[Language, float] = field(
-        default_factory=lambda: defaultdict(float)
+    watch: defaultdict[Language, dict[Service, float]] = field(
+        default_factory=lambda: defaultdict(dict)
     )
     """Watching something in seconds."""
 
@@ -103,25 +105,43 @@ class Summary:
     shows: set[Object] = field(default_factory=set)
     """Shows watched."""
 
-    def register_listen(self, duration: float, language: Language) -> None:
+    def register_listen(
+        self, duration: float, language: Language, service: Service | None
+    ) -> None:
         """Register the number of seconds listened in language."""
-        self.listen[language] += duration
+        if not service:
+            service = Service("unknown")
+        self.listen[language][service] += duration
 
-    def register_write(self, duration: float, language: Language) -> None:
+    def register_write(
+        self, duration: float, language: Language, service: Service | None
+    ) -> None:
         """Register the number of seconds writing in language."""
-        self.write[language] += duration
+        if not service:
+            service = Service("unknown")
+        self.write[language][service] += duration
 
-    def register_write_words(self, words: float, language: Language) -> None:
+    def register_write_words(
+        self, words: float, language: Language, service: Service | None
+    ) -> None:
         """Register the number of words written in language."""
-        self.write_words[language] += words
+        if not service:
+            service = Service("unknown")
+        self.write_words[language][service] += words
 
     def register_speak(self, duration: float, language: Language) -> None:
         """Register the number of seconds speaking in language."""
         self.speak[language] += duration
 
-    def register_watch(self, duration: float, language: Language) -> None:
+    def register_watch(
+        self, duration: float, language: Language, service: Service | None
+    ) -> None:
         """Register the number of seconds watched in language."""
-        self.watch[language] += duration
+        if not service:
+            service = Service("watch", name="Watch", color=Color("gray"))
+        if service not in self.watch[language]:
+            self.watch[language][service] = 0.0
+        self.watch[language][service] += duration
 
     def register_learn(
         self, duration: float, subject: Subject, service: Service | None
@@ -164,6 +184,14 @@ class Summary:
     def register_show(self, show: Object) -> None:
         """Register a show was watched."""
         self.shows.add(show)
+
+    def get_learning_services(self) -> set[Service]:
+        """Get all learning services."""
+        return {x for y in self.learn_language.values() for x in y}
+
+    def get_watching_services(self) -> set[Service]:
+        """Get all watching services."""
+        return {x for y in self.watch.values() for x in y}
 
     def __str__(self) -> str:
         """Get human-readable text representation of the summary."""
