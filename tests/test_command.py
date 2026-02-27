@@ -7,6 +7,7 @@ from chronicle.event.art import (
     ListenAudiobookEvent,
     ListenMusicEvent,
     ListenPodcastEvent,
+    WatchEvent,
 )
 from chronicle.event.common import LearnEvent, ProgramEvent, SleepEvent
 from chronicle.event.core import Event, Objects
@@ -303,3 +304,47 @@ def test_event_learn_unknown_duration() -> None:
     event: Event = events[0]
     assert isinstance(event, LearnEvent)
     assert event.get_duration() == ((2 + 4) / 2 * 3) * 60
+
+
+def test_podcast_by_reference() -> None:
+    """Test podcast event using a pre-defined podcast object reference."""
+
+    timeline: Timeline = parse(
+        """
+        podcast podcast_es = My Podcast .es
+        2000-01-01
+        podcast @podcast_es e74 07:30
+        """
+    )
+    events: list[Event] = timeline.events
+
+    assert len(events) == 1
+    event: Event = events[0]
+    assert isinstance(event, ListenPodcastEvent)
+    assert event.podcast
+    assert event.podcast.language == Language("es")
+    assert event.episode == "74"
+    assert event.duration == Timedelta.from_code("07:30")
+
+
+def test_watch() -> None:
+    """Test watch event with language, subtitles, season, episode, duration."""
+
+    timeline: Timeline = parse(
+        """
+        2000-01-01
+        watch Elite .es _es s1 e1 56:31
+        """
+    )
+    events: list[Event] = timeline.events
+
+    assert len(events) == 1
+    event: Event = events[0]
+    assert isinstance(event, WatchEvent)
+    assert event.video
+    assert event.video.title == "Elite"
+    assert event.language == Language("es")
+    assert event.subtitles == Language("es")
+    assert event.season == 1
+    assert event.episode == "1"
+    assert event.duration == Timedelta.from_code("56:31")
