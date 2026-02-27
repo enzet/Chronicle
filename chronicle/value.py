@@ -684,5 +684,7 @@ class Weights(Value):
         re.compile(r"((\d+(\.\d+)?)kg)(,(\d+(\.\d+)?)kg)*")
     ]
     extractors: ClassVar[list[Callable]] = [
-        lambda groups: [float(group) for group in groups(0).split(",")]
+        lambda groups: [
+            float(group.removesuffix("kg")) for group in groups(0).split(",")
+        ]
     ]

@@ -17,16 +17,6 @@ class SportViewer:
     timeline: Timeline
 
     def plot_sport(self) -> None:
-        _ = [
-            (lambda summary: summary.chin_ups, "#FF0000", "+"),
-            (lambda summary: summary.push_ups, "#0000FF", "x"),
-            (lambda summary: summary.abs_, "#008800", "|"),
-            (lambda summary: summary.jumping_jacks, "#888800", "o"),
-            (lambda summary: summary.squats, "#008888", "p"),
-            (lambda summary: summary.russian_twists, "#880088", "s"),
-            (lambda summary: summary.dips, "#888888", "*"),
-        ]
-
         from matplotlib import pyplot as plt
 
         xs: list[datetime] = []
@@ -35,7 +25,7 @@ class SportViewer:
         types: list[str] = [
             "chin_ups",
             "push_ups",
-            "abs_",
+            "abs",
             "jumping_jacks",
             "squats",
             "russian_twists",
@@ -57,9 +47,9 @@ class SportViewer:
             xs.append(day)
             total: float = 0.0
             for index, type_ in enumerate(types):
-                value: float | None = getattr(summary, type_)
+                value: float = summary.exercises.get(type_, 0.0)
                 ys[index].append(value if value else None)
-                total += value if value else 0.0
+                total += value
             ys_total.append(total / len(types))
 
         for index, type_ in enumerate(types):
