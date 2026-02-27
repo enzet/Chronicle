@@ -70,7 +70,7 @@ def main() -> None:
     view_parser = sub_parsers.add_parser("view")
     view_parser.add_argument("--style", default="normal")
     view_parser.add_argument(
-        "--colors", default="light", choices=["light", "dark", "no"]
+        "--colors", default="no", choices=["light", "dark", "no"]
     )
 
     view_sub_parsers = view_parser.add_subparsers(dest="sub_command")
@@ -91,6 +91,25 @@ def main() -> None:
         help="form of data: table or plot",
     )
     view_language_parser.add_argument(
+        "--file",
+        type=str,
+        default=None,
+        help="path to file to save plot to",
+    )
+    view_language_parser.add_argument(
+        "--period",
+        type=str,
+        choices=["day", "week", "month", "year"],
+        default="month",
+        help="period of data chunks: day, week, month, year",
+    )
+    view_language_parser.add_argument(
+        "--smooth",
+        type=int,
+        default=0,
+        help="smooth data by time",
+    )
+    view_language_parser.add_argument(
         "--interval",
         type=int,
         default=0,
@@ -101,7 +120,10 @@ def main() -> None:
         ),
     )
     view_language_parser.add_argument(
-        "--stack", action="store_true", help="stack data (only for plot)"
+        "--plot-type",
+        choices=["fill", "stack", "bar", "percent"],
+        default="line",
+        help="plot type",
     )
     view_language_parser.add_argument(
         "--margin",
@@ -128,6 +150,11 @@ def main() -> None:
             "identifiers of services of learning event to show separately, "
             "e.g. `duolingo`"
         ),
+    )
+    view_language_parser.add_argument(
+        "--cumulative",
+        action="store_true",
+        help="show cumulative data",
     )
 
     view_sub_parsers.add_parser("objects")
@@ -156,6 +183,20 @@ def main() -> None:
     logger.info("Starting Chronicle.")
 
     timeline: Timeline = Timeline()
+
+    with (
+        Path.home() / ".vim" / "syntax" / "chronicle_header.vim"
+    ).open() as input_file:
+        syntax_header: str = input_file.read()
+
+    with (Path.home() / ".vim" / "syntax" / "chronicle.vim").open(
+        "w"
+    ) as output_file:
+        output_file.write(syntax_header)
+        for event_class in timeline.prefix_to_class.values():
+            output_file.write(event_class.get_vim_syntax() + "\n")
+        for object_class in timeline.objects.prefix_to_class.values():
+            output_file.write(object_class.get_vim_syntax() + "\n")
 
     if arguments.input:
         for file_name in arguments.input:
