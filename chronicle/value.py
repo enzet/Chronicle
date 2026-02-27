@@ -8,7 +8,7 @@ from typing import ClassVar, Literal, Self
 from colour import Color
 
 from chronicle.errors import ChronicleValueError
-from chronicle.time import INTERVAL_PATTERN, Timedelta
+from chronicle.time import DELTA_PATTERN_TEXT, INTERVAL_PATTERN, Timedelta
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
@@ -384,6 +384,33 @@ class Distance(Value):
     extractors: ClassVar[list[Callable]] = [
         lambda groups: float(groups("v")),
         lambda groups: float(groups("v")) * 1000.0,
+    ]
+
+
+@dataclass
+class Speed(Value):
+    """Speed in kilometers per hour."""
+
+    value: float
+    """Speed value in km/h."""
+
+    patterns: ClassVar[list[re.Pattern]] = [
+        re.compile(r"(?P<v>\d+(\.\d+)?)km/h"),
+    ]
+    extractors: ClassVar[list[Callable]] = [
+        lambda groups: float(groups("v")),
+    ]
+
+
+@dataclass
+class Pace(Value):
+    """Pace in seconds per kilometer, encoded as `MM:SS/km`."""
+
+    patterns: ClassVar[list[re.Pattern]] = [
+        re.compile(rf"({DELTA_PATTERN_TEXT})/km"),
+    ]
+    extractors: ClassVar[list[Callable]] = [
+        lambda groups: Timedelta.from_code(groups(1)),
     ]
 
 
