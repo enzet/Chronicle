@@ -11,6 +11,12 @@ from chronicle.event.art import (
 )
 from chronicle.event.common import LearnEvent, ProgramEvent, SleepEvent
 from chronicle.event.core import Event, Objects
+from chronicle.event.sport import (
+    ChinUpsEvent,
+    PecDeckEvent,
+    RunEvent,
+    WalkEvent,
+)
 from chronicle.objects.core import Audiobook, Book, Glasses, Object, Project
 from chronicle.time import Context, Timedelta
 from chronicle.timeline import CommandParser, Timeline
@@ -370,3 +376,142 @@ def test_watch() -> None:
     assert event.season == 1
     assert event.episode == "1"
     assert event.duration == Timedelta.from_code("56:31")
+
+
+def test_run_distance() -> None:
+    """Test run event with distance only."""
+
+    timeline: Timeline = parse("2000-01-01\nrun 5km")
+    events: list[Event] = timeline.events
+
+    assert len(events) == 1
+    event: Event = events[0]
+    assert isinstance(event, RunEvent)
+    assert event.distance == 5000.0  # noqa: PLR2004
+
+
+def test_run_speed_and_distance() -> None:
+    """Test run event with speed and distance."""
+
+    timeline: Timeline = parse("2000-01-01\nrun 10km/h 3.80km")
+    events: list[Event] = timeline.events
+
+    assert len(events) == 1
+    event: Event = events[0]
+    assert isinstance(event, RunEvent)
+    assert event.speed == 10.0  # noqa: PLR2004
+    assert event.distance == 3800.0  # noqa: PLR2004
+
+
+def test_run_pace() -> None:
+    """Test run event with distance and pace using /km suffix."""
+
+    timeline: Timeline = parse("2000-01-01\nrun 1km 6:36/km")
+    events: list[Event] = timeline.events
+
+    assert len(events) == 1
+    event: Event = events[0]
+    assert isinstance(event, RunEvent)
+    assert event.distance == 1000.0  # noqa: PLR2004
+    assert event.pace == Timedelta.from_code("6:36")
+    assert event.duration is None
+
+
+def test_walk() -> None:
+    """Test walk event with distance."""
+
+    timeline: Timeline = parse("2000-01-01\nwalk 3km")
+    events: list[Event] = timeline.events
+
+    assert len(events) == 1
+    event: Event = events[0]
+    assert isinstance(event, WalkEvent)
+    assert event.distance == 3000.0  # noqa: PLR2004
+
+
+def test_exercise_single_set() -> None:
+    """Test exercise event with a single set count."""
+
+    timeline: Timeline = parse("2000-01-01\nchin_ups 5")
+    events: list[Event] = timeline.events
+
+    assert len(events) == 1
+    event: Event = events[0]
+    assert isinstance(event, ChinUpsEvent)
+    assert event.sets == [5]
+
+
+def test_exercise_multiple_sets() -> None:
+    """Test exercise event with comma-separated set counts."""
+
+    timeline: Timeline = parse("2000-01-01\nchin_ups 5,5,4")
+    events: list[Event] = timeline.events
+
+    assert len(events) == 1
+    event: Event = events[0]
+    assert isinstance(event, ChinUpsEvent)
+    assert event.sets == [5, 5, 4]
+
+
+def test_exercise_shorthand_sets() -> None:
+    """Test exercise event with NxM shorthand (3x5 means [5, 5, 5])."""
+
+    timeline: Timeline = parse("2000-01-01\nchin_ups 3x5")
+    events: list[Event] = timeline.events
+
+    assert len(events) == 1
+    event: Event = events[0]
+    assert isinstance(event, ChinUpsEvent)
+    assert event.sets == [5, 5, 5]
+
+
+def test_exercise_with_weight() -> None:
+    """Test exercise event with uniform weight across sets."""
+
+    timeline: Timeline = parse("2000-01-01\npec_deck 3x10 30kg")
+    events: list[Event] = timeline.events
+
+    assert len(events) == 1
+    event: Event = events[0]
+    assert isinstance(event, PecDeckEvent)
+    assert event.sets == [10, 10, 10]
+    assert event.weights == [30.0, 30.0, 30.0]
+
+
+def test_exercise_with_multiple_weights() -> None:
+    """Test exercise event with per-set weights."""
+
+    timeline: Timeline = parse("2000-01-01\npec_deck 10,8,8 30kg,35kg,35kg")
+    events: list[Event] = timeline.events
+
+    assert len(events) == 1
+    event: Event = events[0]
+    assert isinstance(event, PecDeckEvent)
+    assert event.sets == [10, 8, 8]
+    assert event.weights == [30.0, 35.0, 35.0]
+
+
+def test_exercise_summary() -> None:
+    """Test that exercise repetitions are counted in the summary."""
+
+    timeline: Timeline = parse("2000-01-01\nchin_ups 5,5,4")
+    summary: Summary = timeline.get_summary()
+
+    assert summary.exercises["chin_ups"] == 14  # noqa: PLR2004
+
+
+def test_exercise_summary_multiple() -> None:
+    """Test that multiple exercise events accumulate in the summary."""
+
+    timeline: Timeline = parse(
+        """
+        2000-01-01
+        chin_ups 5,5,4
+        pec_deck 3x10 30kg
+        chin_ups 3
+        """
+    )
+    summary: Summary = timeline.get_summary()
+
+    assert summary.exercises["chin_ups"] == 17  # noqa: PLR2004
+    assert summary.exercises["pec_deck"] == 30  # noqa: PLR2004

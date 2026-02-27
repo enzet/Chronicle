@@ -1,5 +1,6 @@
 """Events related to sports and physical activity."""
 
+import logging
 from dataclasses import dataclass
 from typing import Any, ClassVar, override
 
@@ -7,10 +8,19 @@ from chronicle.argument import Argument, Arguments
 from chronicle.event.core import Event
 from chronicle.summary.core import Summary
 from chronicle.time import Timedelta
-from chronicle.value import Distance, Integers, Kilocalories, Weights
+from chronicle.value import (
+    Distance,
+    Integers,
+    Kilocalories,
+    Pace,
+    Speed,
+    Weights,
+)
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
+
+logger: logging.Logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -34,6 +44,9 @@ class MoveEvent(SportEvent):
     pace: Timedelta | None = None
     """Pace in seconds per kilometer."""
 
+    speed: float | None = None
+    """Speed in km/h."""
+
     kilocalories: float | None = None
     """Kilocalories burned."""
 
@@ -41,7 +54,8 @@ class MoveEvent(SportEvent):
         Arguments(["move"], "move")
         .add_class_argument("duration", Timedelta)
         .add_class_argument("distance", Distance)
-        .add_class_argument("pace", Timedelta)
+        .add_class_argument("speed", Speed)
+        .add_class_argument("pace", Pace)
         .add_class_argument("kilocalories", Kilocalories)
     )
 
@@ -158,6 +172,18 @@ class ExerciseEvent(SportEvent):
         .add_class_argument("sets", Integers)
         .add_class_argument("weights", Weights)
     )
+
+    def __post_init__(self) -> None:
+        if self.sets is not None and self.weights is not None:
+            if len(self.weights) == 1 and len(self.sets) > 1:
+                self.weights = self.weights * len(self.sets)
+            elif len(self.weights) != len(self.sets):
+                logger.warning(
+                    "Sets length %d doesn't match weights length %d for %s.",
+                    len(self.sets),
+                    len(self.weights),
+                    self.arguments.command,
+                )
 
     def __init_subclass__(
         cls, command: str | None = None, **kwargs: Any
