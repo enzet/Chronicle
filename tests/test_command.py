@@ -306,6 +306,28 @@ def test_event_learn_unknown_duration() -> None:
     assert event.get_duration() == ((2 + 4) / 2 * 3) * 60
 
 
+def test_listen_audiobook_duration() -> None:
+    """Test audiobook event with a plain duration token."""
+
+    timeline: Timeline = parse(
+        """
+        book book_1984 = 1984 .en
+        audiobook audio_1984 = @book_1984
+        2000-01-01
+        audiobook @audio_1984 1:52:00
+        """
+    )
+    events: list[Event] = timeline.events
+
+    assert len(events) == 1
+    event: Event = events[0]
+    assert isinstance(event, ListenAudiobookEvent)
+    assert event.audiobook
+    assert event.audiobook.book
+    assert event.audiobook.book.title == "1984"
+    assert event.duration == Timedelta.from_code("1:52:00")
+
+
 def test_podcast_by_reference() -> None:
     """Test podcast event using a pre-defined podcast object reference."""
 
