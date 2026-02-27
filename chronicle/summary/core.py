@@ -75,32 +75,10 @@ class Summary:
     work: float = 0
     """Working time in seconds."""
 
-    abs_: int = 0
-    """Number of abdominal crunches performed."""
-
-    dips: int = 0
-    """Number of dips performed."""
-
-    push_ups: int = 0
-    """Number of push-ups performed."""
-
-    chin_ups: int = 0
-    """Number of chin-ups performed."""
-
-    sit_ups: int = 0
-    """Number of sit-ups performed."""
-
-    squats: int = 0
-    """Number of squats performed."""
-
-    burpees: int = 0
-    """Number of burpees performed."""
-
-    jumping_jacks: int = 0
-    """Number of jumping jacks performed."""
-
-    russian_twists: int = 0
-    """Number of Russian twists performed."""
+    exercises: defaultdict[str, float] = field(
+        default_factory=lambda: defaultdict(float)
+    )
+    """Exercise repetition counts by exercise name."""
 
     shows: set[Object] = field(default_factory=set)
     """Shows watched."""
