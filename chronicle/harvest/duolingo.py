@@ -199,6 +199,7 @@ def add_event(
     service: Service,
     course_name: str,
 ) -> None:
+    """Add a single Duolingo learn event to the timeline."""
     time: Time = Time.from_moments(
         Moment.from_datetime(previous_date),
         Moment.from_datetime(date),
@@ -223,6 +224,7 @@ def add_events(
     service: Service,
     course_name: str,
 ) -> None:
+    """Add multiple Duolingo learn events (one per day) to the timeline."""
     days: int = int((date - previous_date).total_seconds() / 24 / 3600)
     for day in range(days):
         current_time: Time = Time.from_moments(
