@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <title>Chronicle Travel Map</title>
+        <link rel="stylesheet"
+            href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+            crossorigin=""/>
+        <style>
+            html, body {height: 100%; margin: 0;}
+            body {background-color: #ffffff;}
+            .map-wrapper {position: relative; height: 100%; width: 100%;}
+            #map {height: 100%; width: 100%;}
+            .map-overlay {
+                position: absolute;
+                z-index: 300;
+                top: 0;
+                left: 0;
+                height: 100%;
+                width: 100%;
+                pointer-events: none;
+                background: rgba(255, 255, 255, 1);
+            }
+            .leaflet-pane.leaflet-tile-pane {
+                filter: opacity(0.4);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="map-wrapper">
+            <div id="map"></div>
+            <div class="map-overlay"></div>
+        </div>
+        <script
+            src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            crossorigin=""></script>
+        <script>
+            const lines = __LINES_JSON__;
+            const map = L.map("map");
+            const uniquePoints = new Set();
+            const pointLabels = __POINT_LABELS__;
+
+            L.tileLayer(
+                "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {
+                    maxZoom: 19,
+                    attribution: "&copy; OpenStreetMap contributors"
+                }
+            ).addTo(map);
+
+            if (lines.length > 0) {
+                const bounds = [];
+                lines.forEach((line) => {
+                    const polyline = L.polyline(
+                        line, {color: "#000000", weight: 1, opacity: 0.2}
+                    );
+                    polyline.addTo(map);
+                    line.forEach((point) => bounds.push(point));
+
+                    const endpoints = [line[0], line[line.length - 1]];
+                    endpoints.forEach((point) => {
+                        const key = `${point[0].toFixed(6)}_${point[1].toFixed(6)}`;
+                        if (!uniquePoints.has(key)) {
+                            uniquePoints.add(key);
+                            const label = pointLabels[key][0];
+                            const visits = pointLabels[key][1];
+                            if (visits > 0) {
+                                const marker = L.circleMarker(
+                                    point,
+                                    {
+                                        radius: 2,
+                                        color: "#000000",
+                                        weight: 1,
+                                        fillOpacity: 0.6,
+                                    }
+                                ).addTo(map);
+                                if (label) {
+                                    marker.bindTooltip(label, {permanent: false});
+                                }
+                            }
+                        }
+                    });
+                });
+                map.fitBounds(bounds, {padding: [20, 20]});
+            } else {
+                map.setView([0, 0], 2);
+            }
+        </script>
+    </body>
+</html>
+

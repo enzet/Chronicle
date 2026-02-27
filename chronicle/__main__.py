@@ -75,6 +75,14 @@ def main() -> None:
 
     view_sub_parsers = view_parser.add_subparsers(dest="sub_command")
 
+    view_travel_parser = view_sub_parsers.add_parser("travel")
+    view_travel_parser.add_argument(
+        "--svg-output",
+        type=str,
+        default=None,
+        help="path to SVG file to save travel overlay",
+    )
+
     view_language_parser = view_sub_parsers.add_parser("language")
     view_language_parser.add_argument(
         "--form",
@@ -193,6 +201,11 @@ def main() -> None:
                 from chronicle.view.language import LanguageLearningViewer
 
                 LanguageLearningViewer(timeline).process_command(arguments)
+
+            elif arguments.sub_command == "travel":
+                from chronicle.view.travel import TravelViewer
+
+                TravelViewer(timeline).process_command(arguments)
 
             elif arguments.sub_command == "objects":
                 output_path: Path = Path("output.html")
