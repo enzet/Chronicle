@@ -509,6 +509,9 @@ class ListenAudiobookEvent(Event):
     volume: AudiobookVolume | None = None
     """Volume or portion of the audiobook that was listened to."""
 
+    duration: Timedelta | None = None
+    """Duration of the listening session."""
+
     speed: float | None = None
     """Playback speed multiplier."""
 
@@ -519,6 +522,7 @@ class ListenAudiobookEvent(Event):
         Arguments(["audiobook"], "listen to audiobook")
         .add_object_argument("audiobook", Audiobook)
         .add_class_argument("interval", Interval)
+        .add_class_argument("duration", Timedelta)
         .add_class_argument("volume", AudiobookVolume)
         .add_object_argument("service", Service)
         .add(
@@ -543,8 +547,10 @@ class ListenAudiobookEvent(Event):
 
         message: str
 
-        if not self.interval and not self.volume:
-            message = f"Event {self} has neither interval, nor volume."
+        if not self.interval and not self.volume and not self.duration:
+            message = (
+                f"Event {self} has neither interval, duration, nor volume."
+            )
             raise ChronicleSummaryError(message, self)
 
         language: Language | None = self.get_language()
@@ -556,6 +562,8 @@ class ListenAudiobookEvent(Event):
 
         if self.interval:
             duration = self.interval.get_duration()
+        elif self.duration:
+            duration = self.duration.total_seconds()
         elif self.volume:
             if not self.audiobook:
                 message = f"Cannot get audiobook for event {self}."

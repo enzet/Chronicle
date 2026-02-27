@@ -316,7 +316,6 @@ class LanguageLearningViewer:
                     total_threshold=arguments.margin,
                     style=arguments.style,
                     colors=arguments.colors,
-                    interval=arguments.interval,
                 )
             case "plot":
                 self.plot_languages(
@@ -667,7 +666,6 @@ class LanguageLearningViewer:
         total_threshold: float = 0.0,
         style: str = "normal",
         colors: str = "light",
-        _interval: int = 0,
     ) -> None:
         total: float = 0
 
