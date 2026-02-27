@@ -35,10 +35,12 @@ COLOR_SCHEME: dict[str, str] = DARK_COLOR_SCHEME
 
 SECONDS_IN_HOUR: float = 3600.0
 MINUTES_IN_HOUR: float = 60.0
+BAR_CAPTION_MIN_RATIO: float = 0.05
+MAX_GOAL_ROWS: int = 5
 
 
 with (Path.home() / ".config" / "machina" / "config.yml").open() as input_file:
-    CONFIG: dict[str, Any] = yaml.load(input_file, Loader=yaml.FullLoader)
+    CONFIG: dict[str, Any] = yaml.safe_load(input_file)
 
 
 @dataclass
@@ -532,10 +534,10 @@ class LanguageLearningViewer:
             if not interval:
                 plt.xlim(datetime(2017, 9, 22, tzinfo=UTC), datetime.now(UTC))
             else:
-                # plt.xlim(None, data_by_time.xs[-1])
+                # We can also use `plt.xlim(None, data_by_time.xs[-1])` here.
                 plt.xlim(None, datetime.now(UTC))
             plt.ylim(0, None)
-            # plt.legend(loc="upper left")
+            # We can also use `plt.legend(loc="upper left")` here.
 
             plt.ylabel("Minutes per day")
 
@@ -576,7 +578,7 @@ class LanguageLearningViewer:
                     )
             plt.xlim(datetime(2017, 9, 22, tzinfo=UTC), datetime.now(UTC))
             plt.ylim(0, None)
-            # plt.legend(loc="upper left")
+            # We can also use `plt.legend(loc="upper left")` here.
             if path:
                 plt.gcf().set_size_inches(14, 4)
                 plt.savefig(path)
@@ -599,24 +601,24 @@ class LanguageLearningViewer:
         match mode:
             case "paper":
 
-                def foreground_color(color):
+                def foreground_color(_color: Color) -> Color:
                     return Color("black")
 
-                def background_color(color):
+                def background_color(_color: Color) -> Color:
                     return Color("white")
             case "black":
 
-                def foreground_color(color):
+                def foreground_color(_color: Color) -> Color:
                     return Color("white")
 
-                def background_color(color):
+                def background_color(_color: Color) -> Color:
                     return Color("black")
             case "color":
 
-                def foreground_color(color):
+                def foreground_color(_color: Color) -> Color:
                     return Color("white")
 
-                def background_color(color):
+                def background_color(color: Color) -> Color:
                     return color
 
         for language in data.get_languages():
@@ -636,7 +638,10 @@ class LanguageLearningViewer:
                         edgecolor=foreground_color(service.color).hex,
                         linewidth=0.5,
                     )
-                    if value / data.get_language_max() * SECONDS_IN_HOUR > 0.05:
+                    ratio: float = (
+                        value / data.get_language_max() * SECONDS_IN_HOUR
+                    )
+                    if ratio > BAR_CAPTION_MIN_RATIO:
                         caption: str = service.name or method.name
                         plt.text(
                             left + value / 2,
@@ -657,12 +662,12 @@ class LanguageLearningViewer:
     def print_table(
         self,
         languages: set[Language],
-        services: list[Service],
+        _services: list[Service],
         data: LanguageMethodServiceData,
         total_threshold: float = 0.0,
         style: str = "normal",
         colors: str = "light",
-        interval: int = 0,
+        _interval: int = 0,
     ) -> None:
         total: float = 0
 
@@ -742,7 +747,6 @@ class LanguageLearningViewer:
             Language(language) for language in CONFIG["language"]["priority"]
         ]
 
-        sum(language_totals.values())
         ratio = 1.0
         total_ratio = 0.0
         language_ratios: dict[Language, float] = {}
@@ -751,8 +755,8 @@ class LanguageLearningViewer:
             language_ratios[language] = ratio
             ratio *= CONFIG["language"]["ratio"]
 
-        # Hour goal for the first priority language.
-        # total_goal: float = overall_total / total_ratio
+        # Hour goal for the first priority language is
+        # `overall_total / total_ratio`.
 
         g: float = (
             (
@@ -811,7 +815,7 @@ class LanguageLearningViewer:
                     f"{value:.5f}",
                 )
                 rows += 1
-            if rows > 5:
+            if rows > MAX_GOAL_ROWS:
                 break
         Console().print(table, justify="center")
         print()
