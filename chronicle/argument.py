@@ -72,7 +72,7 @@ class Argument:
     command_printer: Callable | None = lambda x: x.to_command()
     """Command printer."""
 
-    html_printer: Callable = lambda x: x.to_string()
+    html_printer: Callable = lambda _objects, x: x.to_string()
     """HTML printer."""
 
 
