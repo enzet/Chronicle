@@ -306,58 +306,53 @@ class Arguments:
         """Get syntax of arguments in Vim format."""
         return ",".join(self.class_argument_names)
 
+    @staticmethod
+    def _value_to_command_string(argument: Argument, v: Any) -> str:
+        """Serialize a single argument value to its command string form."""
+        if argument.command_printer:
+            return argument.command_printer(v)
+        if getattr(v, "to_command", None):
+            return v.to_command()
+        if isinstance(v, float):
+            return f"{v:.2f}"
+        return str(v)
+
     def to_object_command(self, value: Any) -> str:
         """Convert entity with arguments to normalized command."""
 
-        text: str = ""
+        parts: list[str] = []
         for argument in self.arguments:
             if not hasattr(value, argument.key) or not getattr(
                 value, argument.key
             ):
                 continue
             try:
-                v = getattr(value, argument.key)
-                string: str
-                if argument.command_printer:
-                    string = argument.command_printer(v)
-                elif getattr(v, "to_command", None):
-                    string = v.to_command()
-                else:
-                    string = str(v)
-
+                string = self._value_to_command_string(
+                    argument, getattr(value, argument.key)
+                )
                 if string:
-                    if text:
-                        text += " " + string
-                    else:
-                        text += string
+                    parts.append(string)
             except AttributeError:
                 logger.exception(
                     "Cannot print command for %s of %s.", argument.key, value
                 )
-        return text
+        return " ".join(parts)
 
     def to_command(self, event: Event) -> str:
         """Get command representation of event."""
 
-        text: str = event.time.to_pseudo_edtf_time() + " " + self.prefixes[0]
+        parts: list[str] = [event.time.to_pseudo_edtf_time(), self.prefixes[0]]
         for argument in self.arguments:
-            if hasattr(event, argument.key):
-                if getattr(event, argument.key):
-                    v = getattr(event, argument.key)
-                    string: str
-                    if argument.command_printer:
-                        string = argument.command_printer(v)
-                    elif getattr(v, "to_command", None):
-                        string = v.to_command()
-                    elif isinstance(v, float):
-                        string = f"{v:.2f}"
-                    else:
-                        string = str(v)
-                    if string:
-                        text += " " + string
-            else:
-                logger.error("No {argument.key} of {event}.")
-        return text
+            if not hasattr(event, argument.key):
+                logger.error("No %s of %s.", argument.key, event)
+                continue
+            if getattr(event, argument.key):
+                string = self._value_to_command_string(
+                    argument, getattr(event, argument.key)
+                )
+                if string:
+                    parts.append(string)
+        return " ".join(parts)
 
     def replace(self, prefixes: list[str], command: str) -> Arguments:
         new_arguments = copy.deepcopy(self)
