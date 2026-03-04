@@ -10,18 +10,18 @@ review your information.
 
 ## Features
 
-- Chronicle uses a **simple text format**: you can use any text editor with our `.chr`
-file format.
-- It is **privacy-first**: all data stored locally on your machine.
-- You can **track multiple metrics**:
-  - daily activities and events,
-  - health and fitness metrics,
-  - tasks and goals,
-  - sleep patterns,
-  - custom metrics.
-- Chronicle allows you to **generate insights**: analyze patterns and create
-summaries.
-- `.chr` files have a **flexible syntax**: intuitive format for quick entries.
+  - Chronicle uses a **simple text format**: you can use any text editor with
+    our `.chr` file format.
+  - It is **privacy-first**: all data stored locally on your machine.
+  - You can **track multiple metrics**:
+      - daily activities and events,
+      - health and fitness metrics,
+      - tasks and goals,
+      - sleep patterns,
+      - custom metrics.
+  - Chronicle allows you to **generate insights**: analyze patterns and create
+    summaries.
+  - `.chr` files have a **flexible syntax**: intuitive format for quick entries.
 
 ## Data Format
 
@@ -164,7 +164,7 @@ commands and key mappings for working with tasks in your journal.
   - Changes the event end time to the current time.
   - If the task is recurring (e.g., contains `!every_day`), it will
     automatically schedule the next occurrence on the appropriate date.
-  
+
 - `:ChroniclePause` or <kbd>Space</kbd> <kbd>p</kbd>
   - Marks the current task as done and creates a new identical task.
 
