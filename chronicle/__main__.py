@@ -87,8 +87,8 @@ def main() -> None:
     view_language_parser.add_argument(
         "--form",
         type=str,
-        choices=["table", "plot"],
-        help="form of data: table or plot",
+        choices=["table", "plot", "bars"],
+        help="form of data: table, plot, or bars",
     )
     view_language_parser.add_argument(
         "--file",
