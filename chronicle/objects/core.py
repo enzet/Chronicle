@@ -1015,3 +1015,27 @@ class Standup(Object):
     def to_string(self) -> str:
         title: str = self.title or "Standup"
         return f"{title} by {self.artist}"
+
+
+@dataclass
+class Dish(Object):
+    """A food dish or recipe."""
+
+    title: str | None = None
+    """Name of the dish."""
+
+    ingredients: list[str] = field(default_factory=list)
+    """List of ingredients."""
+
+    arguments: ClassVar[Arguments] = (
+        Arguments(["dish"], "dish")
+        .add(Argument("title"))
+        .add(
+            Argument(
+                "ingredients",
+                patterns=[re.compile(r"\+([a-z_,]+)")],
+                extractors=[lambda groups: groups(1).split(",")],
+                command_printer=lambda x: "+" + ",".join(x),
+            )
+        )
+    )
