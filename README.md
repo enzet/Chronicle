@@ -101,6 +101,74 @@ Objects:
     - [x] Buy milk.
     - [ ] Pay for internet $15.
 
+## Commands
+
+### `view` — Visualize data
+
+```shell
+chronicle --input <files> view [--style <style>] [--colors light|dark|no] <subcommand>
+```
+
+#### `view language` — Language learning statistics
+
+```shell
+chronicle --input <files> view language \
+    [--form table|plot] \
+    [--file <output file>] \
+    [--period day|week|month|year] \
+    [--smooth <days>] \
+    [--interval <days>] \
+    [--plot-type fill|stack|bar|percent] \
+    [--margin <hours>] \
+    [--exclude-languages <lang> ...] \
+    [--services <service> ...] \
+    [--cumulative]
+```
+
+#### `view travel` — Travel map
+
+```shell
+chronicle --input <files> view travel [--svg-output <file>]
+```
+
+#### `view books` — Book list
+
+```shell
+chronicle --input <files> view books [--year <year>] [--title <title>] [--finished]
+```
+
+#### `view podcasts` — Podcast list
+
+```shell
+chronicle --input <files> view podcasts [--title <title>]
+```
+
+#### `view sport` — Sport activity plot
+
+```shell
+chronicle --input <files> view sport
+```
+
+#### `view objects` — Object list as HTML
+
+```shell
+chronicle --input <files> view objects
+```
+
+### Other commands
+
+| Command | Description |
+|---|---|
+| `timeline` | Print the full timeline. |
+| `summary` | Print a summary of all events. |
+| `shows` | Show TV show progress. |
+| `movies` | List watched movies. |
+| `expired` | Show expired tasks. |
+| `dishes` | Show dishes log. |
+| `objects` | List all objects. |
+| `graph` | Build an object graph. |
+| `interpret` | Interactive mode: read commands from stdin. |
+
 ## Requirements
 
 - Python 3.12+.
