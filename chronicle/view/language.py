@@ -326,8 +326,13 @@ class LanguageLearningViewer:
                     path=arguments.file,
                     plot_type=arguments.plot_type,
                     cumulative=arguments.cumulative,
-                    total_threshold=arguments.margin,
                     interval=arguments.interval,
+                )
+            case "bars":
+                self.plot_bar(
+                    self.construct_data(filter_, languages),
+                    arguments.file,
+                    arguments.margin,
                 )
 
     def construct_data_by_time(
@@ -441,7 +446,6 @@ class LanguageLearningViewer:
         cumulative: bool = False,
         smooth: int = 0,
         plot_type: str,
-        total_threshold: float = 0.0,
         interval: int = 0,
     ) -> None:
         """Plot language learning progress."""
@@ -586,11 +590,6 @@ class LanguageLearningViewer:
                 plt.savefig(path)
             else:
                 plt.show()
-
-        elif plot_type == "bar":
-            self.plot_bar(
-                self.construct_data(filter_, languages), path, total_threshold
-            )
 
     def plot_bar(
         self,
