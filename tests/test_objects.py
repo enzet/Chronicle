@@ -6,6 +6,7 @@ from chronicle.errors import (
     ChronicleObjectNotFoundError,
     ChronicleUnknownTypeError,
 )
+from chronicle.event.common import CookEvent
 from chronicle.objects.clothes import Clothes, Coat, Shoes
 from chronicle.objects.core import (
     Airport,
@@ -440,6 +441,36 @@ def test_dish_parse_single_ingredient() -> None:
     objects = timeline.objects.objects
     assert isinstance(objects["tea"], Dish)
     assert objects["tea"].ingredients == ["water"]
+
+
+# CookEvent with Dish.
+
+
+def test_cook_event_inline_dish() -> None:
+    """Cook event with an inline dish name registers a Dish object."""
+    timeline = parse("2000-01-01\ncook Borsch")
+    events = timeline.events
+    assert len(events) == 1
+    event = events[0]
+    assert isinstance(event, CookEvent)
+    assert isinstance(event.dish, Dish)
+    assert event.dish.title == "Borsch"
+
+
+def test_cook_event_dish_reference() -> None:
+    """Cook event using a pre-defined dish object reference."""
+    timeline = parse(
+        "dish @borsch = Borsch +beetroot,cabbage,potato\n"
+        "2000-01-01\n"
+        "cook @borsch"
+    )
+    events = timeline.events
+    assert len(events) == 1
+    event = events[0]
+    assert isinstance(event, CookEvent)
+    assert isinstance(event.dish, Dish)
+    assert event.dish.title == "Borsch"
+    assert event.dish.ingredients == ["beetroot", "cabbage", "potato"]
 
 
 # `get_commands` round-trip.
