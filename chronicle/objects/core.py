@@ -1027,6 +1027,10 @@ class Dish(Object):
     ingredients: list[str] = field(default_factory=list)
     """List of ingredients."""
 
+    @classmethod
+    def from_value(cls, value: str) -> Self:
+        return cls(None, title=value)
+
     arguments: ClassVar[Arguments] = (
         Arguments(["dish"], "dish")
         .add(Argument("title"))

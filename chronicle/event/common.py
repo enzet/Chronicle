@@ -8,7 +8,7 @@ from typing import ClassVar, override
 from chronicle.argument import Argument, Arguments
 from chronicle.errors import ChronicleValueError
 from chronicle.event.core import Event
-from chronicle.objects.core import Object, Person, Project, Service
+from chronicle.objects.core import Dish, Object, Person, Project, Service
 from chronicle.summary.core import Summary
 from chronicle.time import Timedelta
 from chronicle.value import (
@@ -66,12 +66,12 @@ class AppointmentEvent(Event):
 class CookEvent(Event):
     """Event representing cooking food."""
 
-    dish: str | None = None
-    """Name of the dish that was cooked."""
+    dish: Dish | None = None
+    """Dish that was cooked."""
 
-    arguments: ClassVar[Arguments] = Arguments(["cook"], "cook").add(
-        Argument("dish")
-    )
+    arguments: ClassVar[Arguments] = Arguments(
+        ["cook"], "cook"
+    ).add_object_argument("dish", Dish, is_main=True)
 
     @override
     def register_summary(
@@ -79,7 +79,7 @@ class CookEvent(Event):
     ) -> None:
         """Register unique dish."""
         if is_main and self.dish:
-            summary.register_dish(self.dish)
+            summary.register_dish(self.dish.title or self.dish.id)
 
 
 @dataclass
