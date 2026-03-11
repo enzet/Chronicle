@@ -458,18 +458,21 @@ class LanguageLearningViewer:
         for axis in "x", "y":
             plt.rcParams[f"{axis}tick.major.size"] = 0
 
-        data: LanguageMethodServiceData = self.construct_data(
-            filter_, languages
-        )
-
         if plot_type == "stack":
-            keys = sorted(data.data, key=lambda x: -data.data[x]["Total"][-1])
-            keys = [x for x in keys if x != "total__"]
+            data_by_time: LanguageLearningDataByTime = (
+                self.construct_data_by_time(filter_, languages, period)
+            )
+            keys = sorted(
+                data_by_time.data,
+                key=lambda x: -(
+                    data_by_time.data[x][-1] if data_by_time.data[x] else 0
+                ),
+            )
             plt.stackplot(
-                data.xs,
-                *[data.data[key]["Total"] for key in keys],
-                labels=list(keys),
-                colors=[Language(key).get_color() for key in keys],
+                data_by_time.xs,
+                *[data_by_time.data[key] for key in keys],
+                labels=[key.to_string() for key in keys],
+                colors=[key.get_color() for key in keys],
             )
             plt.legend(loc="upper left")
             plt.show()
@@ -585,7 +588,9 @@ class LanguageLearningViewer:
                 plt.show()
 
         elif plot_type == "bar":
-            self.plot_bar(data, path, total_threshold)
+            self.plot_bar(
+                self.construct_data(filter_, languages), path, total_threshold
+            )
 
     def plot_bar(
         self,

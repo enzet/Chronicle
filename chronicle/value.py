@@ -137,8 +137,7 @@ class Language(Value):
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Language):
-            message: str = f"Cannot compare `{self}` with `{other}`."
-            raise TypeError(message)
+            return NotImplemented
         return self.code == other.code
 
     def to_string(self) -> str:
