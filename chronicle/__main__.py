@@ -184,19 +184,27 @@ def main() -> None:
 
     timeline: Timeline = Timeline()
 
-    with (
-        Path.home() / ".vim" / "syntax" / "chronicle_header.vim"
-    ).open() as input_file:
+    repo_syntax_dir: Path = Path(__file__).parent.parent / "syntax"
+    header_path: Path = repo_syntax_dir / "chronicle_header.vim"
+    repo_syntax_path: Path = repo_syntax_dir / "chronicle.vim"
+
+    with header_path.open() as input_file:
         syntax_header: str = input_file.read()
 
-    with (Path.home() / ".vim" / "syntax" / "chronicle.vim").open(
-        "w"
-    ) as output_file:
+    def write_syntax(output_file) -> None:
         output_file.write(syntax_header)
         for event_class in timeline.prefix_to_class.values():
             output_file.write(event_class.get_vim_syntax() + "\n")
         for object_class in timeline.objects.prefix_to_class.values():
             output_file.write(object_class.get_vim_syntax() + "\n")
+
+    with repo_syntax_path.open("w") as output_file:
+        write_syntax(output_file)
+
+    vim_syntax_path: Path = Path.home() / ".vim" / "syntax" / "chronicle.vim"
+    if vim_syntax_path.parent.exists():
+        with vim_syntax_path.open("w") as output_file:
+            write_syntax(output_file)
 
     if arguments.input:
         for file_name in arguments.input:
