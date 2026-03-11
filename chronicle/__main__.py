@@ -4,7 +4,7 @@ import argparse
 import logging
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TextIO
 
 from rich.console import Console
 
@@ -191,7 +191,7 @@ def main() -> None:
     with header_path.open() as input_file:
         syntax_header: str = input_file.read()
 
-    def write_syntax(output_file) -> None:
+    def write_syntax(output_file: TextIO) -> None:
         output_file.write(syntax_header)
         for event_class in timeline.prefix_to_class.values():
             output_file.write(event_class.get_vim_syntax() + "\n")
