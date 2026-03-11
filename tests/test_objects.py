@@ -16,6 +16,7 @@ from chronicle.objects.core import (
     City,
     Concert,
     Country,
+    Dish,
     Mountain,
     Object,
     Objects,
@@ -411,6 +412,34 @@ def test_shoes_parse() -> None:
     objects = timeline.objects.objects
     assert isinstance(objects["nikes"], Shoes)
     assert objects["nikes"].size == "L"
+
+
+# Dish.
+
+
+def test_dish_parse_title_only() -> None:
+    """Parsing a dish declaration with title registers it."""
+    timeline = parse("dish @borsch = Borsch")
+    objects = timeline.objects.objects
+    assert isinstance(objects["borsch"], Dish)
+    assert objects["borsch"].title == "Borsch"
+    assert objects["borsch"].ingredients == []
+
+
+def test_dish_parse_with_ingredients() -> None:
+    """Parsing a dish declaration with ingredients captures the list."""
+    timeline = parse("dish @borsch = Borsch +beetroot,cabbage,potato")
+    objects = timeline.objects.objects
+    assert isinstance(objects["borsch"], Dish)
+    assert objects["borsch"].ingredients == ["beetroot", "cabbage", "potato"]
+
+
+def test_dish_parse_single_ingredient() -> None:
+    """Parsing a dish with one ingredient captures it as a one-element list."""
+    timeline = parse("dish @tea = Tea +water")
+    objects = timeline.objects.objects
+    assert isinstance(objects["tea"], Dish)
+    assert objects["tea"].ingredients == ["water"]
 
 
 # `get_commands` round-trip.
