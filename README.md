@@ -148,6 +148,53 @@ chronicle \
   Argument format is `<username>@<url>`, e.g. `User1@en.wikipedia.org`
   or `User2@wikidata.org`.
 
+## Vim Syntax Highlighting
+
+Chronicle can generate a Vim syntax file for `.chr` files that highlights event
+types, object definitions, timestamps, tags, languages, and other values.
+
+### How it works
+
+Every time `chronicle` runs it writes a generated syntax file to
+`syntax/chronicle.vim` in the repository and, if `~/.vim/syntax/` exists, also
+to `~/.vim/syntax/chronicle.vim`. The generated file is built from the static
+header `syntax/chronicle_header.vim` with auto-generated rules for every known
+event and object type appended.
+
+### Setup
+
+1. Associate the `.chr` extension with the `chronicle` filetype. Add this line
+   to your `~/.vimrc` or `~/.config/nvim/init.vim`:
+
+   ```vim
+   au BufRead,BufNewFile *.chr set filetype=chronicle
+   ```
+
+2. Copy the pre-generated syntax file into your Vim syntax directory:
+
+   ```shell
+   cp syntax/chronicle.vim ~/.vim/syntax/chronicle.vim
+   ```
+
+   After that, re-running `chronicle` will keep `~/.vim/syntax/chronicle.vim`
+   up to date automatically.
+
+### What is highlighted
+
+| Element | Examples |
+|---|---|
+| Event and object types | `sleep`, `run`, `book`, `podcast` |
+| Timestamps and dates | `2024-01-01`, `09:00/09:30` |
+| Object references | `@inner_french` |
+| Languages | `.fr`, `.en` |
+| Tags | `!work`, `!every_day` |
+| Subjects | `/fiction`, `/language/de` |
+| Intervals and durations | `10:00/45:00`, `1:52:00` |
+| Season and episode numbers | `s2`, `e15` |
+| URLs | `https://...` |
+| Comments | `-- ...` |
+| Task markers | `[ ]`, `[x]` |
+
 ## Neovim Integration
 
 Chronicle provides a Lua script (`scripts/chronicle.lua`) for Neovim to help
