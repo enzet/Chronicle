@@ -107,17 +107,61 @@ class CutEvent(Event):
 
 
 @dataclass
+class Macronutrients:
+    """Macronutrients in grams."""
+
+    carbohydrates: float
+    """Carbohydrates in grams."""
+
+    protein: float
+    """Protein in grams."""
+
+    fat: float
+    """Fat in grams."""
+
+
+@dataclass
 class EatEvent(Event):
     """Event representing eating food."""
 
     meal: str | None = None
     """Description of what was eaten."""
 
-    kilocalories: float | None = None
-    """Number of kilocalories in the meal."""
+    energy: float | None = None
+    """Energy in kilocalories."""
 
-    arguments: ClassVar[Arguments] = Arguments(["eat"], "eat").add(
-        Argument("meal")
+    macronutrients: Macronutrients | None = None
+    """Macronutrients: carbohydrates, protein, fat in grams."""
+
+    arguments: ClassVar[Arguments] = (
+        Arguments(["eat"], "eat")
+        .add(Argument("meal"))
+        .add(
+            Argument(
+                "energy",
+                patterns=[re.compile(r"(\d+(?:\.\d+)?)kcal")],
+                extractors=[lambda x: float(x(1))],
+                command_printer=lambda x: f"{x}kcal",
+            )
+        )
+        .add(
+            Argument(
+                "macronutrients",
+                patterns=[
+                    re.compile(
+                        r"(\d+(?:\.\d+)?)/(\d+(?:\.\d+)?)/(\d+(?:\.\d+)?)"
+                    )
+                ],
+                extractors=[
+                    lambda x: Macronutrients(
+                        float(x(1)), float(x(2)), float(x(3))
+                    )
+                ],
+                command_printer=lambda x: (
+                    f"{x.carbohydrates}/{x.protein}/{x.fat}"
+                ),
+            )
+        )
     )
 
 
