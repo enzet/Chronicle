@@ -13,38 +13,37 @@ from chronicle.time import DELTA_PATTERN_TEXT, INTERVAL_PATTERN, Timedelta
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
 
-LANGUAGES: dict[str, tuple[str, str]] = {
-    "ar": ("Arabic", "#286035"),
-    "be": ("Belarusian", "#CB2E3F"),
-    "da": ("Danish", "#061A57"),
-    "de": ("German", "#F7D046"),
-    "el": ("Greek", "#2A5DA9"),
-    "en": ("English", "#071B65"),
-    "eo": ("Esperanto", "#44982A"),
-    "es": ("Spanish", "#CE6C5E"),
-    "fa": ("Persian", "#D73E3E"),
-    "fr": ("French", "#4193C3"),
-    "he": ("Hebrew", "#1334B2"),
-    "hi": ("Hindi", "#E7695A"),
-    "hy": ("Armenian", "#E8AD3B"),
-    "is": ("Icelandic", "#205098"),
-    "it": ("Italian", "#41914D"),
-    "ja": ("Japanese", "#AE232F"),
-    "ka": ("Georgian", "#EA3323"),
-    "ko": ("Korean", "#1B449C"),
-    "la": ("Latin", "#FDF351"),
-    # "no": ("Norwegian", "#061A57"),
-    "nb": ("Norwegian Bokmål", "#061A57"),
-    "no": ("Norwegian", "#061A57"),
-    "po": ("Polish", "#CB2E3F"),
-    "pt": ("Portuguese", "#2B6519"),
-    "rsl": ("Russian Sign Language", "#1335A1"),
-    "ru": ("Russian", "#1335A1"),
-    "sv": ("Swedish", "#205090"),
-    "th": ("Thai", "#2D2A4A"),
-    "tr": ("Turkish", "#888888"),
-    "uk": ("Ukrainian", "#F9D849"),
-    "zh": ("Chinese", "#DB352F"),
+LANGUAGES: dict[str, tuple[str, str, str]] = {
+    "ar": ("Arabic", "العربية", "#286035"),
+    "be": ("Belarusian", "Беларуская", "#CB2E3F"),
+    "da": ("Danish", "Dansk", "#061A57"),
+    "de": ("German", "Deutsch", "#F7D046"),
+    "el": ("Greek", "Ελληνικά", "#2A5DA9"),
+    "en": ("English", "English", "#071B65"),
+    "eo": ("Esperanto", "Esperanto", "#44982A"),
+    "es": ("Spanish", "Español", "#CE6C5E"),
+    "fa": ("Persian", "فارسی", "#D73E3E"),
+    "fr": ("French", "Français", "#4193C3"),
+    "he": ("Hebrew", "עברית", "#1334B2"),
+    "hi": ("Hindi", "हिन्दी", "#E7695A"),
+    "hy": ("Armenian", "Հայերեն", "#E8AD3B"),
+    "is": ("Icelandic", "Íslenska", "#205098"),
+    "it": ("Italian", "Italiano", "#41914D"),
+    "ja": ("Japanese", "日本語", "#AE232F"),
+    "ka": ("Georgian", "ქართული", "#EA3323"),
+    "ko": ("Korean", "한국어", "#1B449C"),
+    "la": ("Latin", "Latina", "#FDF351"),
+    "nb": ("Norwegian", "Norsk bokmål", "#061A57"),
+    "no": ("Norwegian", "Norsk", "#061A57"),
+    "po": ("Polish", "Polski", "#CB2E3F"),
+    "pt": ("Portuguese", "Português", "#2B6519"),
+    "rsl": ("Russian Sign Language", "РЖЯ", "#1335A1"),
+    "ru": ("Russian", "Русский", "#1335A1"),
+    "sv": ("Swedish", "Svenska", "#205090"),
+    "th": ("Thai", "ภาษาไทย", "#2D2A4A"),
+    "tr": ("Turkish", "Türkçe", "#888888"),
+    "uk": ("Ukrainian", "Українська", "#F9D849"),
+    "zh": ("Chinese", "中文", "#DB352F"),
 }
 
 WRITING_SYSTEM_NAMES = {
@@ -148,9 +147,17 @@ class Language(Value):
 
         return self.code
 
+    def to_native(self) -> str:
+        """Get native name of the language or return code."""
+
+        if self.code in LANGUAGES:
+            return LANGUAGES[self.code][1]
+
+        return self.code
+
     def get_color(self) -> str:
         """Get color of the language."""
-        return LANGUAGES[self.code][1]
+        return LANGUAGES[self.code][2]
 
     def to_command(self) -> str:
         """Get command representation of the language."""
