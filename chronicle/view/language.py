@@ -329,7 +329,7 @@ class LanguageLearningViewer:
                     interval=arguments.interval,
                 )
             case "bars":
-                self.plot_bar(
+                self.svg_bar(
                     self.construct_data(filter_, languages),
                     arguments.file,
                     arguments.margin,
@@ -468,8 +468,8 @@ class LanguageLearningViewer:
             )
             keys = sorted(
                 data_by_time.data,
-                key=lambda x: -(
-                    data_by_time.data[x][-1] if data_by_time.data[x] else 0
+                key=lambda x: (
+                    -(data_by_time.data[x][-1] if data_by_time.data[x] else 0)
                 ),
             )
             plt.stackplot(
@@ -661,6 +661,143 @@ class LanguageLearningViewer:
             plt.savefig(path)
         else:
             plt.show()
+
+    @staticmethod
+    def _format_hours(hours: float) -> str:
+        h: int = int(hours)
+        m: int = round((hours - h) * 60)
+        return f"{h}:{m:02d}"
+
+    @staticmethod
+    def _text_color(background: Color) -> str:
+        r, g, b = background.red, background.green, background.blue
+        luminance: float = 0.299 * r + 0.587 * g + 0.114 * b
+        return "black" if luminance > 0.6 else "white"  # noqa: PLR2004
+
+    def svg_bar(
+        self,
+        data: LanguageMethodServiceData,
+        path: Path | None = None,
+        total_threshold: float = 0.0,
+    ) -> None:
+        """Plot language learning progress as an SVG bar chart."""
+
+        bar_height: int = 20
+        sub_bar_height: int = 5
+        label_width: int = 120
+        chart_width: int = 1200
+        padding: int = 25
+        gap: int = 0
+        name_font_size: int = 12
+
+        languages: list[Language] = [
+            lang
+            for lang in reversed(data.get_languages())
+            if data.totals[lang] / SECONDS_IN_HOUR >= total_threshold
+        ]
+        max_value: float = data.get_language_max()
+        row_height: int = bar_height + gap + sub_bar_height + padding
+        total_height: int = len(languages) * row_height + padding
+
+        lines: list[str] = [
+            f'<svg xmlns="http://www.w3.org/2000/svg"'
+            f' width="{label_width + chart_width}"'
+            f' height="{total_height}">',
+        ]
+
+        for row, language in enumerate(languages):
+            y: int = padding + row * row_height
+            y2: int = y + bar_height + gap
+            lines.append(
+                f'  <text x="{label_width - 70}" y="{y + 12}"'
+                f' font-size="12" font-family="sans-serif"'
+                f' fill="#333">{language.to_string()}'
+                f"</text>"
+            )
+            lines.append(
+                f'  <text x="{label_width - 70}" y="{y + 27}"'
+                f' font-size="12" font-family="sans-serif"'
+                f' fill="#333">{self._format_hours(data.totals[language] / SECONDS_IN_HOUR)}'
+                f"</text>"
+            )
+
+            # First row: service-level bars with service color.
+            x: float = label_width
+            for method in methods:
+                for service in data.data[language][method]:
+                    value: float = (
+                        data.data[language][method][service] / SECONDS_IN_HOUR
+                    )
+                    w: float = (
+                        value / (max_value / SECONDS_IN_HOUR) * chart_width
+                    )
+                    bg: Color = service.color if service.color else method.color
+                    lines.append(
+                        f'  <rect x="{x:.2f}" y="{y}" width="{w:.2f}"'
+                        f' height="{bar_height}" fill="{bg.hex}"'
+                        f' stroke="white" stroke-width="1"/>'
+                    )
+                    name: str = service.name or method.name
+                    long_label: str = f"{name}, {self._format_hours(value)}"
+                    if w >= len(long_label) * name_font_size * 0.6:
+                        label = long_label
+                    elif w >= len(name) * name_font_size * 0.6:
+                        label = name
+                    else:
+                        label = None
+                    if label:
+                        lines.append(
+                            f'  <text x="{x + w / 2:.2f}"'
+                            f' y="{y + name_font_size + 2}"'
+                            f' text-anchor="middle"'
+                            f' font-size="{name_font_size}"'
+                            f' font-family="sans-serif"'
+                            f' fill="{self._text_color(bg)}">{label}</text>'
+                        )
+                    x += w
+
+            # Second row: method-level bars with method color.
+            x = label_width
+            for method in methods:
+                method_value: float = sum(
+                    data.data[language][method][service] / SECONDS_IN_HOUR
+                    for service in data.data[language][method]
+                )
+                if not method_value:
+                    continue
+                w = method_value / (max_value / SECONDS_IN_HOUR) * chart_width
+                lines.append(
+                    f'  <rect x="{x:.2f}" y="{y2}" width="{w:.2f}"'
+                    f' height="{sub_bar_height}" fill="{method.color.hex}"'
+                    f' stroke="white" stroke-width="1"/>'
+                )
+                name = method.name
+                long_label = f"{name}, {self._format_hours(method_value)}"
+                if w >= len(long_label) * name_font_size * 0.6:
+                    label = long_label
+                elif w >= len(name) * name_font_size * 0.6:
+                    label = name
+                else:
+                    label = None
+                if label:
+                    lines.append(
+                        f'  <text x="{x + w / 2:.2f}"'
+                        f' y="{y2 + sub_bar_height + name_font_size}"'
+                        f' text-anchor="middle"'
+                        f' font-size="{name_font_size}"'
+                        f' font-family="sans-serif"'
+                        f' fill="{self._text_color(method.color)}"'
+                        f">{label}</text>"
+                    )
+                x += w
+
+        lines.append("</svg>")
+        svg: str = "\n".join(lines)
+
+        if path:
+            Path(path).write_text(svg)
+        else:
+            print(svg)
 
     def print_table(
         self,
