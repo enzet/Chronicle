@@ -22,14 +22,18 @@ def filter_by_year(year: int) -> Callable[[Event], bool]:
     return filter_
 
 
-def smooth(data: list[float | None], size: int) -> list[float]:
+def smooth(data: list[float | None], size: int) -> list[float | None]:
     """Smooth data."""
 
-    replaced: list[float] = [0 if x is None else x for x in data]
-    new_data: list[float] = [
-        sum(replaced[index - size + 1 : index + 1]) / size
-        for index in range(len(data))
-    ]
+    new_data: list[float | None] = []
+    sublist: list[float] = []
+    for index in range(len(data)):
+        value = data[index]
+        if value is not None:
+            sublist.append(value)
+        if index > size and data[index - size] is not None:
+            sublist = sublist[1:]
+        new_data.append(sum(sublist) / len(sublist) if sublist else None)
     return new_data
 
 
