@@ -80,6 +80,21 @@ class Summary:
     )
     """Exercise repetition counts by exercise name."""
 
+    energy: float = 0.0
+    """Energy consumed in kilocalories."""
+
+    carbohydrates: float = 0.0
+    """Carbohydrates consumed in grams."""
+
+    protein: float = 0.0
+    """Protein consumed in grams."""
+
+    fat: float = 0.0
+    """Fat consumed in grams."""
+
+    liquid: float = 0.0
+    """Liquid consumed in milliliters."""
+
     shows: set[Object] = field(default_factory=set)
     """Shows watched."""
 
@@ -158,6 +173,22 @@ class Summary:
     def register_work(self, duration: float) -> None:
         """Register working time in seconds."""
         self.work += duration
+
+    def register_liquid(self, milliliters: float) -> None:
+        """Register liquid consumed in milliliters."""
+        self.liquid += milliliters
+
+    def register_energy(self, kcal: float) -> None:
+        """Register energy consumed in kilocalories."""
+        self.energy += kcal
+
+    def register_macronutrients(
+        self, carbohydrates: float, protein: float, fat: float
+    ) -> None:
+        """Register macronutrients consumed in grams."""
+        self.carbohydrates += carbohydrates
+        self.protein += protein
+        self.fat += fat
 
     def register_show(self, show: Object) -> None:
         """Register a show was watched."""

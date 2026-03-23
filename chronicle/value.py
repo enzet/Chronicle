@@ -434,6 +434,62 @@ class Kilocalories(Value):
 
 
 @dataclass
+class Macronutrients(Value):
+    """Macronutrients in grams."""
+
+    carbohydrates: float
+    """Carbohydrates in grams."""
+
+    protein: float
+    """Protein in grams."""
+
+    fat: float
+    """Fat in grams."""
+
+    patterns: ClassVar[list[re.Pattern]] = [
+        re.compile(
+            r"(?P<c>\d+(?:\.\d+)?)/(?P<p>\d+(?:\.\d+)?)/(?P<f>\d+(?:\.\d+)?)"
+        )
+    ]
+    extractors: ClassVar[list[Callable]] = [
+        lambda groups: Macronutrients(
+            float(groups("c")), float(groups("p")), float(groups("f"))
+        )
+    ]
+
+    def to_command(self) -> str:
+        return f"{self.carbohydrates:g}/{self.protein:g}/{self.fat:g}"
+
+
+KILO: int = 1000
+
+
+@dataclass
+class Liquid(Value):
+    """Liquid volume in milliliters."""
+
+    value: float
+    """Volume value in milliliters."""
+
+    patterns: ClassVar[list[re.Pattern]] = [
+        re.compile(r"(?P<v>\d+(\.\d+)?)ml"),
+        re.compile(r"(?P<v>\d+(\.\d+)?)l"),
+    ]
+    extractors: ClassVar[list[Callable]] = [
+        lambda groups: Liquid(float(groups("v"))),
+        lambda groups: Liquid(float(groups("v")) * KILO),
+    ]
+
+    def __str__(self) -> str:
+        if self.value >= KILO:
+            return f"{self.value / KILO:g}l"
+        return f"{self.value:g}ml"
+
+    def to_command(self) -> str:
+        return str(self)
+
+
+@dataclass
 class Season(Value):
     """Season number."""
 

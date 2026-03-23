@@ -17,6 +17,7 @@ from chronicle.harvest.memrise import MemriseImportManager
 from chronicle.harvest.old import OldImportManager
 from chronicle.harvest.wikimedia import WikimediaImportManager
 from chronicle.timeline import CommandParser, Timeline
+from chronicle.view.food import FoodViewer
 from chronicle.view.objects import ObjectsHtmlViewer
 
 if TYPE_CHECKING:
@@ -171,6 +172,29 @@ def main() -> None:
 
     view_sub_parsers.add_parser("sport")
 
+    view_food_parser = view_sub_parsers.add_parser("food")
+    view_food_parser.add_argument(
+        "--file",
+        type=str,
+        default=None,
+        help="path to file to save plot to",
+    )
+    view_food_parser.add_argument(
+        "--interval",
+        type=int,
+        default=0,
+        metavar="<days>",
+        help=(
+            "if interval is not zero, then only events from the last interval "
+            "days will be shown"
+        ),
+    )
+    view_food_parser.add_argument(
+        "--percent",
+        action="store_true",
+        help="show values as percent of recommended daily intake",
+    )
+
     arguments: argparse.Namespace = argument_parser.parse_args(sys.argv[1:])
 
     if arguments.logging == "info":
@@ -279,6 +303,13 @@ def main() -> None:
                 from chronicle.view.sport import SportViewer
 
                 SportViewer(timeline).plot_sport()
+
+            elif arguments.sub_command == "food":
+                FoodViewer(timeline).plot_kcal(
+                    arguments.file,
+                    arguments.interval,
+                    percent=arguments.percent,
+                )
 
         elif command == "timeline":
             timeline.print()

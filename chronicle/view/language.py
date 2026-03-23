@@ -717,7 +717,9 @@ class LanguageLearningViewer:
             lines.append(
                 f'  <text x="{label_width - 70}" y="{y + 27}"'
                 f' font-size="12" font-family="sans-serif"'
-                f' fill="#333">{self._format_hours(data.totals[language] / SECONDS_IN_HOUR)}'
+                f' fill="#333">{
+                    self._format_hours(data.totals[language] / SECONDS_IN_HOUR)
+                }'
                 f"</text>"
             )
 

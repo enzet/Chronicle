@@ -14,6 +14,8 @@ from chronicle.time import Timedelta
 from chronicle.value import (
     Cost,
     Language,
+    Liquid,
+    Macronutrients,
     ProgrammingLanguage,
     Subject,
     Tags,
@@ -107,20 +109,6 @@ class CutEvent(Event):
 
 
 @dataclass
-class Macronutrients:
-    """Macronutrients in grams."""
-
-    carbohydrates: float
-    """Carbohydrates in grams."""
-
-    protein: float
-    """Protein in grams."""
-
-    fat: float
-    """Fat in grams."""
-
-
-@dataclass
 class EatEvent(Event):
     """Event representing eating food."""
 
@@ -133,6 +121,9 @@ class EatEvent(Event):
     macronutrients: Macronutrients | None = None
     """Macronutrients: carbohydrates, protein, fat in grams."""
 
+    liquid: Liquid | None = None
+    """Liquid volume in milliliters."""
+
     arguments: ClassVar[Arguments] = (
         Arguments(["eat"], "eat")
         .add(Argument("meal"))
@@ -144,25 +135,24 @@ class EatEvent(Event):
                 command_printer=lambda x: f"{x}kcal",
             )
         )
-        .add(
-            Argument(
-                "macronutrients",
-                patterns=[
-                    re.compile(
-                        r"(\d+(?:\.\d+)?)/(\d+(?:\.\d+)?)/(\d+(?:\.\d+)?)"
-                    )
-                ],
-                extractors=[
-                    lambda x: Macronutrients(
-                        float(x(1)), float(x(2)), float(x(3))
-                    )
-                ],
-                command_printer=lambda x: (
-                    f"{x.carbohydrates}/{x.protein}/{x.fat}"
-                ),
-            )
-        )
+        .add_class_argument("macronutrients", Macronutrients)
+        .add_class_argument("liquid", Liquid)
     )
+
+    @override
+    def register_summary(
+        self, summary: Summary, ratio: float = 1.0, is_main: bool = True
+    ) -> None:
+        if self.energy is not None:
+            summary.register_energy(self.energy * ratio)
+        if self.macronutrients is not None:
+            summary.register_macronutrients(
+                self.macronutrients.carbohydrates * ratio,
+                self.macronutrients.protein * ratio,
+                self.macronutrients.fat * ratio,
+            )
+        if self.liquid is not None:
+            summary.register_liquid(self.liquid.value * ratio)
 
 
 @dataclass
@@ -423,24 +413,44 @@ class DrinkEvent(Event):
     liquid: str | None = None
     """Type of liquid consumed."""
 
-    amount: float | None = None
-    """Amount of the liquid in litres."""
+    amount: Liquid | None = None
+    """Amount of the liquid."""
+
+    energy: float | None = None
+    """Energy in kilocalories."""
+
+    macronutrients: Macronutrients | None = None
+    """Macronutrients: carbohydrates, protein, fat in grams."""
 
     arguments: ClassVar[Arguments] = (
         Arguments(["drink"], "drink")
         .add(Argument("liquid"))
+        .add_class_argument("amount", Liquid)
         .add(
             Argument(
-                "amount",
-                patterns=[re.compile(r"(\d*\.\d*)l"), re.compile(r"(\d*)ml")],
-                extractors=[
-                    lambda x: float(x(1)),
-                    lambda x: float(x(1)) / 1000,
-                ],
-                command_printer=lambda x: f"{x}l",
+                "energy",
+                patterns=[re.compile(r"(\d+(?:\.\d+)?)kcal")],
+                extractors=[lambda x: float(x(1))],
+                command_printer=lambda x: f"{x}kcal",
             )
         )
+        .add_class_argument("macronutrients", Macronutrients)
     )
+
+    @override
+    def register_summary(
+        self, summary: Summary, ratio: float = 1.0, is_main: bool = True
+    ) -> None:
+        if self.energy is not None:
+            summary.register_energy(self.energy * ratio)
+        if self.macronutrients is not None:
+            summary.register_macronutrients(
+                self.macronutrients.carbohydrates * ratio,
+                self.macronutrients.protein * ratio,
+                self.macronutrients.fat * ratio,
+            )
+        if self.amount is not None:
+            summary.register_liquid(self.amount.value * ratio)
 
 
 @dataclass
