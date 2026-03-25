@@ -11,7 +11,7 @@ from matplotlib.axes import Axes
 
 from chronicle.settings import Settings
 from chronicle.timeline import Timeline
-from chronicle.util import smooth
+from chronicle.util import ema
 
 settings: Settings = Settings(Path().home() / ".chronicle" / "settings.json")
 
@@ -53,26 +53,26 @@ def get_recommended() -> Recommended:
     )
 
 
-# (summary attribute, settings key, unit, label, smooth days)
-_NUTRIENTS: list[tuple[str, str, str, str, int]] = [
-    ("energy", "calories", "kcal", "Energy", 7),
-    ("carbohydrates", "carbs_g", "g", "Carbohydrates", 7),
-    ("protein", "protein_g", "g", "Protein", 7),
-    ("fat", "fat_g", "g", "Fat", 7),
-    ("saturated_fat", "saturated_fat_g", "g", "Saturated fat", 7),
-    ("fiber", "fiber_g", "g", "Fiber", 7),
-    ("added_sugar", "added_sugar_g", "g", "Added sugar", 7),
-    ("omega3", "omega3_g", "g", "Omega-3", 7),  # 7-30
-    ("calcium", "calcium_mg", "mg", "Calcium", 7),
-    ("iron", "iron_mg", "mg", "Iron", 7),
-    ("vitamin_d", "vitamin_d_iu", "IU", "Vitamin D", 7),  # 7-30
-    ("magnesium", "magnesium_mg", "mg", "Magnesium", 7),
-    ("zinc", "zinc_mg", "mg", "Zinc", 7),
-    ("potassium", "potassium_mg", "mg", "Potassium", 7),
-    ("sodium", "sodium_mg", "mg", "Sodium", 7),
-    ("vitamin_c", "vitamin_c_mg", "mg", "Vitamin C", 7),
-    ("vitamin_b12", "vitamin_b12_mcg", "mcg", "Vitamin B12", 7),  # 30
-    ("liquid", "water_ml", "ml", "Liquid", 7),
+# (summary attribute, settings key, unit, label, ema alpha)
+_NUTRIENTS: list[tuple[str, str, str, str, float]] = [
+    ("energy", "calories", "kcal", "Energy", 0.85),
+    ("carbohydrates", "carbs_g", "g", "Carbohydrates", 0.85),
+    ("protein", "protein_g", "g", "Protein", 0.85),
+    ("fat", "fat_g", "g", "Fat", 0.85),
+    ("saturated_fat", "saturated_fat_g", "g", "Saturated fat", 0.85),
+    ("fiber", "fiber_g", "g", "Fiber", 0.85),
+    ("added_sugar", "added_sugar_g", "g", "Added sugar", 0.85),
+    ("omega3", "omega3_g", "g", "Omega-3", 0.97),
+    ("calcium", "calcium_mg", "mg", "Calcium", 0.9),
+    ("iron", "iron_mg", "mg", "Iron", 0.9),
+    ("vitamin_d", "vitamin_d_iu", "IU", "Vitamin D", 0.97),
+    ("magnesium", "magnesium_mg", "mg", "Magnesium", 0.9),
+    ("zinc", "zinc_mg", "mg", "Zinc", 0.9),
+    ("potassium", "potassium_mg", "mg", "Potassium", 0.85),
+    ("sodium", "sodium_mg", "mg", "Sodium", 0.85),
+    ("vitamin_c", "vitamin_c_mg", "mg", "Vitamin C", 0.85),
+    ("vitamin_b12", "vitamin_b12_mcg", "mcg", "Vitamin B12", 0.97),
+    ("liquid", "water_ml", "ml", "Liquid", 0.85),
 ]
 
 _COLOR_OK: str = "#2ca02c"
@@ -93,16 +93,16 @@ def _plot_nutrient(
     settings_key: str,
     unit: str,
     label: str,
-    step: int,
+    alpha: float,
 ) -> None:
-    """Draw one nutrient subplot: bars, smooth line, and reference lines."""
+    """Draw one nutrient subplot: bars, EMA line, and reference lines."""
 
     thresholds: dict = settings.get("nutrition", {}).get(settings_key, {})
     min_val = thresholds.get("min")
     max_val = thresholds.get("max")
 
     smoothed: list[float] = [
-        v if v is not None else 0.0 for v in smooth(ys, step)
+        v if v is not None else 0.0 for v in ema(ys, alpha)
     ]
     avg = smoothed[-1]
 
@@ -225,10 +225,10 @@ class NutritionViewer:
         for ax in axes_flat[len(active) :]:
             ax.set_visible(False)
 
-        for attr, settings_key, unit, label, step in active:
+        for attr, settings_key, unit, label, alpha in active:
             ys = data[attr]
             smoothed: list[float] = [
-                v if v is not None else 0.0 for v in smooth(ys, step)
+                v if v is not None else 0.0 for v in ema(ys, alpha)
             ]
             avg = smoothed[-1] if smoothed else None
             thresholds: dict = settings.get("nutrition", {}).get(
@@ -251,11 +251,11 @@ class NutritionViewer:
                     f"(above max {max_val} by {diff:.1f} {unit})"
                 )
 
-        for ax, (attr, settings_key, unit, label, step) in zip(
+        for ax, (attr, settings_key, unit, label, alpha) in zip(
             axes_flat, active, strict=False
         ):
             _plot_nutrient(
-                ax, xs_num, data[attr], settings_key, unit, label, step
+                ax, xs_num, data[attr], settings_key, unit, label, alpha
             )
             ax.xaxis.set_major_formatter(mdates.DateFormatter("%m-%d"))
 
