@@ -40,6 +40,20 @@ def smooth(data: list[float | None], size: int) -> list[float | None]:
     return new_data
 
 
+def ema(data: list[float | None], alpha: float) -> list[float | None]:
+    """Exponential moving average with smoothing factor ``alpha``."""
+
+    result: list[float | None] = []
+    current: float | None = None
+    for value in data:
+        if current is None:
+            current = value or 0.0
+        else:
+            current = alpha * current + (1 - alpha) * (value or 0.0)
+        result.append(current)
+    return result
+
+
 def modify_color(color: str) -> str:
     """Make color slightly darker or brighter by random."""
     red, green, blue = (
