@@ -434,31 +434,190 @@ class Kilocalories(Value):
 
 
 @dataclass
-class Macronutrients(Value):
-    """Macronutrients in grams."""
-
-    carbohydrates: float
+class Carbohydrates(Value):
     """Carbohydrates in grams."""
 
-    protein: float
-    """Protein in grams."""
-
-    fat: float
-    """Fat in grams."""
-
-    patterns: ClassVar[list[re.Pattern]] = [
-        re.compile(
-            r"(?P<c>\d+(?:\.\d+)?)/(?P<p>\d+(?:\.\d+)?)/(?P<f>\d+(?:\.\d+)?)"
-        )
-    ]
-    extractors: ClassVar[list[Callable]] = [
-        lambda groups: Macronutrients(
-            float(groups("c")), float(groups("p")), float(groups("f"))
-        )
-    ]
+    value: float
+    prefix: ClassVar[str | None] = "carbs:"
 
     def to_command(self) -> str:
-        return f"{self.carbohydrates:g}/{self.protein:g}/{self.fat:g}"
+        return f"carbs: {self.value:g}"
+
+
+@dataclass
+class Protein(Value):
+    """Protein in grams."""
+
+    value: float
+    prefix: ClassVar[str | None] = "prot:"
+
+    def to_command(self) -> str:
+        return f"prot: {self.value:g}"
+
+
+@dataclass
+class Fat(Value):
+    """Fat in grams."""
+
+    value: float
+    prefix: ClassVar[str | None] = "fat:"
+
+    def to_command(self) -> str:
+        return f"fat: {self.value:g}"
+
+
+@dataclass
+class SaturatedFat(Value):
+    """Saturated fat in grams."""
+
+    value: float
+    prefix: ClassVar[str | None] = "sfat:"
+
+    def to_command(self) -> str:
+        return f"sfat: {self.value:g}"
+
+
+@dataclass
+class Fiber(Value):
+    """Dietary fiber in grams."""
+
+    value: float
+    prefix: ClassVar[str | None] = "fib:"
+
+    def to_command(self) -> str:
+        return f"fib: {self.value:g}"
+
+
+@dataclass
+class Sugar(Value):
+    """Total sugar in grams."""
+
+    value: float
+    prefix: ClassVar[str | None] = "sg:"
+
+    def to_command(self) -> str:
+        return f"sg: {self.value:g}"
+
+
+@dataclass
+class AddedSugar(Value):
+    """Added sugar in grams."""
+
+    value: float
+    prefix: ClassVar[str | None] = "asg:"
+
+    def to_command(self) -> str:
+        return f"asg: {self.value:g}"
+
+
+@dataclass
+class Omega3(Value):
+    """Omega-3 fatty acids in grams."""
+
+    value: float
+    prefix: ClassVar[str | None] = "omega3:"
+
+    def to_command(self) -> str:
+        return f"omega3: {self.value:g}"
+
+
+@dataclass
+class Calcium(Value):
+    """Calcium in milligrams."""
+
+    value: float
+    prefix: ClassVar[str | None] = "ca:"
+
+    def to_command(self) -> str:
+        return f"ca: {self.value:g}"
+
+
+@dataclass
+class Iron(Value):
+    """Iron in milligrams."""
+
+    value: float
+    prefix: ClassVar[str | None] = "fe:"
+
+    def to_command(self) -> str:
+        return f"fe: {self.value:g}"
+
+
+@dataclass
+class VitaminD(Value):
+    """Vitamin D in international units (IU)."""
+
+    value: float
+    prefix: ClassVar[str | None] = "vitd:"
+
+    def to_command(self) -> str:
+        return f"vitd: {self.value:g}"
+
+
+@dataclass
+class Magnesium(Value):
+    """Magnesium in milligrams."""
+
+    value: float
+    prefix: ClassVar[str | None] = "mg:"
+
+    def to_command(self) -> str:
+        return f"mg: {self.value:g}"
+
+
+@dataclass
+class Zinc(Value):
+    """Zinc in milligrams."""
+
+    value: float
+    prefix: ClassVar[str | None] = "zn:"
+
+    def to_command(self) -> str:
+        return f"zn: {self.value:g}"
+
+
+@dataclass
+class Potassium(Value):
+    """Potassium in milligrams."""
+
+    value: float
+    prefix: ClassVar[str | None] = "k:"
+
+    def to_command(self) -> str:
+        return f"k: {self.value:g}"
+
+
+@dataclass
+class Sodium(Value):
+    """Sodium in milligrams."""
+
+    value: float
+    prefix: ClassVar[str | None] = "na:"
+
+    def to_command(self) -> str:
+        return f"na: {self.value:g}"
+
+
+@dataclass
+class VitaminC(Value):
+    """Vitamin C in milligrams."""
+
+    value: float
+    prefix: ClassVar[str | None] = "vitc:"
+
+    def to_command(self) -> str:
+        return f"vitc: {self.value:g}"
+
+
+@dataclass
+class VitaminB12(Value):
+    """Vitamin B12 in micrograms."""
+
+    value: float
+    prefix: ClassVar[str | None] = "vitb12:"
+
+    def to_command(self) -> str:
+        return f"vitb12: {self.value:g}"
 
 
 KILO: int = 1000

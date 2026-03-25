@@ -29,11 +29,14 @@ def smooth(data: list[float | None], size: int) -> list[float | None]:
     sublist: list[float] = []
     for index in range(len(data)):
         value = data[index]
-        if value is not None:
-            sublist.append(value)
-        if index > size and data[index - size] is not None:
+        sublist.append(value if value else 0.0)
+        if index > size:
             sublist = sublist[1:]
-        new_data.append(sum(sublist) / len(sublist) if sublist else None)
+        new_data.append(
+            sum(sublist) / len(sublist)
+            if (sublist and sum(sublist) > 0)
+            else None
+        )
     return new_data
 
 

@@ -230,6 +230,10 @@ class Arguments:
             argument.extractors = class_.extractors
         if hasattr(class_, "prefix"):
             argument.prefix = class_.prefix
+            if not argument.patterns:
+                # Prefix-only class: value is a plain number following the
+                # prefix token; use the class constructor as loader.
+                argument.loader = lambda v, _, cls=class_: cls(float(v))
 
         self.arguments.append(argument)
 

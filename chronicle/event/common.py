@@ -12,14 +12,30 @@ from chronicle.objects.core import Dish, Object, Person, Project, Service
 from chronicle.summary.core import Summary
 from chronicle.time import Timedelta
 from chronicle.value import (
+    AddedSugar,
+    Calcium,
+    Carbohydrates,
     Cost,
+    Fat,
+    Fiber,
+    Iron,
     Language,
     Liquid,
-    Macronutrients,
+    Magnesium,
+    Omega3,
+    Potassium,
     ProgrammingLanguage,
+    Protein,
+    SaturatedFat,
+    Sodium,
     Subject,
+    Sugar,
     Tags,
+    VitaminB12,
+    VitaminC,
+    VitaminD,
     Volume,
+    Zinc,
 )
 
 __author__ = "Sergey Vartanov"
@@ -118,8 +134,56 @@ class EatEvent(Event):
     energy: float | None = None
     """Energy in kilocalories."""
 
-    macronutrients: Macronutrients | None = None
-    """Macronutrients: carbohydrates, protein, fat in grams."""
+    carbohydrates: Carbohydrates | None = None
+    """Carbohydrates in grams."""
+
+    protein: Protein | None = None
+    """Protein in grams."""
+
+    fat: Fat | None = None
+    """Fat in grams."""
+
+    saturated_fat: SaturatedFat | None = None
+    """Saturated fat in grams."""
+
+    fiber: Fiber | None = None
+    """Dietary fiber in grams."""
+
+    sugar: Sugar | None = None
+    """Total sugar in grams."""
+
+    added_sugar: AddedSugar | None = None
+    """Added sugar in grams."""
+
+    omega3: Omega3 | None = None
+    """Omega-3 fatty acids in grams."""
+
+    calcium: Calcium | None = None
+    """Calcium in milligrams."""
+
+    iron: Iron | None = None
+    """Iron in milligrams."""
+
+    vitamin_d: VitaminD | None = None
+    """Vitamin D in international units."""
+
+    magnesium: Magnesium | None = None
+    """Magnesium in milligrams."""
+
+    zinc: Zinc | None = None
+    """Zinc in milligrams."""
+
+    potassium: Potassium | None = None
+    """Potassium in milligrams."""
+
+    sodium: Sodium | None = None
+    """Sodium in milligrams."""
+
+    vitamin_c: VitaminC | None = None
+    """Vitamin C in milligrams."""
+
+    vitamin_b12: VitaminB12 | None = None
+    """Vitamin B12 in micrograms."""
 
     liquid: Liquid | None = None
     """Liquid volume in milliliters."""
@@ -135,7 +199,23 @@ class EatEvent(Event):
                 command_printer=lambda x: f"{x}kcal",
             )
         )
-        .add_class_argument("macronutrients", Macronutrients)
+        .add_class_argument("carbohydrates", Carbohydrates)
+        .add_class_argument("protein", Protein)
+        .add_class_argument("fat", Fat)
+        .add_class_argument("saturated_fat", SaturatedFat)
+        .add_class_argument("fiber", Fiber)
+        .add_class_argument("sugar", Sugar)
+        .add_class_argument("added_sugar", AddedSugar)
+        .add_class_argument("omega3", Omega3)
+        .add_class_argument("calcium", Calcium)
+        .add_class_argument("iron", Iron)
+        .add_class_argument("vitamin_d", VitaminD)
+        .add_class_argument("magnesium", Magnesium)
+        .add_class_argument("zinc", Zinc)
+        .add_class_argument("potassium", Potassium)
+        .add_class_argument("sodium", Sodium)
+        .add_class_argument("vitamin_c", VitaminC)
+        .add_class_argument("vitamin_b12", VitaminB12)
         .add_class_argument("liquid", Liquid)
     )
 
@@ -145,12 +225,40 @@ class EatEvent(Event):
     ) -> None:
         if self.energy is not None:
             summary.register_energy(self.energy * ratio)
-        if self.macronutrients is not None:
-            summary.register_macronutrients(
-                self.macronutrients.carbohydrates * ratio,
-                self.macronutrients.protein * ratio,
-                self.macronutrients.fat * ratio,
-            )
+        if self.carbohydrates is not None:
+            summary.register_carbohydrates(self.carbohydrates.value * ratio)
+        if self.protein is not None:
+            summary.register_protein(self.protein.value * ratio)
+        if self.fat is not None:
+            summary.register_fat(self.fat.value * ratio)
+        if self.saturated_fat is not None:
+            summary.register_saturated_fat(self.saturated_fat.value * ratio)
+        if self.fiber is not None:
+            summary.register_fiber(self.fiber.value * ratio)
+        if self.sugar is not None:
+            summary.register_sugar(self.sugar.value * ratio)
+        if self.added_sugar is not None:
+            summary.register_added_sugar(self.added_sugar.value * ratio)
+        if self.omega3 is not None:
+            summary.register_omega3(self.omega3.value * ratio)
+        if self.calcium is not None:
+            summary.register_calcium(self.calcium.value * ratio)
+        if self.iron is not None:
+            summary.register_iron(self.iron.value * ratio)
+        if self.vitamin_d is not None:
+            summary.register_vitamin_d(self.vitamin_d.value * ratio)
+        if self.magnesium is not None:
+            summary.register_magnesium(self.magnesium.value * ratio)
+        if self.zinc is not None:
+            summary.register_zinc(self.zinc.value * ratio)
+        if self.potassium is not None:
+            summary.register_potassium(self.potassium.value * ratio)
+        if self.sodium is not None:
+            summary.register_sodium(self.sodium.value * ratio)
+        if self.vitamin_c is not None:
+            summary.register_vitamin_c(self.vitamin_c.value * ratio)
+        if self.vitamin_b12 is not None:
+            summary.register_vitamin_b12(self.vitamin_b12.value * ratio)
         if self.liquid is not None:
             summary.register_liquid(self.liquid.value * ratio)
 
@@ -419,8 +527,56 @@ class DrinkEvent(Event):
     energy: float | None = None
     """Energy in kilocalories."""
 
-    macronutrients: Macronutrients | None = None
-    """Macronutrients: carbohydrates, protein, fat in grams."""
+    carbohydrates: Carbohydrates | None = None
+    """Carbohydrates in grams."""
+
+    protein: Protein | None = None
+    """Protein in grams."""
+
+    fat: Fat | None = None
+    """Fat in grams."""
+
+    saturated_fat: SaturatedFat | None = None
+    """Saturated fat in grams."""
+
+    fiber: Fiber | None = None
+    """Dietary fiber in grams."""
+
+    sugar: Sugar | None = None
+    """Total sugar in grams."""
+
+    added_sugar: AddedSugar | None = None
+    """Added sugar in grams."""
+
+    omega3: Omega3 | None = None
+    """Omega-3 fatty acids in grams."""
+
+    calcium: Calcium | None = None
+    """Calcium in milligrams."""
+
+    iron: Iron | None = None
+    """Iron in milligrams."""
+
+    vitamin_d: VitaminD | None = None
+    """Vitamin D in international units."""
+
+    magnesium: Magnesium | None = None
+    """Magnesium in milligrams."""
+
+    zinc: Zinc | None = None
+    """Zinc in milligrams."""
+
+    potassium: Potassium | None = None
+    """Potassium in milligrams."""
+
+    sodium: Sodium | None = None
+    """Sodium in milligrams."""
+
+    vitamin_c: VitaminC | None = None
+    """Vitamin C in milligrams."""
+
+    vitamin_b12: VitaminB12 | None = None
+    """Vitamin B12 in micrograms."""
 
     arguments: ClassVar[Arguments] = (
         Arguments(["drink"], "drink")
@@ -434,7 +590,23 @@ class DrinkEvent(Event):
                 command_printer=lambda x: f"{x}kcal",
             )
         )
-        .add_class_argument("macronutrients", Macronutrients)
+        .add_class_argument("carbohydrates", Carbohydrates)
+        .add_class_argument("protein", Protein)
+        .add_class_argument("fat", Fat)
+        .add_class_argument("saturated_fat", SaturatedFat)
+        .add_class_argument("fiber", Fiber)
+        .add_class_argument("sugar", Sugar)
+        .add_class_argument("added_sugar", AddedSugar)
+        .add_class_argument("omega3", Omega3)
+        .add_class_argument("calcium", Calcium)
+        .add_class_argument("iron", Iron)
+        .add_class_argument("vitamin_d", VitaminD)
+        .add_class_argument("magnesium", Magnesium)
+        .add_class_argument("zinc", Zinc)
+        .add_class_argument("potassium", Potassium)
+        .add_class_argument("sodium", Sodium)
+        .add_class_argument("vitamin_c", VitaminC)
+        .add_class_argument("vitamin_b12", VitaminB12)
     )
 
     @override
@@ -443,12 +615,40 @@ class DrinkEvent(Event):
     ) -> None:
         if self.energy is not None:
             summary.register_energy(self.energy * ratio)
-        if self.macronutrients is not None:
-            summary.register_macronutrients(
-                self.macronutrients.carbohydrates * ratio,
-                self.macronutrients.protein * ratio,
-                self.macronutrients.fat * ratio,
-            )
+        if self.carbohydrates is not None:
+            summary.register_carbohydrates(self.carbohydrates.value * ratio)
+        if self.protein is not None:
+            summary.register_protein(self.protein.value * ratio)
+        if self.fat is not None:
+            summary.register_fat(self.fat.value * ratio)
+        if self.saturated_fat is not None:
+            summary.register_saturated_fat(self.saturated_fat.value * ratio)
+        if self.fiber is not None:
+            summary.register_fiber(self.fiber.value * ratio)
+        if self.sugar is not None:
+            summary.register_sugar(self.sugar.value * ratio)
+        if self.added_sugar is not None:
+            summary.register_added_sugar(self.added_sugar.value * ratio)
+        if self.omega3 is not None:
+            summary.register_omega3(self.omega3.value * ratio)
+        if self.calcium is not None:
+            summary.register_calcium(self.calcium.value * ratio)
+        if self.iron is not None:
+            summary.register_iron(self.iron.value * ratio)
+        if self.vitamin_d is not None:
+            summary.register_vitamin_d(self.vitamin_d.value * ratio)
+        if self.magnesium is not None:
+            summary.register_magnesium(self.magnesium.value * ratio)
+        if self.zinc is not None:
+            summary.register_zinc(self.zinc.value * ratio)
+        if self.potassium is not None:
+            summary.register_potassium(self.potassium.value * ratio)
+        if self.sodium is not None:
+            summary.register_sodium(self.sodium.value * ratio)
+        if self.vitamin_c is not None:
+            summary.register_vitamin_c(self.vitamin_c.value * ratio)
+        if self.vitamin_b12 is not None:
+            summary.register_vitamin_b12(self.vitamin_b12.value * ratio)
         if self.amount is not None:
             summary.register_liquid(self.amount.value * ratio)
 
