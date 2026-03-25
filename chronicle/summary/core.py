@@ -92,6 +92,48 @@ class Summary:
     fat: float = 0.0
     """Fat consumed in grams."""
 
+    saturated_fat: float = 0.0
+    """Saturated fat consumed in grams."""
+
+    fiber: float = 0.0
+    """Dietary fiber consumed in grams."""
+
+    sugar: float = 0.0
+    """Total sugar consumed in grams."""
+
+    added_sugar: float = 0.0
+    """Added sugar consumed in grams."""
+
+    omega3: float = 0.0
+    """Omega-3 fatty acids consumed in grams."""
+
+    calcium: float = 0.0
+    """Calcium consumed in milligrams."""
+
+    iron: float = 0.0
+    """Iron consumed in milligrams."""
+
+    vitamin_d: float = 0.0
+    """Vitamin D consumed in international units."""
+
+    magnesium: float = 0.0
+    """Magnesium consumed in milligrams."""
+
+    zinc: float = 0.0
+    """Zinc consumed in milligrams."""
+
+    potassium: float = 0.0
+    """Potassium consumed in milligrams."""
+
+    sodium: float = 0.0
+    """Sodium consumed in milligrams."""
+
+    vitamin_c: float = 0.0
+    """Vitamin C consumed in milligrams."""
+
+    vitamin_b12: float = 0.0
+    """Vitamin B12 consumed in micrograms."""
+
     liquid: float = 0.0
     """Liquid consumed in milliliters."""
 
@@ -182,13 +224,73 @@ class Summary:
         """Register energy consumed in kilocalories."""
         self.energy += kcal
 
-    def register_macronutrients(
-        self, carbohydrates: float, protein: float, fat: float
-    ) -> None:
-        """Register macronutrients consumed in grams."""
-        self.carbohydrates += carbohydrates
-        self.protein += protein
-        self.fat += fat
+    def register_carbohydrates(self, grams: float) -> None:
+        """Register carbohydrates consumed in grams."""
+        self.carbohydrates += grams
+
+    def register_protein(self, grams: float) -> None:
+        """Register protein consumed in grams."""
+        self.protein += grams
+
+    def register_fat(self, grams: float) -> None:
+        """Register fat consumed in grams."""
+        self.fat += grams
+
+    def register_saturated_fat(self, grams: float) -> None:
+        """Register saturated fat consumed in grams."""
+        self.saturated_fat += grams
+
+    def register_fiber(self, grams: float) -> None:
+        """Register dietary fiber consumed in grams."""
+        self.fiber += grams
+
+    def register_sugar(self, grams: float) -> None:
+        """Register total sugar consumed in grams."""
+        self.sugar += grams
+
+    def register_added_sugar(self, grams: float) -> None:
+        """Register added sugar consumed in grams."""
+        self.added_sugar += grams
+
+    def register_omega3(self, grams: float) -> None:
+        """Register omega-3 fatty acids consumed in grams."""
+        self.omega3 += grams
+
+    def register_calcium(self, mg: float) -> None:
+        """Register calcium consumed in milligrams."""
+        self.calcium += mg
+
+    def register_iron(self, mg: float) -> None:
+        """Register iron consumed in milligrams."""
+        self.iron += mg
+
+    def register_vitamin_d(self, iu: float) -> None:
+        """Register vitamin D consumed in international units."""
+        self.vitamin_d += iu
+
+    def register_magnesium(self, mg: float) -> None:
+        """Register magnesium consumed in milligrams."""
+        self.magnesium += mg
+
+    def register_zinc(self, mg: float) -> None:
+        """Register zinc consumed in milligrams."""
+        self.zinc += mg
+
+    def register_potassium(self, mg: float) -> None:
+        """Register potassium consumed in milligrams."""
+        self.potassium += mg
+
+    def register_sodium(self, mg: float) -> None:
+        """Register sodium consumed in milligrams."""
+        self.sodium += mg
+
+    def register_vitamin_c(self, mg: float) -> None:
+        """Register vitamin C consumed in milligrams."""
+        self.vitamin_c += mg
+
+    def register_vitamin_b12(self, mcg: float) -> None:
+        """Register vitamin B12 consumed in micrograms."""
+        self.vitamin_b12 += mcg
 
     def register_show(self, show: Object) -> None:
         """Register a show was watched."""
