@@ -3,7 +3,7 @@
 import random
 import re
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
@@ -20,6 +20,9 @@ INTERVAL_PATTERN: re.Pattern = re.compile(
 )
 MAX_MONTHS: int = 12
 DAYS_PER_YEAR: int = 365
+
+
+local_timezone = datetime.now().astimezone().tzinfo
 
 
 @dataclass
@@ -132,7 +135,7 @@ class Moment:
             hour=self.hour or 0,
             minute=self.minute or 0,
             second=int(self.second) if self.second is not None else 0,
-            tzinfo=UTC,
+            tzinfo=local_timezone,
         )
 
     def __lt__(self, other: object) -> bool:
@@ -157,14 +160,21 @@ class Moment:
             return None
 
         if self.month is None:
-            return datetime(year=self.year + 1, month=1, day=1, tzinfo=UTC)
+            return datetime(
+                year=self.year + 1, month=1, day=1, tzinfo=local_timezone
+            )
 
         if self.day is None:
             if self.month < MAX_MONTHS:
                 return datetime(
-                    year=self.year, month=self.month + 1, day=1, tzinfo=UTC
+                    year=self.year,
+                    month=self.month + 1,
+                    day=1,
+                    tzinfo=local_timezone,
                 )
-            return datetime(year=self.year + 1, month=1, day=1, tzinfo=UTC)
+            return datetime(
+                year=self.year + 1, month=1, day=1, tzinfo=local_timezone
+            )
 
         if not (lower := self.get_lower()):
             return None
@@ -518,16 +528,20 @@ def humanize_delta(delta: timedelta) -> str:
 def start_of_day(time: datetime) -> datetime:
     """Get start of the day."""
 
-    return datetime(year=time.year, month=time.month, day=time.day, tzinfo=UTC)
+    return datetime(
+        year=time.year, month=time.month, day=time.day, tzinfo=local_timezone
+    )
 
 
 def start_of_month(time: datetime) -> datetime:
     """Get start of the month."""
 
-    return datetime(year=time.year, month=time.month, day=1, tzinfo=UTC)
+    return datetime(
+        year=time.year, month=time.month, day=1, tzinfo=local_timezone
+    )
 
 
 def start_of_year(time: datetime) -> datetime:
     """Get start of the year."""
 
-    return datetime(year=time.year, month=1, day=1, tzinfo=UTC)
+    return datetime(year=time.year, month=1, day=1, tzinfo=local_timezone)
