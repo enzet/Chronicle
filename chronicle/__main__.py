@@ -232,14 +232,14 @@ def main() -> None:
 
     if arguments.input:
         for file_name in arguments.input:
+            path: Path = Path(file_name)
             if file_name.endswith(".chr"):
-                logger.info("Importing data from `%s`.", file_name)
-                parser: CommandParser = CommandParser(timeline)
+                parser: CommandParser = CommandParser(timeline, path)
                 unknown_types: list[ChronicleUnknownTypeError] = []
-                with Path(file_name).open(encoding="utf-8") as input_file:
-                    for line in input_file:
+                with path.open(encoding="utf-8") as input_file:
+                    for line_number, line in enumerate(input_file):
                         try:
-                            parser.parse_command(line[:-1].strip())
+                            parser.parse_command(line[:-1].strip(), line_number)
                         except ChronicleUnknownTypeError as error:
                             unknown_types.append(error)
                 if unknown_types:
