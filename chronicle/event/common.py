@@ -8,7 +8,14 @@ from typing import ClassVar, override
 from chronicle.argument import Argument, Arguments
 from chronicle.errors import ChronicleValueError
 from chronicle.event.core import Event
-from chronicle.objects.core import Dish, Object, Person, Project, Service
+from chronicle.objects.core import (
+    Device,
+    Dish,
+    Object,
+    Person,
+    Project,
+    Service,
+)
 from chronicle.summary.core import Summary
 from chronicle.time import Timedelta
 from chronicle.value import (
@@ -22,6 +29,7 @@ from chronicle.value import (
     Language,
     Liquid,
     Magnesium,
+    Mass,
     Omega3,
     Potassium,
     ProgrammingLanguage,
@@ -521,7 +529,7 @@ class DrinkEvent(Event):
     liquid: str | None = None
     """Type of liquid consumed."""
 
-    amount: Liquid | None = None
+    amount: float | None = None
     """Amount of the liquid."""
 
     energy: float | None = None
@@ -581,7 +589,14 @@ class DrinkEvent(Event):
     arguments: ClassVar[Arguments] = (
         Arguments(["drink"], "drink")
         .add(Argument("liquid"))
-        .add_class_argument("amount", Liquid)
+        .add(
+            Argument(
+                "amount",
+                patterns=[re.compile(r"(\d+(?:\.\d+)?)ml")],
+                extractors=[lambda x: float(x(1))],
+                command_printer=lambda x: f"{x}ml",
+            )
+        )
         .add(
             Argument(
                 "energy",
@@ -650,24 +665,7 @@ class DrinkEvent(Event):
         if self.vitamin_b12 is not None:
             summary.register_vitamin_b12(self.vitamin_b12.value * ratio)
         if self.amount is not None:
-            summary.register_liquid(self.amount.value * ratio)
-
-
-@dataclass
-class StatusEvent(Event):
-    """Event representing a status check of body metrics."""
-
-    weight: float | None = None
-    """Body weight in kilograms."""
-
-    temperature: float | None = None
-    """Body temperature in Celsius."""
-
-    arguments: ClassVar[Arguments] = (
-        Arguments(["_"], "_")
-        .add(Argument("weight"))
-        .add(Argument("temperature"))
-    )
+            summary.register_liquid(self.amount * ratio)
 
 
 @dataclass
@@ -764,3 +762,27 @@ class InBedEvent(Event):
     """Event representing being in bed."""
 
     arguments: ClassVar[Arguments] = Arguments(["in_bed"], "in_bed")
+
+
+@dataclass
+class WeightEvent(Event):
+    """Event representing a body weight measurement."""
+
+    mass: Mass | None = None
+    """Body mass in kilograms."""
+
+    arguments: ClassVar[Arguments] = Arguments(
+        ["weight"], "weight"
+    ).add_class_argument("mass", Mass)
+
+
+@dataclass
+class BackupEvent(Event):
+    """Event representing backing up a device."""
+
+    device: Device | None = None
+    """Device being backed up."""
+
+    arguments: ClassVar[Arguments] = Event.arguments.replace(
+        ["backup"], "backup"
+    ).add_object_argument("device", Device, is_main=True)
