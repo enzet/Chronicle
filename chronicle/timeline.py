@@ -2,7 +2,7 @@
 
 import logging
 from collections.abc import Callable
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from re import Pattern
 from re import compile as re_compile
@@ -33,6 +33,7 @@ from chronicle.util import empty_filter
 logger: logging.Logger = logging.getLogger(__name__)
 
 PYDANTIC: bool = False
+local_timezone = datetime.now().astimezone().tzinfo
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
@@ -318,7 +319,9 @@ class Timeline:
         print("Getting events by day...")
 
         def get_first(point: datetime) -> datetime:
-            return datetime(point.year, point.month, point.day, tzinfo=UTC)
+            return datetime(
+                point.year, point.month, point.day, tzinfo=local_timezone
+            )
 
         def get_next(point: datetime) -> datetime:
             return point + timedelta(days=1)
@@ -334,7 +337,9 @@ class Timeline:
         def get_first(point: datetime) -> datetime:
             day_of_week = point.weekday()
             point = point - timedelta(days=day_of_week)
-            return datetime(point.year, point.month, point.day, tzinfo=UTC)
+            return datetime(
+                point.year, point.month, point.day, tzinfo=local_timezone
+            )
 
         def get_next(point: datetime) -> datetime:
             return point + timedelta(days=7)
@@ -348,12 +353,14 @@ class Timeline:
         print("Getting events by month...")
 
         def get_first(point: datetime) -> datetime:
-            return datetime(point.year, point.month, 1, tzinfo=UTC)
+            return datetime(point.year, point.month, 1, tzinfo=local_timezone)
 
         def get_next(point: datetime) -> datetime:
             if point.month == MAX_MONTHS:
-                return datetime(point.year + 1, 1, 1, tzinfo=UTC)
-            return datetime(point.year, point.month + 1, 1, tzinfo=UTC)
+                return datetime(point.year + 1, 1, 1, tzinfo=local_timezone)
+            return datetime(
+                point.year, point.month + 1, 1, tzinfo=local_timezone
+            )
 
         return self.get_events_by(get_first, get_next, filter_)
 
@@ -384,10 +391,10 @@ class Timeline:
         print("Getting events by year...")
 
         def get_first(point: datetime) -> datetime:
-            return datetime(point.year, 1, 1, tzinfo=UTC)
+            return datetime(point.year, 1, 1, tzinfo=local_timezone)
 
         def get_next(point: datetime) -> datetime:
-            return datetime(point.year + 1, 1, 1, tzinfo=UTC)
+            return datetime(point.year + 1, 1, 1, tzinfo=local_timezone)
 
         return self.get_events_by(get_first, get_next, filter_)
 
@@ -405,7 +412,7 @@ class Timeline:
             if isinstance(x, Medication) and x.expired is not None
         ]
         for object_ in sorted(objects, key=lambda x: x.expired.get_lower()):
-            diff = object_.expired.get_lower() - datetime.now(UTC)
+            diff = object_.expired.get_lower() - datetime.now(local_timezone)
             style = ""
             if object_.color:
                 c = object_.color.hex
@@ -520,7 +527,9 @@ class Timeline:
                 print(event.to_string(self.objects))
 
     def graph(self, filter_: Callable | None = None) -> None:
-        filter_ = self.get_filter(datetime.now(UTC) - timedelta(days=30), None)
+        filter_ = self.get_filter(
+            datetime.now(local_timezone) - timedelta(days=30), None
+        )
 
         i = 0
         for day, events, _summary in self.get_events_by_day(filter_):
