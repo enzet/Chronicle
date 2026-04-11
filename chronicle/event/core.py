@@ -3,6 +3,8 @@
 This file describes events and some common attributes that events may have.
 """
 
+from pathlib import Path
+
 import logging
 from dataclasses import dataclass, field
 from typing import Any, ClassVar, Self
@@ -53,7 +55,13 @@ class Event:
 
     @classmethod
     def parse_command(
-        cls, time: Time, command: str, tokens: list[str], objects: Objects
+        cls,
+        time: Time,
+        command: str,
+        tokens: list[str],
+        objects: Objects,
+        path: Path | None = None,
+        line_number: int | None = None,
     ) -> Self:
         """Create an event from a command."""
 
@@ -66,8 +74,13 @@ class Event:
         except ChronicleObjectNotFoundError as error:
             message = (
                 f"Object with id `{error.object_id}` not found, needed to "
-                f"parse `{cls.__name__}` from command `{command}`."
+                f"parse `{cls.__name__}` from command `{command}`"
             )
+            if path:
+                message += f" in `{path}`"
+            if line_number is not None:
+                message += f":{line_number + 1}"
+            message += "."
             raise ChronicleObjectNotFoundError(message) from error
         try:
             return cls(time=time, source=(command, parsed), **parsed)

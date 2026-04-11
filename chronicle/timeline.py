@@ -105,6 +105,8 @@ class Timeline:
         command: str,
         tokens: list[str],
         context: Context | None = None,
+        path: Path | None = None,
+        line_number: int | None = None,
         *,
         is_task: bool = False,
     ) -> None:
@@ -159,7 +161,7 @@ class Timeline:
 
         if prefix in self.prefix_to_class:
             event: Event = self.prefix_to_class[prefix].parse_command(
-                time, command, parameters, self.objects
+                time, command, parameters, self.objects, path, line_number
             )
             event.is_task = is_task
             self.events.append(event)
@@ -611,13 +613,18 @@ class Timeline:
 class CommandParser:
     """Parser of special Chronicle commands."""
 
-    def __init__(self, timeline: Timeline | None = None) -> None:
+    def __init__(
+        self, timeline: Timeline | None = None, path: Path | None = None
+    ) -> None:
         self.timeline: Timeline = (
             timeline if timeline is not None else Timeline()
         )
+        self.path: Path | None = path
         self.context: Context = Context()
 
-    def parse_command(self, command: str) -> None:
+    def parse_command(
+        self, command: str, line_number: int | None = None
+    ) -> None:
         """Parse special Chronicle command."""
 
         if not command.strip():
@@ -671,7 +678,12 @@ class CommandParser:
 
         # Parse event.
         self.timeline.parse_event_command(
-            command, parameters, self.context, is_task=is_task
+            command,
+            parameters,
+            self.context,
+            is_task=is_task,
+            path=self.path,
+            line_number=line_number,
         )
 
     def parse_commands(self, commands: list[str]) -> None:
