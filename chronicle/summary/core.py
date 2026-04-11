@@ -80,6 +80,24 @@ class Summary:
     )
     """Exercise repetition counts by exercise name."""
 
+    energy_expenditure: float = 0.0
+    """Energy spent during sport activities in kilocalories."""
+
+    sport_sessions: int = 0
+    """Number of sport sessions."""
+
+    cardio_distance: float = 0.0
+    """Distance covered in cardio activities in meters."""
+
+    move_distance: float = 0.0
+    """Distance covered in move activities (walk, run, hike, etc.) in meters."""
+
+    strength_tonnage: float = 0.0
+    """Total weight lifted in strength training in kg·reps."""
+
+    body_weight_kg: float | None = None
+    """Current body weight in kilograms, used for bodyweight exercise tonnage."""
+
     energy: float = 0.0
     """Energy consumed in kilocalories."""
 
@@ -219,6 +237,26 @@ class Summary:
     def register_liquid(self, milliliters: float) -> None:
         """Register liquid consumed in milliliters."""
         self.liquid += milliliters
+
+    def register_energy_expenditure(self, kcal: float) -> None:
+        """Register energy spent during sport activities in kilocalories."""
+        self.energy_expenditure += kcal
+
+    def register_sport_session(self) -> None:
+        """Register a sport session."""
+        self.sport_sessions += 1
+
+    def register_cardio_distance(self, meters: float) -> None:
+        """Register cardio distance in meters."""
+        self.cardio_distance += meters
+
+    def register_move_distance(self, meters: float) -> None:
+        """Register move distance in meters."""
+        self.move_distance += meters
+
+    def register_strength_tonnage(self, kg_reps: float) -> None:
+        """Register strength training tonnage in kg·reps."""
+        self.strength_tonnage += kg_reps
 
     def register_energy(self, kcal: float) -> None:
         """Register energy consumed in kilocalories."""
