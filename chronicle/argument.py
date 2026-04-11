@@ -30,9 +30,7 @@ def default_pretty_printer(value: Any) -> str:
 
     if isinstance(value, str):
         return value
-    if isinstance(value, float):
-        return str(value)
-    if isinstance(value, int):
+    if isinstance(value, (float, int, list)):
         return str(value)
     if isinstance(value, set):
         return "(" + ", ".join(value) + ")"
