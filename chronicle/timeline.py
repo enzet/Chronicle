@@ -13,7 +13,7 @@ from rich.table import Table
 
 from chronicle.approximation import Approximation
 from chronicle.errors import ChronicleUnknownTypeError, ChronicleValueError
-from chronicle.event.common import PayEvent, SleepEvent
+from chronicle.event.common import PayEvent, SleepEvent, WeightEvent
 from chronicle.event.core import Event
 from chronicle.event.place import PlaceEvent
 from chronicle.event.sport import MoveEvent, SportEvent
@@ -206,6 +206,7 @@ class Timeline:
         """Get summary for events."""
 
         summary: Summary = Summary()
+        summary.body_weight_kg = self.get_weight(datetime.now(local_timezone))
 
         for event in self.get_events(filter_=filter_):
             try:
@@ -215,6 +216,21 @@ class Timeline:
                 raise
 
         return summary
+
+    def get_weight(self, point: datetime) -> float | None:
+        """Get the last recorded body weight at or before the given point."""
+        last: WeightEvent | None = None
+        for event in self.events:
+            if not isinstance(event, WeightEvent):
+                continue
+            moment = event.time.get_moment()
+            if moment <= point and (
+                last is None or moment > last.time.get_moment()
+            ):
+                last = event
+        if last is None or last.mass is None:
+            return None
+        return last.mass.value
 
     def get_events(self, filter_: Callable | None = None) -> list[Event]:
         """Get events filtered by `filter_`."""
@@ -253,8 +269,10 @@ class Timeline:
             point = next_point
 
         result_dict: dict[datetime, tuple[list[Event], Summary]] = {}
-        for point in points:
-            result_dict[point[0]] = ([], Summary())
+        for point_start, point_end in points:
+            summary = Summary()
+            summary.body_weight_kg = self.get_weight(point_end)
+            result_dict[point_start] = ([], summary)
 
         assert points[0][0] == start_point
         assert points[-1][1] == end_point
