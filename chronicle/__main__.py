@@ -68,6 +68,17 @@ def main() -> None:
         manager.add_argument(import_parsers)
 
     sub_parsers = argument_parser.add_subparsers(dest="command")
+
+    dashboard_parser = sub_parsers.add_parser(
+        "dashboard", help="generate static SVG dashboard"
+    )
+    dashboard_parser.add_argument(
+        "--output",
+        "-o",
+        metavar="FILE",
+        help="write SVG to FILE (default: stdout)",
+    )
+
     view_parser = sub_parsers.add_parser("view")
     view_parser.add_argument("--style", default="normal")
     view_parser.add_argument(
@@ -234,6 +245,7 @@ def main() -> None:
         for file_name in arguments.input:
             path: Path = Path(file_name)
             if file_name.endswith(".chr"):
+                logger.info("Importing data from `%s`.", file_name)
                 parser: CommandParser = CommandParser(timeline, path)
                 unknown_types: list[ChronicleUnknownTypeError] = []
                 with path.open(encoding="utf-8") as input_file:
@@ -336,6 +348,17 @@ def main() -> None:
             timeline.graph()
 
     command = arguments.command
+
+    if command == "dashboard":
+        from chronicle.view.dashboard import generate_dashboard_svg
+
+        svg = generate_dashboard_svg(timeline)
+        if arguments.output:
+            Path(arguments.output).write_text(svg, encoding="utf-8")
+        else:
+            print(svg)
+        return
+
     if command == "interpret":
         while True:
             command = input("> ")
