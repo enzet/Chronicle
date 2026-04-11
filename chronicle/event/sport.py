@@ -25,10 +25,24 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 @dataclass
 class SportEvent(Event):
-    """Event representing a sport."""
+    """Excercise, warmup or any other sport activity."""
+
+    energy: float | None = None
+    """Spent energy in kilocalories."""
+
+    arguments: ClassVar[Arguments] = Arguments(
+        ["sport"], "sport"
+    ).add_class_argument("energy", Kilocalories)
 
     def get_color(self) -> str:
         return "#008800"
+
+    @override
+    def register_summary(
+        self, summary: Summary, ratio: float = 1.0, *, is_main: bool = True
+    ) -> None:
+        if self.energy is not None:
+            summary.register_energy_expenditure(self.energy * ratio)
 
 
 @dataclass
@@ -59,6 +73,14 @@ class MoveEvent(SportEvent):
         .add_class_argument("kilocalories", Kilocalories)
     )
 
+    @override
+    def register_summary(
+        self, summary: Summary, ratio: float = 1.0, *, is_main: bool = True
+    ) -> None:
+        super().register_summary(summary, ratio, is_main=is_main)
+        if self.distance is not None:
+            summary.register_move_distance(self.distance * ratio)
+
 
 @dataclass
 class RunEvent(MoveEvent):
@@ -67,6 +89,14 @@ class RunEvent(MoveEvent):
     arguments: ClassVar[Arguments] = MoveEvent.arguments.replace(["run"], "run")
 
     color: ClassVar[str] = "#FF8800"
+
+    @override
+    def register_summary(
+        self, summary: Summary, ratio: float = 1.0, *, is_main: bool = True
+    ) -> None:
+        super().register_summary(summary, ratio, is_main=is_main)
+        if self.distance is not None:
+            summary.register_cardio_distance(self.distance * ratio)
 
 
 @dataclass
@@ -167,6 +197,17 @@ class ExerciseEvent(SportEvent):
     weights: list[float] | None = None
     """The weights used for each set."""
 
+    min_sets_to_count: ClassVar[int] = 3
+    """Minimum total repetitions for the event to count as an exercise."""
+
+    bodyweight_fraction: ClassVar[float | None] = None
+    """Fraction of body weight used as load (e.g. 0.69 for push-ups).
+
+    When set, body weight from the summary is used as the base load per rep,
+    with any recorded `weights` added on top (e.g. weighted chin-ups).
+    If body weight is unknown, tonnage is skipped for this exercise.
+    """
+
     arguments: ClassVar[Arguments] = (
         SportEvent.arguments.replace(["exercise"], "exercise")
         .add_class_argument("sets", Integers)
@@ -182,7 +223,7 @@ class ExerciseEvent(SportEvent):
                     "Sets length %d doesn't match weights length %d for %s.",
                     len(self.sets),
                     len(self.weights),
-                    self.arguments.command,
+                    self,
                 )
 
     def __init_subclass__(
@@ -194,10 +235,36 @@ class ExerciseEvent(SportEvent):
 
     @override
     def register_summary(
-        self, summary: Summary, ratio: float = 1.0, is_main: bool = True
+        self, summary: Summary, ratio: float = 1.0, *, is_main: bool = True
     ) -> None:
+        super().register_summary(summary, ratio, is_main=is_main)
         if self.sets is not None:
             summary.exercises[self.arguments.command] += sum(self.sets) * ratio
+
+        if (
+            self.sets is not None
+            and is_main
+            and len(self.sets) >= self.min_sets_to_count
+        ):
+            summary.register_sport_session()
+
+        if self.sets is None:
+            return
+
+        if self.weights is not None:
+            # Explicit weight recorded (possibly added on top of bodyweight).
+            base = self.weights
+            if self.bodyweight_fraction is not None and summary.body_weight_kg:
+                bw_load = self.bodyweight_fraction * summary.body_weight_kg
+                base = [w + bw_load for w in base]
+            tonnage = sum(r * w for r, w in zip(self.sets, base, strict=True))
+            summary.register_strength_tonnage(tonnage * ratio)
+        elif self.bodyweight_fraction is not None:
+            # No explicit weight — use bodyweight fraction alone.
+            if summary.body_weight_kg is not None:
+                bw_load = self.bodyweight_fraction * summary.body_weight_kg
+                tonnage = sum(self.sets) * bw_load
+                summary.register_strength_tonnage(tonnage * ratio)
 
 
 @dataclass
@@ -209,10 +276,14 @@ class AbsEvent(ExerciseEvent, command="abs"):
 class SquatsEvent(ExerciseEvent, command="squats"):
     """Event representing squats."""
 
+    bodyweight_fraction: ClassVar[float | None] = 0.75
+
 
 @dataclass
 class ChinUpsEvent(ExerciseEvent, command="chin_ups"):
     """Event representing chin ups."""
+
+    bodyweight_fraction: ClassVar[float | None] = 0.75
 
 
 @dataclass
@@ -229,10 +300,14 @@ class SquatJumpsEvent(ExerciseEvent, command="squat_jumps"):
 class DipsEvent(ExerciseEvent, command="dips"):
     """Event representing dips."""
 
+    bodyweight_fraction: ClassVar[float | None] = 0.75
+
 
 @dataclass
 class PushUpsEvent(ExerciseEvent, command="push_ups"):
     """Event representing push ups."""
+
+    bodyweight_fraction: ClassVar[float | None] = 0.69
 
 
 @dataclass
@@ -291,6 +366,11 @@ class DumbbellSideUpEvent(ExerciseEvent, command="dumbbell_side_up"):
 
 
 @dataclass
+class DumbbellSideUpsEvent(ExerciseEvent, command="dumbbell_side_ups"):
+    """Event representing dumbbell lateral raises."""
+
+
+@dataclass
 class SupermanEvent(ExerciseEvent, command="superman"):
     """Event representing superman exercise."""
 
@@ -322,6 +402,11 @@ class LatMachineEvent(ExerciseEvent, command="lat_machine"):
 
 @dataclass
 class CrunchEvent(ExerciseEvent, command="crunch"):
+    """Event representing crunches."""
+
+
+@dataclass
+class CrunchesEvent(ExerciseEvent, command="crunches"):
     """Event representing crunches."""
 
 
