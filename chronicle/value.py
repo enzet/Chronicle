@@ -630,22 +630,10 @@ class Liquid(Value):
     value: float
     """Volume value in milliliters."""
 
-    patterns: ClassVar[list[re.Pattern]] = [
-        re.compile(r"(?P<v>\d+(\.\d+)?)ml"),
-        re.compile(r"(?P<v>\d+(\.\d+)?)l"),
-    ]
-    extractors: ClassVar[list[Callable]] = [
-        lambda groups: Liquid(float(groups("v"))),
-        lambda groups: Liquid(float(groups("v")) * KILO),
-    ]
-
-    def __str__(self) -> str:
-        if self.value >= KILO:
-            return f"{self.value / KILO:g}l"
-        return f"{self.value:g}ml"
+    prefix: ClassVar[str | None] = "lq:"
 
     def to_command(self) -> str:
-        return str(self)
+        return f"lq: {self.value:g}"
 
 
 @dataclass
@@ -922,17 +910,65 @@ class Integers(Value):
 
 
 @dataclass
+class Mass(Value):
+    """Body mass in kilograms."""
+
+    value: float
+    """Mass in kilograms."""
+
+    patterns: ClassVar[list[re.Pattern]] = [
+        re.compile(r"(?P<v>\d+(\.\d+)?)kg"),
+    ]
+    extractors: ClassVar[list[Callable]] = [
+        lambda groups: Mass(float(groups("v"))),
+    ]
+
+
+@dataclass
 class Weights(Value):
     """List of weights in kilograms."""
 
     values: list[float]
     """Weights in kilograms."""
 
+    LBS_TO_KG: ClassVar[float] = 0.453592
+
     patterns: ClassVar[list[re.Pattern]] = [
-        re.compile(r"((\d+(\.\d+)?)kg)(,(\d+(\.\d+)?)kg)*")
+        re.compile(r"((\d+(\.\d+)?)kg)(,(\d+(\.\d+)?)kg)*"),
+        re.compile(r"(\d+)x(\d+(\.\d+)?)kg"),
+        re.compile(r"((\d+(\.\d+)?)lbs)(,(\d+(\.\d+)?)lbs)*"),
+        re.compile(r"(\d+)x(\d+(\.\d+)?)lbs"),
+        re.compile(r"((\d+(\.\d+)?)lb)(,(\d+(\.\d+)?)lb)*"),
+        re.compile(r"(\d+)x(\d+(\.\d+)?)lb"),
     ]
     extractors: ClassVar[list[Callable]] = [
         lambda groups: [
             float(group.removesuffix("kg")) for group in groups(0).split(",")
-        ]
+        ],
+        lambda groups: (
+            int(groups(0).split("x")[0])
+            * [float(groups(0).split("x")[1].removesuffix("kg"))]
+        ),
+        lambda groups: [
+            float(group.removesuffix("lbs")) * Weights.LBS_TO_KG
+            for group in groups(0).split(",")
+        ],
+        lambda groups: (
+            int(groups(0).split("x")[0])
+            * [
+                float(groups(0).split("x")[1].removesuffix("lbs"))
+                * Weights.LBS_TO_KG
+            ]
+        ),
+        lambda groups: [
+            float(group.removesuffix("lb")) * Weights.LBS_TO_KG
+            for group in groups(0).split(",")
+        ],
+        lambda groups: (
+            int(groups(0).split("x")[0])
+            * [
+                float(groups(0).split("x")[1].removesuffix("lb"))
+                * Weights.LBS_TO_KG
+            ]
+        ),
     ]
