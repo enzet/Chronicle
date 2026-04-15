@@ -384,10 +384,12 @@ class Distance(Value):
     """Distance value."""
 
     patterns: ClassVar[list[re.Pattern]] = [
+        re.compile(r"(?P<v>\d+(\.\d+)?)cm"),
         re.compile(r"(?P<v>\d+(\.\d+)?)m"),
         re.compile(r"(?P<v>\d+(\.\d+)?)km"),
     ]
     extractors: ClassVar[list[Callable]] = [
+        lambda groups: float(groups("v")) / 100.0,
         lambda groups: float(groups("v")),
         lambda groups: float(groups("v")) * 1000.0,
     ]
