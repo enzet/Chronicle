@@ -460,3 +460,8 @@ class DumbbellOverheadTricepExtensionEvent(
     ExerciseEvent, command="dumbbell_overhead_tricep_extension"
 ):
     """Event representing dumbbell overhead tricep extension."""
+
+
+@dataclass
+class DeadBugEvent(ExerciseEvent, command="dead_bug"):
+    """Event representing dead bug exercise."""
