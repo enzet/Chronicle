@@ -106,8 +106,11 @@ class Object:
             if argument.patterns:
                 for pattern in argument.patterns:
                     pattern_text: str = pattern.pattern
-                    pattern_text = pattern_text.replace("/", "\\/")
-                    pattern_text = re.sub(r"\?P<.*>", "", pattern_text)
+                    pattern_text = re.sub(r"(?<!\\)/", r"\\/", pattern_text)
+                    pattern_text = re.sub(r"\?P<.*?>", "", pattern_text)
+                    pattern_text = pattern_text.replace("%", "[%]").replace("@", "[@]")
+                    pattern_text = pattern_text.replace("(?:", "%(")
+
                     syntax += (
                         f"syntax match {name}Arguments "
                         f"/\\v{pattern_text}/ contained"

@@ -3,6 +3,7 @@
 This file describes events and some common attributes that events may have.
 """
 
+import re
 from pathlib import Path
 
 import logging
@@ -106,9 +107,13 @@ class Event:
                 continue
             for pattern in argument.patterns:
                 pattern_text: str = pattern.pattern
-                pattern_text = pattern_text.replace("/", "\\/")
+                pattern_text = re.sub(r"(?<!\\)/", r"\\/", pattern_text)
+                pattern_text = re.sub(r"\?P<.*?>", "", pattern_text)
+                pattern_text = pattern_text.replace("%", "[%]").replace("@", "[@]")
+                pattern_text = pattern_text.replace("(?:", "%(")
+
                 syntax += (
-                    f"syntax match {name}Arguments /{pattern_text}/ contained\n"
+                    f"syntax match {name}Arguments /\\v{pattern_text}/ contained\n"
                 )
 
         syntax += (
