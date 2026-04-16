@@ -137,6 +137,14 @@ class WarmUpEvent(SportEvent):
         ["warm_up"], "warm_up"
     )
 
+    @override
+    def register_summary(
+        self, summary: Summary, ratio: float = 1.0, *, is_main: bool = True
+    ) -> None:
+        super().register_summary(summary, ratio, is_main=is_main)
+        if is_main:
+            summary.register_sport_session()
+
 
 @dataclass
 class StretchEvent(SportEvent):
