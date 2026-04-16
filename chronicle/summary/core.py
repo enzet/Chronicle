@@ -92,6 +92,9 @@ class Summary:
     move_distance: float = 0.0
     """Distance covered in move activities (walk, run, hike, etc.) in meters."""
 
+    move_energy: float = 0.0
+    """Move energy expenditure in kilocalories."""
+
     strength_tonnage: float = 0.0
     """Total weight lifted in strength training in kg·reps."""
 
@@ -253,6 +256,10 @@ class Summary:
     def register_move_distance(self, meters: float) -> None:
         """Register move distance in meters."""
         self.move_distance += meters
+
+    def register_move_energy(self, energy: float) -> None:
+        """Register move energy in kilocalories."""
+        self.move_energy += energy
 
     def register_strength_tonnage(self, kg_reps: float) -> None:
         """Register strength training tonnage in kg·reps."""
