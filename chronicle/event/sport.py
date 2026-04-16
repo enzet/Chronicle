@@ -80,6 +80,8 @@ class MoveEvent(SportEvent):
         super().register_summary(summary, ratio, is_main=is_main)
         if self.distance is not None:
             summary.register_move_distance(self.distance * ratio)
+        if self.kilocalories is not None:
+            summary.register_move_energy(self.kilocalories * ratio)
 
 
 @dataclass
