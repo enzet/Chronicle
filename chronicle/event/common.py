@@ -23,6 +23,7 @@ from chronicle.value import (
     Calcium,
     Carbohydrates,
     Cost,
+    Distance,
     Fat,
     Fiber,
     Iron,
@@ -774,6 +775,18 @@ class WeightEvent(Event):
     arguments: ClassVar[Arguments] = Arguments(
         ["weight"], "weight"
     ).add_class_argument("mass", Mass)
+
+
+@dataclass
+class WaistEvent(Event):
+    """Event representing a waist circumference measurement."""
+
+    circumference: Distance | None = None
+    """Waist circumference in centimeters."""
+
+    arguments: ClassVar[Arguments] = Arguments(
+        ["waist"], "waist"
+    ).add_class_argument("circumference", Distance)
 
 
 @dataclass
