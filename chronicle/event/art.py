@@ -545,10 +545,8 @@ class ListenAudiobookEvent(Event):
     ) -> None:
         """Register this audiobook event in the summary statistics."""
 
-        message: str
-
         if not self.interval and not self.volume and not self.duration:
-            message = (
+            message: str = (
                 f"Event {self} has neither interval, duration, nor volume."
             )
             raise ChronicleSummaryError(message, self)
@@ -594,6 +592,19 @@ class ListenAudiobookEvent(Event):
                 message = f"Event {self} has duration {duration}."
                 raise ChronicleValueError(message, self)
             summary.register_listen(duration * ratio, language, self.service)
+            if (
+                self.audiobook
+                and self.audiobook.book
+                and self.audiobook.duration
+                and self.audiobook.book.volume
+            ):
+                summary.register_read_pages(
+                    duration
+                    / self.audiobook.duration.total_seconds()
+                    * ratio
+                    * self.audiobook.book.volume,
+                    language,
+                )
 
 
 @dataclass
