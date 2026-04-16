@@ -3,11 +3,10 @@
 This file describes events and some common attributes that events may have.
 """
 
-import re
-from pathlib import Path
-
 import logging
+import re
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, ClassVar, Self
 
 from chronicle.argument import Arguments
@@ -109,11 +108,13 @@ class Event:
                 pattern_text: str = pattern.pattern
                 pattern_text = re.sub(r"(?<!\\)/", r"\\/", pattern_text)
                 pattern_text = re.sub(r"\?P<.*?>", "", pattern_text)
-                pattern_text = pattern_text.replace("%", "[%]").replace("@", "[@]")
+                pattern_text = pattern_text.replace("%", "[%]")
+                pattern_text = pattern_text.replace("@", "[@]")
                 pattern_text = pattern_text.replace("(?:", "%(")
 
                 syntax += (
-                    f"syntax match {name}Arguments /\\v{pattern_text}/ contained\n"
+                    f"syntax match {name}Arguments"
+                    f" /\\v{pattern_text}/ contained\n"
                 )
 
         syntax += (

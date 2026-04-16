@@ -99,7 +99,7 @@ class Summary:
     """Total weight lifted in strength training in kg·reps."""
 
     body_weight_kg: float | None = None
-    """Current body weight in kilograms, used for bodyweight exercise tonnage."""
+    """Current body weight in kilograms, used for bodyweight tonnage."""
 
     energy: float = 0.0
     """Energy consumed in kilocalories."""
