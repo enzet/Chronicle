@@ -118,7 +118,12 @@ class Object:
             prefix += ("_" + c.lower()) if "A" <= c <= "Z" else c
 
         syntax: str = f"highlight link {name}Arguments chronicleEventValue\n"
-        syntax += f"highlight link {name}Prefix Prefix\n"
+
+        prefix_args = [a for a in cls.arguments.arguments if a.prefix]
+        if prefix_args:
+            syntax += f"highlight link {name}Prefix Prefix\n"
+            syntax += f"highlight link {name}PrefixValue chronicleEventValue\n"
+            syntax += f"syntax match {name}PrefixValue /\\v\\S+/ contained\n"
 
         for argument in cls.arguments.arguments:
             if argument.patterns:
@@ -139,17 +144,19 @@ class Object:
                 syntax += (
                     f"syntax match {name}Prefix "
                     f"/\\v{argument.prefix}/ contained"
+                    f" nextgroup={name}PrefixValue skipwhite"
                     "\n"
                 )
 
+        contains = f" contains={name}Arguments"
+        if prefix_args:
+            contains += f",{name}Prefix"
+        contains += ",chronicleVariable"
         syntax += (
             f"syntax region {name}Line"
             " matchgroup=TypeFormat"
             f" start=/{prefix}\\s*/"
-            " end=/$/"
-            f" contains={name}Arguments,{name}Prefix"
-            ",chronicleVariable"
-            "\n"
+            " end=/$/" + contains + "\n"
         )
         return syntax
 
@@ -793,7 +800,7 @@ class Objects:
         self.objects: dict[str, Object] = objects or {}
         """Objects indexed by their identifiers."""
 
-        self.prefix_to_class: dict[str, type] = {}
+        self.prefix_to_class: dict[str, type[Object]] = {}
         """Prefixes to classes."""
 
         classes: list = Objects.get_classes(Object)

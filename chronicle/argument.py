@@ -212,8 +212,6 @@ class Arguments:
 
         Value class should specify patterns and extractors. E.g. language.
         """
-        self.class_argument_names.append(class_.__name__)
-
         argument: Argument = Argument(name)
 
         assert (
@@ -232,6 +230,12 @@ class Arguments:
                 # Prefix-only class: value is a plain number following the
                 # prefix token; use the class constructor as loader.
                 argument.loader = lambda v, _, cls=class_: cls(float(v))
+
+        # Only add to class_argument_names when the class has its own Vim
+        # syntax group (i.e. it has patterns). Prefix-only classes are handled
+        # via the {Name}Prefix / {Name}PrefixValue mechanism instead.
+        if argument.patterns:
+            self.class_argument_names.append(class_.__name__)
 
         self.arguments.append(argument)
 

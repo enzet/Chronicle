@@ -101,7 +101,19 @@ class Event:
 
         syntax: str = f"highlight link {name}Arguments chronicleEventValue\n"
 
+        prefix_args = [a for a in cls.arguments.arguments if a.prefix]
+        if prefix_args:
+            syntax += f"highlight link {name}Prefix Prefix\n"
+            syntax += f"highlight link {name}PrefixValue chroniclePrefixValue\n"
+            syntax += f"syntax match {name}PrefixValue /\\v\\S+/ contained\n"
+
         for argument in cls.arguments.arguments:
+            if argument.prefix:
+                syntax += (
+                    f"syntax match {name}Prefix"
+                    f" /\\v{argument.prefix}/ contained"
+                    f" nextgroup={name}PrefixValue skipwhite\n"
+                )
             if not argument.patterns:
                 continue
             for pattern in argument.patterns:
@@ -117,6 +129,9 @@ class Event:
                     f" /\\v{pattern_text}/ contained\n"
                 )
 
+        contains_extra = (f",{name}Prefix" if prefix_args else "") + (
+            ("," + class_arguments) if class_arguments else ""
+        )
         syntax += (
             f"syntax region {name}Line"
             " matchgroup=TypeFormat"
@@ -127,7 +142,7 @@ class Event:
             "chronicleTask,"
             "chronicleLink,"
             "chronicleComment,"
-            "Tag" + (("," + class_arguments) if class_arguments else "") + "\n"
+            "Tag" + contains_extra + "\n"
         )
         return syntax
 
