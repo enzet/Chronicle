@@ -11,6 +11,7 @@ from chronicle.event.core import Event
 from chronicle.objects.core import (
     Device,
     Dish,
+    Drink,
     Object,
     Person,
     Project,
@@ -140,6 +141,12 @@ class EatEvent(Event):
     meal: str | None = None
     """Description of what was eaten."""
 
+    dish: Dish | None = None
+    """Reference to a predefined dish object."""
+
+    multiplier: float | None = None
+    """Scaling factor applied to dish nutrition (e.g. x2 means double portion)."""
+
     energy: float | None = None
     """Energy in kilocalories."""
 
@@ -202,6 +209,22 @@ class EatEvent(Event):
         .add(Argument("meal"))
         .add(
             Argument(
+                "dish",
+                patterns=[re.compile(r"(@\w+)")],
+                loader=lambda value, objects: objects.get_object(value),
+                command_printer=lambda x: f"@{x.id}",
+            )
+        )
+        .add(
+            Argument(
+                "multiplier",
+                patterns=[re.compile(r"x(\d+(?:\.\d+)?)")],
+                extractors=[lambda x: float(x(1))],
+                command_printer=lambda x: f"x{x}",
+            )
+        )
+        .add(
+            Argument(
                 "energy",
                 patterns=[re.compile(r"(\d+(?:\.\d+)?)kcal")],
                 extractors=[lambda x: float(x(1))],
@@ -232,44 +255,48 @@ class EatEvent(Event):
     def register_summary(
         self, summary: Summary, ratio: float = 1.0, is_main: bool = True
     ) -> None:
-        if self.energy is not None:
-            summary.register_energy(self.energy * ratio)
-        if self.carbohydrates is not None:
-            summary.register_carbohydrates(self.carbohydrates.value * ratio)
-        if self.protein is not None:
-            summary.register_protein(self.protein.value * ratio)
-        if self.fat is not None:
-            summary.register_fat(self.fat.value * ratio)
-        if self.saturated_fat is not None:
-            summary.register_saturated_fat(self.saturated_fat.value * ratio)
-        if self.fiber is not None:
-            summary.register_fiber(self.fiber.value * ratio)
-        if self.sugar is not None:
-            summary.register_sugar(self.sugar.value * ratio)
-        if self.added_sugar is not None:
-            summary.register_added_sugar(self.added_sugar.value * ratio)
-        if self.omega3 is not None:
-            summary.register_omega3(self.omega3.value * ratio)
-        if self.calcium is not None:
-            summary.register_calcium(self.calcium.value * ratio)
-        if self.iron is not None:
-            summary.register_iron(self.iron.value * ratio)
-        if self.vitamin_d is not None:
-            summary.register_vitamin_d(self.vitamin_d.value * ratio)
-        if self.magnesium is not None:
-            summary.register_magnesium(self.magnesium.value * ratio)
-        if self.zinc is not None:
-            summary.register_zinc(self.zinc.value * ratio)
-        if self.potassium is not None:
-            summary.register_potassium(self.potassium.value * ratio)
-        if self.sodium is not None:
-            summary.register_sodium(self.sodium.value * ratio)
-        if self.vitamin_c is not None:
-            summary.register_vitamin_c(self.vitamin_c.value * ratio)
-        if self.vitamin_b12 is not None:
-            summary.register_vitamin_b12(self.vitamin_b12.value * ratio)
-        if self.liquid is not None:
-            summary.register_liquid(self.liquid.value * ratio)
+        source = self.dish if self.dish is not None else self
+        multiplier = self.multiplier if self.multiplier is not None else 1.0
+        scale = multiplier * ratio
+
+        if source.energy is not None:
+            summary.register_energy(source.energy * scale)
+        if source.carbohydrates is not None:
+            summary.register_carbohydrates(source.carbohydrates.value * scale)
+        if source.protein is not None:
+            summary.register_protein(source.protein.value * scale)
+        if source.fat is not None:
+            summary.register_fat(source.fat.value * scale)
+        if source.saturated_fat is not None:
+            summary.register_saturated_fat(source.saturated_fat.value * scale)
+        if source.fiber is not None:
+            summary.register_fiber(source.fiber.value * scale)
+        if source.sugar is not None:
+            summary.register_sugar(source.sugar.value * scale)
+        if source.added_sugar is not None:
+            summary.register_added_sugar(source.added_sugar.value * scale)
+        if source.omega3 is not None:
+            summary.register_omega3(source.omega3.value * scale)
+        if source.calcium is not None:
+            summary.register_calcium(source.calcium.value * scale)
+        if source.iron is not None:
+            summary.register_iron(source.iron.value * scale)
+        if source.vitamin_d is not None:
+            summary.register_vitamin_d(source.vitamin_d.value * scale)
+        if source.magnesium is not None:
+            summary.register_magnesium(source.magnesium.value * scale)
+        if source.zinc is not None:
+            summary.register_zinc(source.zinc.value * scale)
+        if source.potassium is not None:
+            summary.register_potassium(source.potassium.value * scale)
+        if source.sodium is not None:
+            summary.register_sodium(source.sodium.value * scale)
+        if source.vitamin_c is not None:
+            summary.register_vitamin_c(source.vitamin_c.value * scale)
+        if source.vitamin_b12 is not None:
+            summary.register_vitamin_b12(source.vitamin_b12.value * scale)
+        if source.liquid is not None:
+            summary.register_liquid(source.liquid.value * scale)
 
 
 @dataclass
@@ -530,6 +557,12 @@ class DrinkEvent(Event):
     liquid: str | None = None
     """Type of liquid consumed."""
 
+    drink: Drink | None = None
+    """Reference to a predefined drink object."""
+
+    multiplier: float | None = None
+    """Scaling factor applied to drink nutrition."""
+
     amount: float | None = None
     """Amount of the liquid."""
 
@@ -592,6 +625,22 @@ class DrinkEvent(Event):
         .add(Argument("liquid"))
         .add(
             Argument(
+                "drink",
+                patterns=[re.compile(r"(@\w+)")],
+                loader=lambda value, objects: objects.get_object(value),
+                command_printer=lambda x: f"@{x.id}",
+            )
+        )
+        .add(
+            Argument(
+                "multiplier",
+                patterns=[re.compile(r"x(\d+(?:\.\d+)?)")],
+                extractors=[lambda x: float(x(1))],
+                command_printer=lambda x: f"x{x}",
+            )
+        )
+        .add(
+            Argument(
                 "amount",
                 patterns=[re.compile(r"(\d+(?:\.\d+)?)ml")],
                 extractors=[lambda x: float(x(1))],
@@ -629,44 +678,48 @@ class DrinkEvent(Event):
     def register_summary(
         self, summary: Summary, ratio: float = 1.0, is_main: bool = True
     ) -> None:
-        if self.energy is not None:
-            summary.register_energy(self.energy * ratio)
-        if self.carbohydrates is not None:
-            summary.register_carbohydrates(self.carbohydrates.value * ratio)
-        if self.protein is not None:
-            summary.register_protein(self.protein.value * ratio)
-        if self.fat is not None:
-            summary.register_fat(self.fat.value * ratio)
-        if self.saturated_fat is not None:
-            summary.register_saturated_fat(self.saturated_fat.value * ratio)
-        if self.fiber is not None:
-            summary.register_fiber(self.fiber.value * ratio)
-        if self.sugar is not None:
-            summary.register_sugar(self.sugar.value * ratio)
-        if self.added_sugar is not None:
-            summary.register_added_sugar(self.added_sugar.value * ratio)
-        if self.omega3 is not None:
-            summary.register_omega3(self.omega3.value * ratio)
-        if self.calcium is not None:
-            summary.register_calcium(self.calcium.value * ratio)
-        if self.iron is not None:
-            summary.register_iron(self.iron.value * ratio)
-        if self.vitamin_d is not None:
-            summary.register_vitamin_d(self.vitamin_d.value * ratio)
-        if self.magnesium is not None:
-            summary.register_magnesium(self.magnesium.value * ratio)
-        if self.zinc is not None:
-            summary.register_zinc(self.zinc.value * ratio)
-        if self.potassium is not None:
-            summary.register_potassium(self.potassium.value * ratio)
-        if self.sodium is not None:
-            summary.register_sodium(self.sodium.value * ratio)
-        if self.vitamin_c is not None:
-            summary.register_vitamin_c(self.vitamin_c.value * ratio)
-        if self.vitamin_b12 is not None:
-            summary.register_vitamin_b12(self.vitamin_b12.value * ratio)
-        if self.amount is not None:
-            summary.register_liquid(self.amount * ratio)
+        source = self.drink if self.drink is not None else self
+        multiplier = self.multiplier if self.multiplier is not None else 1.0
+        scale = multiplier * ratio
+
+        if source.energy is not None:
+            summary.register_energy(source.energy * scale)
+        if source.carbohydrates is not None:
+            summary.register_carbohydrates(source.carbohydrates.value * scale)
+        if source.protein is not None:
+            summary.register_protein(source.protein.value * scale)
+        if source.fat is not None:
+            summary.register_fat(source.fat.value * scale)
+        if source.saturated_fat is not None:
+            summary.register_saturated_fat(source.saturated_fat.value * scale)
+        if source.fiber is not None:
+            summary.register_fiber(source.fiber.value * scale)
+        if source.sugar is not None:
+            summary.register_sugar(source.sugar.value * scale)
+        if source.added_sugar is not None:
+            summary.register_added_sugar(source.added_sugar.value * scale)
+        if source.omega3 is not None:
+            summary.register_omega3(source.omega3.value * scale)
+        if source.calcium is not None:
+            summary.register_calcium(source.calcium.value * scale)
+        if source.iron is not None:
+            summary.register_iron(source.iron.value * scale)
+        if source.vitamin_d is not None:
+            summary.register_vitamin_d(source.vitamin_d.value * scale)
+        if source.magnesium is not None:
+            summary.register_magnesium(source.magnesium.value * scale)
+        if source.zinc is not None:
+            summary.register_zinc(source.zinc.value * scale)
+        if source.potassium is not None:
+            summary.register_potassium(source.potassium.value * scale)
+        if source.sodium is not None:
+            summary.register_sodium(source.sodium.value * scale)
+        if source.vitamin_c is not None:
+            summary.register_vitamin_c(source.vitamin_c.value * scale)
+        if source.vitamin_b12 is not None:
+            summary.register_vitamin_b12(source.vitamin_b12.value * scale)
+        if source.amount is not None:
+            summary.register_liquid(source.amount * scale)
 
 
 @dataclass
