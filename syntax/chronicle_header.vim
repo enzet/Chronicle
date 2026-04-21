@@ -10,13 +10,15 @@ if exists("b:current_syntax")
    finish
 endif
 
+hi link chroniclePrefixValue Constant
+
 syntax match chronicleTime /\v(\d{4}-\d{2}-\d{2}|\d{2}:\d{2}|\d{4}-\d{2}-\d{2}T\d{2}:\d{2})(\/(\d{4}-\d{2}-\d{2}|\d{2}:\d{2}|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}))?/
 
 hi link DoArguments chronicleEventValue
 syntax match DoArguments /\v![a-z0-9_]+/ contained
 
 hi link CleanArguments chronicleEventValue
-syntax match CleanArguments /\v(body|head)/ contained
+syntax match CleanArguments /\v(body|head|face|teeth)/ contained
 
 hi link ShaveArguments chronicleEventValue
 syntax match ShaveArguments /\v(body|face)/ contained
