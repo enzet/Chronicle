@@ -19,13 +19,31 @@ from chronicle.errors import (
 from chronicle.time import Moment, Timedelta
 from chronicle.value import (
     OSM,
+    AddedSugar,
+    Calcium,
+    Carbohydrates,
     Cost,
     Date,
+    Fat,
+    Fiber,
+    Iron,
     Language,
+    Liquid,
+    Magnesium,
+    Omega3,
+    Potassium,
     ProgrammingLanguage,
+    Protein,
+    SaturatedFat,
+    Sodium,
     Subject,
+    Sugar,
     Tags,
+    VitaminB12,
+    VitaminC,
+    VitaminD,
     WikidataId,
+    Zinc,
 )
 from chronicle.wikidata import (
     Property,
@@ -1022,6 +1040,78 @@ class Standup(Object):
 
 
 @dataclass
+class Drink(Object):
+    """A drink or beverage."""
+
+    title: str | None = None
+    """Name of the drink."""
+
+    amount: float | None = None
+    """Volume in millilitres."""
+
+    energy: float | None = None
+    carbohydrates: Carbohydrates | None = None
+    protein: Protein | None = None
+    fat: Fat | None = None
+    saturated_fat: SaturatedFat | None = None
+    fiber: Fiber | None = None
+    sugar: Sugar | None = None
+    added_sugar: AddedSugar | None = None
+    omega3: Omega3 | None = None
+    calcium: Calcium | None = None
+    iron: Iron | None = None
+    vitamin_d: VitaminD | None = None
+    magnesium: Magnesium | None = None
+    zinc: Zinc | None = None
+    potassium: Potassium | None = None
+    sodium: Sodium | None = None
+    vitamin_c: VitaminC | None = None
+    vitamin_b12: VitaminB12 | None = None
+
+    @classmethod
+    def from_value(cls, value: str) -> Self:
+        return cls(None, title=value)
+
+    arguments: ClassVar[Arguments] = (
+        Arguments(["drink"], "drink")
+        .add(Argument("title"))
+        .add(
+            Argument(
+                "amount",
+                patterns=[re.compile(r"(\d+(?:\.\d+)?)ml")],
+                extractors=[lambda x: float(x(1))],
+                command_printer=lambda x: f"{x}ml",
+            )
+        )
+        .add(
+            Argument(
+                "energy",
+                patterns=[re.compile(r"(\d+(?:\.\d+)?)kcal")],
+                extractors=[lambda x: float(x(1))],
+                command_printer=lambda x: f"{x}kcal",
+            )
+        )
+        .add_class_argument("carbohydrates", Carbohydrates)
+        .add_class_argument("protein", Protein)
+        .add_class_argument("fat", Fat)
+        .add_class_argument("saturated_fat", SaturatedFat)
+        .add_class_argument("fiber", Fiber)
+        .add_class_argument("sugar", Sugar)
+        .add_class_argument("added_sugar", AddedSugar)
+        .add_class_argument("omega3", Omega3)
+        .add_class_argument("calcium", Calcium)
+        .add_class_argument("iron", Iron)
+        .add_class_argument("vitamin_d", VitaminD)
+        .add_class_argument("magnesium", Magnesium)
+        .add_class_argument("zinc", Zinc)
+        .add_class_argument("potassium", Potassium)
+        .add_class_argument("sodium", Sodium)
+        .add_class_argument("vitamin_c", VitaminC)
+        .add_class_argument("vitamin_b12", VitaminB12)
+    )
+
+
+@dataclass
 class Dish(Object):
     """A food dish or recipe."""
 
@@ -1030,6 +1120,26 @@ class Dish(Object):
 
     ingredients: list[str] = field(default_factory=list)
     """List of ingredients."""
+
+    energy: float | None = None
+    carbohydrates: Carbohydrates | None = None
+    protein: Protein | None = None
+    fat: Fat | None = None
+    saturated_fat: SaturatedFat | None = None
+    fiber: Fiber | None = None
+    sugar: Sugar | None = None
+    added_sugar: AddedSugar | None = None
+    omega3: Omega3 | None = None
+    calcium: Calcium | None = None
+    iron: Iron | None = None
+    vitamin_d: VitaminD | None = None
+    magnesium: Magnesium | None = None
+    zinc: Zinc | None = None
+    potassium: Potassium | None = None
+    sodium: Sodium | None = None
+    vitamin_c: VitaminC | None = None
+    vitamin_b12: VitaminB12 | None = None
+    liquid: Liquid | None = None
 
     @classmethod
     def from_value(cls, value: str) -> Self:
@@ -1046,4 +1156,30 @@ class Dish(Object):
                 command_printer=lambda x: "+" + ",".join(x),
             )
         )
+        .add(
+            Argument(
+                "energy",
+                patterns=[re.compile(r"(\d+(?:\.\d+)?)kcal")],
+                extractors=[lambda x: float(x(1))],
+                command_printer=lambda x: f"{x}kcal",
+            )
+        )
+        .add_class_argument("carbohydrates", Carbohydrates)
+        .add_class_argument("protein", Protein)
+        .add_class_argument("fat", Fat)
+        .add_class_argument("saturated_fat", SaturatedFat)
+        .add_class_argument("fiber", Fiber)
+        .add_class_argument("sugar", Sugar)
+        .add_class_argument("added_sugar", AddedSugar)
+        .add_class_argument("omega3", Omega3)
+        .add_class_argument("calcium", Calcium)
+        .add_class_argument("iron", Iron)
+        .add_class_argument("vitamin_d", VitaminD)
+        .add_class_argument("magnesium", Magnesium)
+        .add_class_argument("zinc", Zinc)
+        .add_class_argument("potassium", Potassium)
+        .add_class_argument("sodium", Sodium)
+        .add_class_argument("vitamin_c", VitaminC)
+        .add_class_argument("vitamin_b12", VitaminB12)
+        .add_class_argument("liquid", Liquid)
     )
