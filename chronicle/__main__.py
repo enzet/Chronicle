@@ -350,13 +350,20 @@ def main() -> None:
     command = arguments.command
 
     if command == "dashboard":
-        from chronicle.view.dashboard import generate_dashboard_svg
+        from chronicle.view.dashboard import (
+            generate_dashboard_html,
+            generate_dashboard_svg,
+        )
 
-        svg = generate_dashboard_svg(timeline)
-        if arguments.output:
-            Path(arguments.output).write_text(svg, encoding="utf-8")
+        output_path = arguments.output
+        if output_path and output_path.endswith(".html"):
+            content = generate_dashboard_html(timeline)
         else:
-            print(svg)
+            content = generate_dashboard_svg(timeline)
+        if output_path:
+            Path(output_path).write_text(content, encoding="utf-8")
+        else:
+            print(content)
         return
 
     if command == "interpret":
