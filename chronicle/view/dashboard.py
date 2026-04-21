@@ -12,6 +12,7 @@ from chronicle.timeline import Timeline
 from chronicle.value import Language
 
 _settings: Settings = Settings(Path.home() / ".chronicle" / "settings.json")
+_TABLE_DAYS: int = int((datetime.now() - datetime(2026, 3, 12)).days)
 
 
 @dataclass
@@ -120,7 +121,7 @@ _BORDER = "#e4e4e4"
 _TEXT = "#1a1a1a"
 _MUTED = "#999999"
 _GREEN = "#2a9d5c"
-_ORANGE = "#d08b40"
+_ORANGE = "#f08b00"
 _RED = "#d63030"
 _NEUTRAL = "#aaaaaa"
 
@@ -262,27 +263,33 @@ def _sparkline_svg(
                 l2_y = value_y(ts.soft_min)
                 _band(bx, l2_y, chart_bot, column_width, "0.4")
     else:
-        l1 = thresholds.hard_min
-        l2 = thresholds.soft_min
-        l4 = thresholds.soft_max
-        l5 = thresholds.hard_max
+        hard_min = thresholds.hard_min
+        soft_min = thresholds.soft_min
+        soft_max = thresholds.soft_max
+        hard_max = thresholds.hard_max
 
-        sw = float(_SPARKLINE_WIDTH)
+        width = float(_SPARKLINE_WIDTH)
         ox = float(origin_x)
         # below hard_min: red zone
-        if l1 and max_val > 0:
-            _band(ox, value_y(l1), chart_bot, sw, "0.5")
+        if hard_min and max_val > 0:
+            _band(ox, value_y(hard_min), chart_bot, width, "0.5")
         # hard_min to soft_min: orange zone
-        if l1 and l2 and max_val > 0:
-            _band(ox, value_y(l2), value_y(l1), sw, "0.25")
+        if hard_min and soft_min and max_val > 0:
+            _band(ox, value_y(soft_min), value_y(hard_min), width, "0.25")
         # soft_max to hard_max: orange zone (only if within chart)
-        if l4 and l5 and l4 < max_val:
-            _band(ox, value_y(min(l5, max_val)), value_y(l4), sw, "0.25")
-        # above hard_max: red zone (only if hard_max is within chart)
-        if l5 and l5 < max_val:
-            _band(ox, chart_top, value_y(l5), sw, "0.5")
+        if soft_max and hard_max and soft_max < max_val:
+            _band(
+                ox,
+                value_y(min(hard_max, max_val)),
+                value_y(soft_max),
+                width,
+                "0.25",
+            )
+        # Above hard maximum: red zone (only if hard_max is within chart).
+        if hard_max and hard_max < max_val:
+            _band(ox, chart_top, value_y(hard_max), width, "0.5")
 
-    # EMA polyline
+    # EMA polyline.
     points = " ".join(
         f"{bar_center_x(i):.1f},{value_y(v):.1f}"
         for i, v in enumerate(visible_smoothed)
@@ -546,3 +553,80 @@ def generate_dashboard_svg(timeline: Timeline) -> str:
 
     parts.append("</svg>")
     return "\n".join(parts)
+
+
+def _cell_style(value: float, thresholds: Thresholds) -> str:
+    color = _metric_color(value, thresholds)
+    if color == _NEUTRAL:
+        return ""
+    return f"background:{color}28"
+
+
+def _table_row(metric: MetricData) -> str:
+    all_vals = [*metric.values, metric.today]
+    smoothed = _make_ema(all_vals, metric.alpha)
+    last_14 = smoothed[-_TABLE_DAYS:]
+    pad = _TABLE_DAYS - len(last_14)
+    last_14 = [0.0] * pad + last_14
+
+    if metric.thresholds_series:
+        ts_list = metric.thresholds_series[-_TABLE_DAYS:]
+        ts_list = [Thresholds()] * (_TABLE_DAYS - len(ts_list)) + ts_list
+    else:
+        ts_list = [metric.thresholds] * _TABLE_DAYS
+
+    cells: list[str] = []
+    for v, ts in zip(last_14, ts_list, strict=True):
+        if v == 0.0:
+            cells.append(f'<td class="cell" style="color:{_BORDER}"></td>')
+        else:
+            num = str(int(v)) if v == int(v) else f"{v:.1f}"
+            style = _cell_style(v, ts)
+            attr = f' style="{style}"' if style else ""
+            cells.append(f'<td{attr} class="cell"></td>')
+
+    unit_span = (
+        f' <span class="unit">{metric.unit}</span>' if metric.unit else ""
+    )
+    return (
+        f'<tr><td class="label">{metric.label}{unit_span}</td>'
+        + "".join(cells)
+        + "</tr>"
+    )
+
+
+def generate_dashboard_html(timeline: Timeline) -> str:
+    """Generate a static HTML page with inline SVG and 14-day metrics table."""
+    svg = generate_dashboard_svg(timeline)
+    data = get_dashboard_data(timeline)
+
+    now = datetime.now().astimezone()
+    col_dates = [
+        (now - timedelta(days=_TABLE_DAYS - 1 - i)).date()
+        for i in range(_TABLE_DAYS)
+    ]
+    header_cells = "".join("<th></th>" for d in col_dates)
+    rows = "".join(_table_row(m) for m in data.metrics)
+
+    css = (
+        f"*{{box-sizing:border-box}}"
+        f"body{{font-family:serif;"
+        f"background:{_BACKGROUND};margin:0;padding:16px}}"
+        f"table{{border-collapse:collapse;font-size:11px;margin-top:16px}}"
+        f"th,td{{border: 1px inset;"
+        f"padding:3px 1px;text-align:right;white-space:nowrap;}}"
+        f"td.cell {{border: none;}}"
+        f"th{{font-weight: bold; font-size:11px}}"
+        f"td.label{{text-align:left;font-weight:500;min-width:120px; padding: 3px 7px;}}"
+        f".unit{{color:{_MUTED};font-weight:400;font-size:9px}}"
+    )
+    return (
+        "<!DOCTYPE html>\n<html>\n<head>\n"
+        '<meta charset="utf-8">\n<title>Dashboard</title>\n'
+        f"<style>{css}</style>\n</head>\n<body>\n"
+        f"{svg}\n"
+        f"<table>\n"
+        f"  <thead><tr><th>Metric</th>{header_cells}</tr></thead>\n"
+        f"  <tbody>{rows}</tbody>\n"
+        "</table>\n</body>\n</html>"
+    )
