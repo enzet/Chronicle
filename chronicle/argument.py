@@ -37,7 +37,7 @@ def default_pretty_printer(value: Any) -> str:
     return value.to_string()
 
 
-def default_html_printer(objects_, value: Any) -> str:
+def default_html_printer(_objects: Any, value: Any) -> str:
     """Return the value based on its type."""
 
     if isinstance(value, str):
