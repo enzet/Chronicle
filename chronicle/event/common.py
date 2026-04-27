@@ -24,6 +24,7 @@ from chronicle.value import (
     Calcium,
     Carbohydrates,
     Cost,
+    DairySaturatedFat,
     Distance,
     Fat,
     Fiber,
@@ -145,7 +146,7 @@ class EatEvent(Event):
     """Reference to a predefined dish object."""
 
     multiplier: float | None = None
-    """Scaling factor applied to dish nutrition (e.g. x2 means double portion)."""
+    """Scaling factor applied to dish nutrition (e.g. `x2`)."""
 
     energy: float | None = None
     """Energy in kilocalories."""
@@ -161,6 +162,9 @@ class EatEvent(Event):
 
     saturated_fat: SaturatedFat | None = None
     """Saturated fat in grams."""
+
+    dairy_saturated_fat: DairySaturatedFat | None = None
+    """Dairy saturated fat in grams."""
 
     fiber: Fiber | None = None
     """Dietary fiber in grams."""
@@ -235,6 +239,7 @@ class EatEvent(Event):
         .add_class_argument("protein", Protein)
         .add_class_argument("fat", Fat)
         .add_class_argument("saturated_fat", SaturatedFat)
+        .add_class_argument("dairy_saturated_fat", DairySaturatedFat)
         .add_class_argument("fiber", Fiber)
         .add_class_argument("sugar", Sugar)
         .add_class_argument("added_sugar", AddedSugar)
@@ -269,6 +274,10 @@ class EatEvent(Event):
             summary.register_fat(source.fat.value * scale)
         if source.saturated_fat is not None:
             summary.register_saturated_fat(source.saturated_fat.value * scale)
+        if source.dairy_saturated_fat is not None:
+            summary.register_dairy_saturated_fat(
+                source.dairy_saturated_fat.value * scale
+            )
         if source.fiber is not None:
             summary.register_fiber(source.fiber.value * scale)
         if source.sugar is not None:
@@ -581,6 +590,9 @@ class DrinkEvent(Event):
     saturated_fat: SaturatedFat | None = None
     """Saturated fat in grams."""
 
+    dairy_saturated_fat: DairySaturatedFat | None = None
+    """Dairy saturated fat in grams."""
+
     fiber: Fiber | None = None
     """Dietary fiber in grams."""
 
@@ -659,6 +671,7 @@ class DrinkEvent(Event):
         .add_class_argument("protein", Protein)
         .add_class_argument("fat", Fat)
         .add_class_argument("saturated_fat", SaturatedFat)
+        .add_class_argument("dairy_saturated_fat", DairySaturatedFat)
         .add_class_argument("fiber", Fiber)
         .add_class_argument("sugar", Sugar)
         .add_class_argument("added_sugar", AddedSugar)
@@ -692,6 +705,10 @@ class DrinkEvent(Event):
             summary.register_fat(source.fat.value * scale)
         if source.saturated_fat is not None:
             summary.register_saturated_fat(source.saturated_fat.value * scale)
+        if source.dairy_saturated_fat is not None:
+            summary.register_dairy_saturated_fat(
+                source.dairy_saturated_fat.value * scale
+            )
         if source.fiber is not None:
             summary.register_fiber(source.fiber.value * scale)
         if source.sugar is not None:

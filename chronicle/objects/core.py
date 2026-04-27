@@ -23,6 +23,7 @@ from chronicle.value import (
     Calcium,
     Carbohydrates,
     Cost,
+    DairySaturatedFat,
     Date,
     Fat,
     Fiber,
@@ -1061,6 +1062,7 @@ class Drink(Object):
     protein: Protein | None = None
     fat: Fat | None = None
     saturated_fat: SaturatedFat | None = None
+    dairy_saturated_fat: DairySaturatedFat | None = None
     fiber: Fiber | None = None
     sugar: Sugar | None = None
     added_sugar: AddedSugar | None = None
@@ -1102,6 +1104,7 @@ class Drink(Object):
         .add_class_argument("protein", Protein)
         .add_class_argument("fat", Fat)
         .add_class_argument("saturated_fat", SaturatedFat)
+        .add_class_argument("dairy_saturated_fat", DairySaturatedFat)
         .add_class_argument("fiber", Fiber)
         .add_class_argument("sugar", Sugar)
         .add_class_argument("added_sugar", AddedSugar)
@@ -1133,6 +1136,7 @@ class Dish(Object):
     protein: Protein | None = None
     fat: Fat | None = None
     saturated_fat: SaturatedFat | None = None
+    dairy_saturated_fat: DairySaturatedFat | None = None
     fiber: Fiber | None = None
     sugar: Sugar | None = None
     added_sugar: AddedSugar | None = None
@@ -1175,6 +1179,7 @@ class Dish(Object):
         .add_class_argument("protein", Protein)
         .add_class_argument("fat", Fat)
         .add_class_argument("saturated_fat", SaturatedFat)
+        .add_class_argument("dairy_saturated_fat", DairySaturatedFat)
         .add_class_argument("fiber", Fiber)
         .add_class_argument("sugar", Sugar)
         .add_class_argument("added_sugar", AddedSugar)
