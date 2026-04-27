@@ -164,6 +164,14 @@ class Summary:
     shows: set[Object] = field(default_factory=set)
     """Shows watched."""
 
+    posts: defaultdict[str, int] = field(
+        default_factory=lambda: defaultdict(int)
+    )
+    """Post counts by service id."""
+
+    cleaned: set[str] = field(default_factory=set)
+    """Object ids that were cleaned/washed this day."""
+
     def register_listen(
         self, duration: float, language: Language, service: Service | None
     ) -> None:
