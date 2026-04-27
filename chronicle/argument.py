@@ -37,6 +37,20 @@ def default_pretty_printer(value: Any) -> str:
     return value.to_string()
 
 
+def default_html_printer(objects_, value: Any) -> str:
+    """Return the value based on its type."""
+
+    if isinstance(value, str):
+        return value
+    if isinstance(value, (float, int, list)):
+        return str(value)
+    if isinstance(value, set):
+        return "(" + ", ".join(value) + ")"
+    if hasattr(value, "to_string"):
+        return value.to_string()
+    return value.to_command()
+
+
 def default_loader(value: Any, _: Objects) -> Any:
     """Return the value as is."""
     return value
@@ -70,7 +84,7 @@ class Argument:
     command_printer: Callable | None = lambda x: x.to_command()
     """Command printer."""
 
-    html_printer: Callable = lambda _objects, x: x.to_string()
+    html_printer: Callable = default_html_printer
     """HTML printer."""
 
 
