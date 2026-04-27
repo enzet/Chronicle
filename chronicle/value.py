@@ -480,6 +480,17 @@ class SaturatedFat(Value):
 
 
 @dataclass
+class DairySaturatedFat(Value):
+    """Dairy saturated fat in grams."""
+
+    value: float
+    prefix: ClassVar[str | None] = "dsfat:"
+
+    def to_command(self) -> str:
+        return f"dsfat: {self.value:g}"
+
+
+@dataclass
 class Fiber(Value):
     """Dietary fiber in grams."""
 

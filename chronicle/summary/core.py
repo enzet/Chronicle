@@ -116,6 +116,9 @@ class Summary:
     saturated_fat: float = 0.0
     """Saturated fat consumed in grams."""
 
+    dairy_saturated_fat: float = 0.0
+    """Dairy saturated fat consumed in grams."""
+
     fiber: float = 0.0
     """Dietary fiber consumed in grams."""
 
@@ -284,6 +287,10 @@ class Summary:
     def register_saturated_fat(self, grams: float) -> None:
         """Register saturated fat consumed in grams."""
         self.saturated_fat += grams
+
+    def register_dairy_saturated_fat(self, grams: float) -> None:
+        """Register dairy saturated fat consumed in grams."""
+        self.dairy_saturated_fat += grams
 
     def register_fiber(self, grams: float) -> None:
         """Register dietary fiber consumed in grams."""
