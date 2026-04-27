@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 from matplotlib import colormaps
 
+from chronicle.event.sport import ExerciseEvent
 from chronicle.timeline import Timeline
 from chronicle.util import smooth
 
@@ -30,6 +31,18 @@ class SportViewer:
     """Viewer for sport statistics."""
 
     timeline: Timeline
+
+    @staticmethod
+    def get_html_exercises() -> str:
+        rows = []
+        for cls in sorted(
+            ExerciseEvent.__subclasses__(), key=lambda c: c.arguments.command
+        ):
+            command = cls.arguments.command
+            groups = ", ".join(sorted(cls.muscle_groups))
+            rows.append(f"<tr><td>{command}</td><td>{groups}</td></tr>")
+        header = "<tr><th>Exercise</th><th>Muscle groups</th></tr>"
+        return f"<table>{header}{''.join(rows)}</table>"
 
     def plot_sport(self) -> None:
         from matplotlib import pyplot as plt

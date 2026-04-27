@@ -10,11 +10,15 @@ from chronicle.settings import Settings
 from chronicle.summary.core import Summary
 from chronicle.timeline import Timeline
 from chronicle.value import Language
+from chronicle.view.sport import SportViewer
 
 local_timezone = datetime.now().astimezone().tzinfo
 _settings: Settings = Settings(Path.home() / ".chronicle" / "settings.json")
 _TABLE_DAYS: int = int(
-    (datetime.now() - datetime(2026, 3, 12, tzinfo=local_timezone)).days
+    (
+        datetime.now(tz=local_timezone)
+        - datetime(2026, 3, 12, tzinfo=local_timezone)
+    ).days
 )
 
 
@@ -739,12 +743,17 @@ def generate_dashboard_html(timeline: Timeline) -> str:
         f".unit{{color:{_MUTED};font-weight:400;font-size:9px}}"
     )
     return (
-        "<!DOCTYPE html>\n<html>\n<head>\n"
-        '<meta charset="utf-8">\n<title>Dashboard</title>\n'
-        f"<style>{css}</style>\n</head>\n<body>\n"
-        f"{svg}\n"
-        f"<table>\n"
-        f"  <thead><tr><th>Metric</th>{header_cells}</tr></thead>\n"
-        f"  <tbody>{rows}</tbody>\n"
-        "</table>\n</body>\n</html>"
+        (
+            "<!DOCTYPE html>\n<html>\n<head>\n"
+            '<meta charset="utf-8">\n<title>Dashboard</title>\n'
+            f"<style>{css}</style>\n</head>\n"
+            "<body>\n"
+            f"{svg}\n"
+            f"<table>\n"
+            f"  <thead><tr><th>Metric</th>{header_cells}</tr></thead>\n"
+            f"  <tbody>{rows}</tbody>\n"
+            "</table>\n"
+        )
+        + SportViewer.get_html_exercises()
+        + "</body>\n</html>"
     )
