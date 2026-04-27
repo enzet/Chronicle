@@ -2,6 +2,9 @@
 
 import argparse
 import json
+import re
+import sys
+from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -66,3 +69,27 @@ class AppleHealthImporter(Importer):
                         distance=element["qty"] * 1000,
                     )
                     timeline.events.append(event)
+
+
+def apple_xml_to_chronicle(file_path: Path) -> None:
+    """Read Apple Health XML export and print events in Chronicle format."""
+    pattern = re.compile(
+        r'startDate="(\d{4}-\d{2}-\d{2})[^"]*"[^/]*value="([^"]+)"'
+    )
+    by_date: defaultdict[str, float] = defaultdict(float)
+
+    with file_path.open(encoding="utf-8") as f:
+        for line in f:
+            if m := pattern.search(line):
+                date, value = m.group(1), float(m.group(2))
+                by_date[date] += value
+
+    for date in sorted(by_date):
+        print(f"\n{date}\n")
+        km = by_date[date]
+        num = str(int(km)) if km == int(km) else f"{km:.6f}".rstrip("0")
+        print(f"move {num}km")
+
+
+if __name__ == "__main__":
+    apple_xml_to_chronicle(Path(sys.argv[1]))
