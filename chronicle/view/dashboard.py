@@ -11,8 +11,11 @@ from chronicle.summary.core import Summary
 from chronicle.timeline import Timeline
 from chronicle.value import Language
 
+local_timezone = datetime.now().astimezone().tzinfo
 _settings: Settings = Settings(Path.home() / ".chronicle" / "settings.json")
-_TABLE_DAYS: int = int((datetime.now() - datetime(2026, 3, 12)).days)
+_TABLE_DAYS: int = int(
+    (datetime.now() - datetime(2026, 3, 12, tzinfo=local_timezone)).days
+)
 
 
 @dataclass
@@ -34,6 +37,23 @@ class Thresholds:
 
 
 @dataclass
+class WindowCondition:
+    """A condition satisfied when a window of days contains enough events."""
+
+    count: int
+    days: int
+
+
+@dataclass
+class DiscreteThresholds:
+    """Window-based thresholds for discrete (count) metrics."""
+
+    hard_min: WindowCondition | None = None
+    soft_min: WindowCondition | None = None
+    goal: WindowCondition | None = None
+
+
+@dataclass
 class MetricData:
     """Processed time-series data for a single dashboard metric."""
 
@@ -45,6 +65,7 @@ class MetricData:
     today: float
     thresholds: Thresholds
     thresholds_series: list[Thresholds] | None = None
+    discrete_thresholds: DiscreteThresholds | None = None
 
 
 @dataclass
@@ -58,6 +79,20 @@ class DashboardData:
 local_timezone = datetime.now().astimezone().tzinfo
 
 _RUSSIAN = Language.from_json("ru")
+
+
+def _post_extractor(service_id: str) -> Callable[[Summary], float]:
+    return lambda s: float(s.posts.get(service_id, 0))
+
+
+def _post_day_extractor(service_id: str) -> Callable[[Summary], float]:
+    return lambda s: 1.0 if s.posts.get(service_id, 0) >= 1 else 0.0
+
+
+def _clean_day_extractor(object_id: str) -> Callable[[Summary], float]:
+    return lambda s: 1.0 if object_id in s.cleaned else 0.0
+
+
 _EXTRACTORS: dict[str, Callable[[Summary], float]] = {
     "sport_sessions": lambda s: float(s.sport_sessions),
     "body_weight_kg": lambda s: s.body_weight_kg or 0.0,
@@ -90,6 +125,7 @@ _EXTRACTORS: dict[str, Callable[[Summary], float]] = {
     "protein": lambda s: s.protein,
     "fat": lambda s: s.fat,
     "saturated_fat": lambda s: s.saturated_fat,
+    "dairy_saturated_fat": lambda s: s.dairy_saturated_fat,
     "fiber": lambda s: s.fiber,
     "added_sugar": lambda s: s.added_sugar,
     "omega3": lambda s: s.omega3,
@@ -100,6 +136,7 @@ _EXTRACTORS: dict[str, Callable[[Summary], float]] = {
     "potassium": lambda s: s.potassium,
     "sodium": lambda s: s.sodium,
     "vitamin_c": lambda s: s.vitamin_c,
+    "vitamin_d": lambda s: s.vitamin_d,
     "vitamin_b12": lambda s: s.vitamin_b12,
     "liquid": lambda s: s.liquid,
     "muscle_chest": lambda s: float(s.muscle_groups.get("chest", 0)),
@@ -127,9 +164,9 @@ _SURFACE = "#ffffff"
 _BORDER = "#e4e4e4"
 _TEXT = "#1a1a1a"
 _MUTED = "#999999"
-_GREEN = "#2a9d5c"
-_ORANGE = "#f08b00"
-_RED = "#d63030"
+_GREEN = "#008800"  # "#2a9d5c"
+_ORANGE = "#ff8800"  # "#f08b00"
+_RED = "#FF0000"  # "#d63030"
 _NEUTRAL = "#aaaaaa"
 
 
@@ -145,6 +182,22 @@ def _make_ema(values: list[float], alpha: float) -> list[float]:
         )
         result.append(current if current is not None else 0.0)
     return result
+
+
+def _discrete_color(values: list[float], dt: DiscreteThresholds) -> str:
+    """Color based on whether recent window conditions are satisfied."""
+
+    def _met(cond: WindowCondition | None) -> bool:
+        if cond is None:
+            return True
+        window = values[-cond.days :]
+        return any(v >= cond.count for v in window)
+
+    if not _met(dt.hard_min):
+        return _RED
+    if not _met(dt.soft_min) or not _met(dt.goal):
+        return _ORANGE
+    return _GREEN
 
 
 def _metric_color(last_ema: float, thresholds: Thresholds) -> str:
@@ -171,12 +224,13 @@ def _sparkline_svg(
     origin_x: int,
     origin_y: int,
     thresholds_series: list[Thresholds] | None = None,
+    discrete_thresholds: DiscreteThresholds | None = None,
 ) -> str:
     """Return SVG elements for a sparkline card body at (origin_x, origin_y)."""
     all_values = [*values, today]
     smoothed = _make_ema(all_values, alpha)
 
-    show = 14
+    show = 40
     visible_values = all_values[-(show + 1) :]
     visible_smoothed = smoothed[-(show + 1) :]
 
@@ -198,7 +252,10 @@ def _sparkline_svg(
         if max_threshold > 0:
             max_val = max(max_val, max_threshold * 1.12)
 
-    color = _metric_color(smoothed[-1], thresholds)
+    if discrete_thresholds is not None:
+        color = _discrete_color(all_values, discrete_thresholds)
+    else:
+        color = _metric_color(smoothed[-1], thresholds)
     bar_count = len(visible_values)
     gap = 0.6
     bar_width = max(1.5, _SPARKLINE_WIDTH / bar_count - gap)
@@ -211,27 +268,28 @@ def _sparkline_svg(
 
     parts: list[str] = []
 
-    if thresholds_series:
-        visible_thresholds = thresholds_series[-(show + 1) :]
-        # Per-day goal (health ideal) as a dashed polyline.
-        health_points = [
-            f"{bar_center_x(i):.1f},{value_y(ts.goal):.1f}"
-            for i, ts in enumerate(visible_thresholds)
-            if ts.goal is not None
-        ]
-        if health_points:
+    if discrete_thresholds is None:
+        if thresholds_series:
+            visible_thresholds = thresholds_series[-(show + 1) :]
+            health_points = [
+                f"{bar_center_x(i):.1f},{value_y(ts.goal):.1f}"
+                for i, ts in enumerate(visible_thresholds)
+                if ts.goal is not None
+            ]
+            if health_points:
+                parts.append(
+                    f'<polyline points="{" ".join(health_points)}"'
+                    f' fill="none" stroke="{_TEXT}" stroke-width="0.8"'
+                    f' stroke-linejoin="round"/>'
+                )
+        elif thresholds.goal is not None:
+            health_line_y = value_y(thresholds.goal)
             parts.append(
-                f'<polyline points="{" ".join(health_points)}" fill="none"'
-                f' stroke="{_TEXT}" stroke-width="0.8"'
-                f' stroke-dasharray="2,2" stroke-linejoin="round"/>'
+                f'<line x1="{origin_x}" y1="{health_line_y:.1f}"'
+                f' x2="{origin_x + _SPARKLINE_WIDTH}"'
+                f' y2="{health_line_y:.1f}"'
+                f' stroke="{_TEXT}" stroke-width="1"/>'
             )
-    elif thresholds.goal is not None:
-        health_line_y = value_y(thresholds.goal)
-        parts.append(
-            f'<line x1="{origin_x}" y1="{health_line_y:.1f}"'
-            f' x2="{origin_x + _SPARKLINE_WIDTH}" y2="{health_line_y:.1f}"'
-            f' stroke="{_TEXT}" stroke-width="1"/>'
-        )
 
     # bars
     for i, v in enumerate(visible_values):
@@ -246,65 +304,62 @@ def _sparkline_svg(
             f' height="{bar_height:.1f}" fill="{color}" opacity="{opacity}"/>'
         )
 
-    # threshold bands — white overlays dim bars in orange/red zones
-    def _band(
-        x: float, y_top: float, y_bot: float, w: float, opacity: str
-    ) -> None:
-        h = y_bot - y_top
-        if h > 0:
-            parts.append(
-                f'<rect x="{x:.1f}" y="{y_top:.1f}" width="{w:.1f}"'
-                f' height="{h:.1f}" fill="#ffffff" opacity="{opacity}"/>'
-            )
+    if discrete_thresholds is None:
+        # threshold bands — white overlays dim bars in orange/red zones
+        def _band(
+            x: float, y_top: float, y_bot: float, w: float, opacity: str
+        ) -> None:
+            h = y_bot - y_top
+            if h > 0:
+                parts.append(
+                    f'<rect x="{x:.1f}" y="{y_top:.1f}" width="{w:.1f}"'
+                    f' height="{h:.1f}" fill="#ffffff" opacity="{opacity}"/>'
+                )
 
-    chart_top = float(origin_y)
-    chart_bot = float(origin_y + _SPARKLINE_HEIGHT)
+        chart_top = float(origin_y)
+        chart_bot = float(origin_y + _SPARKLINE_HEIGHT)
 
-    if thresholds_series:
-        visible_thresholds = thresholds_series[-(show + 1) :]
-        column_width = _SPARKLINE_WIDTH / bar_count
-        for i, ts in enumerate(visible_thresholds):
-            bx = origin_x + i * column_width
-            if ts.soft_min and max_val > 0:
-                # below soft_min = orange/red zone for per-day series
-                l2_y = value_y(ts.soft_min)
-                _band(bx, l2_y, chart_bot, column_width, "0.4")
-    else:
-        hard_min = thresholds.hard_min
-        soft_min = thresholds.soft_min
-        soft_max = thresholds.soft_max
-        hard_max = thresholds.hard_max
+        if thresholds_series:
+            visible_thresholds = thresholds_series[-(show + 1) :]
+            column_width = _SPARKLINE_WIDTH / bar_count
+            for i, ts in enumerate(visible_thresholds):
+                bx = origin_x + i * column_width
+                if ts.soft_min and max_val > 0:
+                    l2_y = value_y(ts.soft_min)
+                    _band(bx, l2_y, chart_bot, column_width, "0.4")
+        else:
+            hard_min = thresholds.hard_min
+            soft_min = thresholds.soft_min
+            soft_max = thresholds.soft_max
+            hard_max = thresholds.hard_max
 
-        width = float(_SPARKLINE_WIDTH)
-        ox = float(origin_x)
-        # below hard_min: red zone
-        if hard_min and max_val > 0:
-            _band(ox, value_y(hard_min), chart_bot, width, "0.5")
-        # hard_min to soft_min: orange zone
-        if hard_min and soft_min and max_val > 0:
-            _band(ox, value_y(soft_min), value_y(hard_min), width, "0.25")
-        # soft_max to hard_max: orange zone (only if within chart)
-        if soft_max and hard_max and soft_max < max_val:
-            _band(
-                ox,
-                value_y(min(hard_max, max_val)),
-                value_y(soft_max),
-                width,
-                "0.25",
-            )
-        # Above hard maximum: red zone (only if hard_max is within chart).
-        if hard_max and hard_max < max_val:
-            _band(ox, chart_top, value_y(hard_max), width, "0.5")
+            width = float(_SPARKLINE_WIDTH)
+            ox = float(origin_x)
+            if hard_min and max_val > 0:
+                _band(ox, value_y(hard_min), chart_bot, width, "0.5")
+            if hard_min and soft_min and max_val > 0:
+                _band(ox, value_y(soft_min), value_y(hard_min), width, "0.25")
+            if soft_max and hard_max and soft_max < max_val:
+                _band(
+                    ox,
+                    value_y(min(hard_max, max_val)),
+                    value_y(soft_max),
+                    width,
+                    "0.25",
+                )
+            if hard_max and hard_max < max_val:
+                _band(ox, chart_top, value_y(hard_max), width, "0.5")
 
-    # EMA polyline.
-    points = " ".join(
-        f"{bar_center_x(i):.1f},{value_y(v):.1f}"
-        for i, v in enumerate(visible_smoothed)
-    )
-    parts.append(
-        f'<polyline points="{points}" fill="none" stroke="{color}"'
-        f' stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>'
-    )
+        # EMA polyline.
+        points = " ".join(
+            f"{bar_center_x(i):.1f},{value_y(v):.1f}"
+            for i, v in enumerate(visible_smoothed)
+        )
+        parts.append(
+            f'<polyline points="{points}" fill="none" stroke="{color}"'
+            f' stroke-width="1.5" stroke-linejoin="round"'
+            f' stroke-linecap="round"/>'
+        )
 
     return "\n".join(parts)
 
@@ -347,9 +402,20 @@ def get_dashboard_data(timeline: Timeline) -> DashboardData:
     }
     today_index: int | None = None
 
+    def _get_extractor(metric_id: str) -> Callable[[Summary], float] | None:
+        if metric_id in _EXTRACTORS:
+            return _EXTRACTORS[metric_id]
+        if metric_id.startswith("post_count_"):
+            return _post_extractor(metric_id[len("post_count_") :])
+        if metric_id.startswith("post_day_"):
+            return _post_day_extractor(metric_id[len("post_day_") :])
+        if metric_id.startswith("clean_") and metric_id.endswith("_day"):
+            return _clean_day_extractor(metric_id[len("clean_") : -len("_day")])
+        return None
+
     for i, (day, _, summary) in enumerate(days):
         for metric_id in ids_to_extract:
-            extractor = _EXTRACTORS.get(metric_id)
+            extractor = _get_extractor(metric_id)
             raw_values[metric_id].append(
                 extractor(summary) if extractor else 0.0
             )
@@ -373,12 +439,29 @@ def get_dashboard_data(timeline: Timeline) -> DashboardData:
             else:
                 values = all_vals
                 today_value = 0.0
-            if not any(v > 0 for v in values) and today_value == 0.0:
-                continue
 
             def _lv(cfg: dict, key: str) -> float | None:
                 v = cfg.get(key)
-                return float(v) if v is not None else None
+                if v is None or isinstance(v, dict):
+                    return None
+                return float(v)
+
+            def _wc(cfg: dict, key: str) -> WindowCondition | None:
+                v = cfg.get(key)
+                if isinstance(v, dict):
+                    return WindowCondition(
+                        count=int(v["count"]), days=int(v["days"])
+                    )
+                return None
+
+            is_discrete = metric_config.get("type") == "discrete"
+            discrete_thresholds: DiscreteThresholds | None = None
+            if is_discrete:
+                discrete_thresholds = DiscreteThresholds(
+                    hard_min=_wc(metric_config, "hard_min"),
+                    soft_min=_wc(metric_config, "soft_min"),
+                    goal=_wc(metric_config, "goal"),
+                )
 
             thresholds = Thresholds(
                 hard_min=_lv(metric_config, "hard_min"),
@@ -449,6 +532,7 @@ def get_dashboard_data(timeline: Timeline) -> DashboardData:
                     today=round(today_value, 2),
                     thresholds=thresholds,
                     thresholds_series=series,
+                    discrete_thresholds=discrete_thresholds,
                 )
             )
 
@@ -480,19 +564,26 @@ def _render_cards(
         )
 
         all_values = [*metric.values, metric.today]
-        smoothed = _make_ema(all_values, metric.alpha)
-        color = _metric_color(smoothed[-1], metric.thresholds)
 
-        last_value = smoothed[-1]
-        if last_value > 0:
-            num = (
-                str(int(last_value))
-                if last_value == int(last_value)
-                else f"{last_value:.2f}"
+        if metric.discrete_thresholds is not None:
+            color = _discrete_color(all_values, metric.discrete_thresholds)
+            today_int = int(metric.today)
+            value_str = (
+                f"{today_int}\u202f{metric.unit}" if today_int > 0 else "\u2014"
             )
-            value_str = f"{num}\u202f{metric.unit}"
         else:
-            value_str = "\u2014"
+            smoothed = _make_ema(all_values, metric.alpha)
+            color = _metric_color(smoothed[-1], metric.thresholds)
+            last_value = smoothed[-1]
+            if last_value > 0:
+                num = (
+                    str(int(last_value))
+                    if last_value == int(last_value)
+                    else f"{last_value:.2f}"
+                )
+                value_str = f"{num}\u202f{metric.unit}"
+            else:
+                value_str = "\u2014"
 
         parts.append(
             f'<text x="{card_x + _CARD_WIDTH - 8}" y="{card_y + 16}"'
@@ -519,6 +610,7 @@ def _render_cards(
                 sparkline_x,
                 sparkline_y,
                 metric.thresholds_series,
+                metric.discrete_thresholds,
             )
         )
         parts.append("</g>")
@@ -566,31 +658,49 @@ def _cell_style(value: float, thresholds: Thresholds) -> str:
     color = _metric_color(value, thresholds)
     if color == _NEUTRAL:
         return ""
-    return f"background:{color}28"
+    return f"background:{color}88"
 
 
 def _table_row(metric: MetricData) -> str:
     all_vals = [*metric.values, metric.today]
-    smoothed = _make_ema(all_vals, metric.alpha)
-    last_14 = smoothed[-_TABLE_DAYS:]
-    pad = _TABLE_DAYS - len(last_14)
-    last_14 = [0.0] * pad + last_14
-
-    if metric.thresholds_series:
-        ts_list = metric.thresholds_series[-_TABLE_DAYS:]
-        ts_list = [Thresholds()] * (_TABLE_DAYS - len(ts_list)) + ts_list
-    else:
-        ts_list = [metric.thresholds] * _TABLE_DAYS
 
     cells: list[str] = []
-    for v, ts in zip(last_14, ts_list, strict=True):
-        if v == 0.0:
-            cells.append(f'<td class="cell" style="color:{_BORDER}"></td>')
+    if metric.discrete_thresholds is not None:
+        dt = metric.discrete_thresholds
+        n = len(all_vals)
+        for i in range(_TABLE_DAYS):
+            idx = n - _TABLE_DAYS + i
+            if idx < 0:
+                cells.append(f'<td class="cell" style="color:{_BORDER}"></td>')
+                continue
+            v = all_vals[idx]
+            if v > 0:
+                cells.append(
+                    f'<td style="background:{_GREEN}88" class="cell"></td>'
+                )
+            else:
+                day_color = _discrete_color(all_vals[: idx + 1], dt)
+                cells.append(
+                    f'<td style="background:{day_color}88" class="cell"></td>'
+                )
+    else:
+        smoothed = _make_ema(all_vals, metric.alpha)
+        last_14 = smoothed[-_TABLE_DAYS:]
+        last_14 = [0.0] * (_TABLE_DAYS - len(last_14)) + last_14
+
+        if metric.thresholds_series:
+            ts_list = metric.thresholds_series[-_TABLE_DAYS:]
+            ts_list = [Thresholds()] * (_TABLE_DAYS - len(ts_list)) + ts_list
         else:
-            num = str(int(v)) if v == int(v) else f"{v:.1f}"
-            style = _cell_style(v, ts)
-            attr = f' style="{style}"' if style else ""
-            cells.append(f'<td{attr} class="cell"></td>')
+            ts_list = [metric.thresholds] * _TABLE_DAYS
+
+        for v, ts in zip(last_14, ts_list, strict=True):
+            if v == 0.0:
+                cells.append(f'<td class="cell" style="color:{_BORDER}"></td>')
+            else:
+                style = _cell_style(v, ts)
+                attr = f' style="{style}"' if style else ""
+                cells.append(f'<td{attr} class="cell"></td>')
 
     unit_span = (
         f' <span class="unit">{metric.unit}</span>' if metric.unit else ""
@@ -624,7 +734,8 @@ def generate_dashboard_html(timeline: Timeline) -> str:
         f"padding:3px 1px;text-align:right;white-space:nowrap;}}"
         f"td.cell {{border: none;}}"
         f"th{{font-weight: bold; font-size:11px}}"
-        f"td.label{{text-align:left;font-weight:500;min-width:120px; padding: 3px 7px;}}"
+        f"td.label{{text-align:left;font-weight:500;min-width:120px;"
+        f"padding:3px 7px;}}"
         f".unit{{color:{_MUTED};font-weight:400;font-size:9px}}"
     )
     return (
