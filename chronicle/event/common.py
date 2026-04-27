@@ -12,7 +12,6 @@ from chronicle.objects.core import (
     Device,
     Dish,
     Drink,
-    Object,
     Person,
     Project,
     Service,
@@ -115,12 +114,22 @@ class CookEvent(Event):
 class CleanEvent(Event):
     """Event representing cleaning something."""
 
-    object_: Object | None = None
-    """Object that was cleaned."""
+    object_: str | None = None
+    """Object that was cleaned (raw string, may be comma-separated)."""
 
     arguments: ClassVar[Arguments] = Event.arguments.replace(
         ["clean", "wash"], "clean"
-    ).add_object_argument("object_", Object, is_main=True)
+    ).add(Argument("object_"), is_main=True)
+
+    @override
+    def register_summary(
+        self, summary: Summary, ratio: float = 1.0, *, is_main: bool = True
+    ) -> None:
+        if is_main and self.object_:
+            for part in self.object_.split(","):
+                stripped = part.strip().lstrip("@")
+                if stripped:
+                    summary.cleaned.add(stripped)
 
 
 @dataclass
@@ -869,3 +878,23 @@ class BackupEvent(Event):
     arguments: ClassVar[Arguments] = Event.arguments.replace(
         ["backup"], "backup"
     ).add_object_argument("device", Device, is_main=True)
+
+
+@dataclass
+class PostEvent(Event):
+    """Event representing posting in social media."""
+
+    service: Service | None = None
+    """Social media service posted to."""
+
+    arguments: ClassVar[Arguments] = Arguments(
+        ["post"], "post"
+    ).add_object_argument("service", Service, is_main=True)
+
+    @override
+    def register_summary(
+        self, summary: Summary, ratio: float = 1.0, *, is_main: bool = True
+    ) -> None:
+        if is_main:
+            service_id = self.service.id if self.service else "unknown"
+            summary.posts[service_id] += 1
