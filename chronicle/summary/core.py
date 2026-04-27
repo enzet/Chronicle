@@ -80,6 +80,11 @@ class Summary:
     )
     """Exercise repetition counts by exercise name."""
 
+    muscle_groups: defaultdict[str, int] = field(
+        default_factory=lambda: defaultdict(int)
+    )
+    """Exercise session counts per WHO muscle group."""
+
     energy_expenditure: float = 0.0
     """Energy spent during sport activities in kilocalories."""
 

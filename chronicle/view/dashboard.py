@@ -102,6 +102,13 @@ _EXTRACTORS: dict[str, Callable[[Summary], float]] = {
     "vitamin_c": lambda s: s.vitamin_c,
     "vitamin_b12": lambda s: s.vitamin_b12,
     "liquid": lambda s: s.liquid,
+    "muscle_chest": lambda s: float(s.muscle_groups.get("chest", 0)),
+    "muscle_back": lambda s: float(s.muscle_groups.get("back", 0)),
+    "muscle_shoulders": lambda s: float(s.muscle_groups.get("shoulders", 0)),
+    "muscle_arms": lambda s: float(s.muscle_groups.get("arms", 0)),
+    "muscle_core": lambda s: float(s.muscle_groups.get("core", 0)),
+    "muscle_legs": lambda s: float(s.muscle_groups.get("legs", 0)),
+    "muscle_calves": lambda s: float(s.muscle_groups.get("calves", 0)),
 }
 
 # Layout constants
