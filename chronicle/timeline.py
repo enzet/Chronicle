@@ -621,6 +621,7 @@ class CommandParser:
         )
         self.path: Path | None = path
         self.context: Context = Context()
+        self.aliases: dict[str, str] = {}
 
     def parse_command(
         self, command: str, line_number: int | None = None
@@ -646,6 +647,22 @@ class CommandParser:
         if tokens[0] == ">>>":
             # Skip planned event.
             return
+
+        if tokens[0] == "alias" and len(tokens) >= 4 and tokens[2] == "=":  # noqa: PLR2004
+            # Store alias definition: alias <name> = <expansion>
+            self.aliases[tokens[1]] = " ".join(tokens[3:])
+            return
+
+        # Expand alias usage: any :name token is replaced by its alias body.
+        if any(t.startswith(":") and t[1:] in self.aliases for t in tokens):
+            expanded: list[str] = []
+            for token in tokens:
+                if token.startswith(":") and token[1:] in self.aliases:
+                    expanded.extend(self.aliases[token[1:]].split())
+                else:
+                    expanded.append(token)
+            tokens = expanded
+            command = " ".join(tokens)
 
         if len(tokens) >= 3 and tokens[2] == "=":  # noqa: PLR2004
             # Parse object.
