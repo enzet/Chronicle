@@ -1152,6 +1152,9 @@ class Dish(Object):
     vitamin_b12: VitaminB12 | None = None
     liquid: Liquid | None = None
 
+    def to_string(self) -> str:
+        return self.title or self.id or "dish"
+
     @classmethod
     def from_value(cls, value: str) -> Self:
         return cls(None, title=value)
