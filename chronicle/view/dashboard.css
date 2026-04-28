@@ -1,0 +1,8 @@
+* {box-sizing: border-box;}
+body {font-family: serif; background: #f5f5f5; margin: 0; padding: 16px;}
+table {border-collapse: collapse; margin-top: 16px;}
+th, td {border: 1px inset; padding: 3px 7px;}
+td.cell, th.cell {border: none; padding: 0 1px;}
+th {font-weight: bold;}
+table.hystogram tr td {font-size: 11px;}
+.unit {color: #999999; font-weight: 400; font-size: 9px;}
