@@ -320,7 +320,10 @@ def main() -> None:
     command = arguments.command
 
     if command == "dashboard":
+        import shutil
+
         from chronicle.view.dashboard import (
+            DASHBOARD_CSS_PATH,
             generate_dashboard_html,
             generate_dashboard_svg,
         )
@@ -332,6 +335,11 @@ def main() -> None:
             content = generate_dashboard_svg(timeline)
         if output_path:
             Path(output_path).write_text(content, encoding="utf-8")
+            if output_path.endswith(".html"):
+                shutil.copy(
+                    DASHBOARD_CSS_PATH,
+                    Path(output_path).parent / "dashboard.css",
+                )
         else:
             print(content)
         return

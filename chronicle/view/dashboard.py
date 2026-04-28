@@ -12,6 +12,8 @@ from chronicle.timeline import Timeline
 from chronicle.value import Language
 from chronicle.view.sport import SportViewer
 
+DASHBOARD_CSS_PATH: Path = Path(__file__).parent / "dashboard.css"
+
 local_timezone = datetime.now().astimezone().tzinfo
 _settings: Settings = Settings(Path.home() / ".chronicle" / "settings.json")
 _TABLE_DAYS: int = int(
@@ -729,24 +731,11 @@ def generate_dashboard_html(timeline: Timeline) -> str:
     header_cells = "".join("<th></th>" for d in col_dates)
     rows = "".join(_table_row(m) for m in data.metrics)
 
-    css = (
-        f"*{{box-sizing:border-box}}"
-        f"body{{font-family:serif;"
-        f"background:{_BACKGROUND};margin:0;padding:16px}}"
-        f"table{{border-collapse:collapse;font-size:11px;margin-top:16px}}"
-        f"th,td{{border: 1px inset;"
-        f"padding:3px 1px;text-align:right;white-space:nowrap;}}"
-        f"td.cell {{border: none;}}"
-        f"th{{font-weight: bold; font-size:11px}}"
-        f"td.label{{text-align:left;font-weight:500;min-width:120px;"
-        f"padding:3px 7px;}}"
-        f".unit{{color:{_MUTED};font-weight:400;font-size:9px}}"
-    )
     return (
         (
             "<!DOCTYPE html>\n<html>\n<head>\n"
             '<meta charset="utf-8">\n<title>Dashboard</title>\n'
-            f"<style>{css}</style>\n</head>\n"
+            '<link rel="stylesheet" href="dashboard.css">\n</head>\n'
             "<body>\n"
             f"{svg}\n"
             f"<table>\n"
