@@ -315,7 +315,7 @@ function M.finish()
     local state = M.process_line()
 
     -- Mark event as finished now.
-    if state.event.end_time == nil then
+    if state.event.start_time ~= nil and state.event.end_time == nil then
         state.event.end_time = M.now()
     end
 
