@@ -183,6 +183,11 @@ class Summary:
     shaved: set[str] = field(default_factory=set)
     """Object ids that were shaved this day."""
 
+    commits: defaultdict[str, int] = field(
+        default_factory=lambda: defaultdict(int)
+    )
+    """Commit counts by project name."""
+
     def register_listen(
         self, duration: float, language: Language, service: Service | None
     ) -> None:
@@ -366,6 +371,10 @@ class Summary:
     def register_show(self, show: Object) -> None:
         """Register a show was watched."""
         self.shows.add(show)
+
+    def register_commits(self, project: str, count: int) -> None:
+        """Register git commits for a project."""
+        self.commits[project] += count
 
     def get_learning_services(self) -> set[Service]:
         """Get all learning services."""
