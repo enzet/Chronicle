@@ -109,6 +109,10 @@ def _shave_day_extractor(object_id: str) -> Callable[[Summary], float]:
     return lambda s: 1.0 if object_id in s.shaved else 0.0
 
 
+def _muscle_day_extractor(group: str) -> Callable[[Summary], float]:
+    return lambda s: 2.0 if s.muscle_groups.get(group, 0) >= 1 else 0.0
+
+
 _EXTRACTORS: dict[str, Callable[[Summary], float]] = {
     "sport_sessions": lambda s: float(s.sport_sessions),
     "body_weight_kg": lambda s: s.body_weight_kg or 0.0,
@@ -160,12 +164,45 @@ _EXTRACTORS: dict[str, Callable[[Summary], float]] = {
     "vitamin_d": lambda s: s.vitamin_d,
     "vitamin_b12": lambda s: s.vitamin_b12,
     "liquid": lambda s: s.liquid,
-    "muscle_chest": lambda s: float(s.muscle_groups.get("chest", 0)),
-    "muscle_back": lambda s: float(s.muscle_groups.get("back", 0)),
-    "muscle_shoulders": lambda s: float(s.muscle_groups.get("shoulders", 0)),
-    "muscle_arms": lambda s: float(s.muscle_groups.get("arms", 0)),
-    "muscle_core": lambda s: float(s.muscle_groups.get("core", 0)),
-    "muscle_legs": lambda s: float(s.muscle_groups.get("legs", 0)),
+    "muscle_chest/upper": lambda s: float(
+        s.muscle_groups.get("chest/upper", 0)
+    ),
+    "muscle_chest/mid": lambda s: float(s.muscle_groups.get("chest/mid", 0)),
+    "muscle_back/vertical": lambda s: float(
+        s.muscle_groups.get("back/vertical", 0)
+    ),
+    "muscle_back/horizontal": lambda s: float(
+        s.muscle_groups.get("back/horizontal", 0)
+    ),
+    "muscle_shoulders/side": lambda s: float(
+        s.muscle_groups.get("shoulders/side", 0)
+    ),
+    "muscle_shoulders/rear": lambda s: float(
+        s.muscle_groups.get("shoulders/rear", 0)
+    ),
+    "muscle_arms/biceps": lambda s: float(
+        s.muscle_groups.get("arms/biceps", 0)
+    ),
+    "muscle_arms/triceps": lambda s: float(
+        s.muscle_groups.get("arms/triceps", 0)
+    ),
+    "muscle_core/abs": lambda s: float(s.muscle_groups.get("core/abs", 0)),
+    "muscle_core/extension": lambda s: float(
+        s.muscle_groups.get("core/extension", 0)
+    ),
+    "muscle_core/obliques": lambda s: float(
+        s.muscle_groups.get("core/obliques", 0)
+    ),
+    "muscle_core/stabilizers": lambda s: float(
+        s.muscle_groups.get("core/stabilizers", 0)
+    ),
+    "muscle_legs/quads": lambda s: float(s.muscle_groups.get("legs/quads", 0)),
+    "muscle_legs/glutes": lambda s: float(
+        s.muscle_groups.get("legs/glutes", 0)
+    ),
+    "muscle_legs/hamstrings": lambda s: float(
+        s.muscle_groups.get("legs/hamstrings", 0)
+    ),
     "muscle_calves": lambda s: float(s.muscle_groups.get("calves", 0)),
     "commits": lambda s: float(sum(s.commits.values())),
 }
@@ -448,6 +485,10 @@ def get_dashboard_data(timeline: Timeline, settings: Settings) -> DashboardData:
             return _cut_day_extractor(metric_id[len("cut_") : -len("_day")])
         if metric_id.startswith("shave_") and metric_id.endswith("_day"):
             return _shave_day_extractor(metric_id[len("shave_") : -len("_day")])
+        if metric_id.startswith("muscle_") and metric_id.endswith("_day"):
+            return _muscle_day_extractor(
+                metric_id[len("muscle_") : -len("_day")]
+            )
         return None
 
     for i, (day, _, summary) in enumerate(days):
