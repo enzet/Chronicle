@@ -13,6 +13,7 @@ from chronicle.errors import ChronicleUnknownTypeError
 from chronicle.harvest.apple_health import AppleHealthImportManager
 from chronicle.harvest.arc import ArcImportManager
 from chronicle.harvest.duolingo import DuolingoImportManager
+from chronicle.harvest.git import GitImportManager
 from chronicle.harvest.memrise import MemriseImportManager
 from chronicle.harvest.old import OldImportManager
 from chronicle.harvest.wikimedia import WikimediaImportManager
@@ -59,6 +60,7 @@ def main() -> None:
         AppleHealthImportManager,
         ArcImportManager,
         DuolingoImportManager,
+        GitImportManager,
         MemriseImportManager,
         OldImportManager,
     ]

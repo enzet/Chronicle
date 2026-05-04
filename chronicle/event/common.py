@@ -915,6 +915,30 @@ class BackupEvent(Event):
 
 
 @dataclass
+class CommitEvent(Event):
+    """Event representing making git commits."""
+
+    project: str | None = None
+    """Git project name."""
+
+    count: int = 1
+    """Number of commits made."""
+
+    arguments: ClassVar[Arguments] = (
+        Arguments(["commit"], "commit")
+        .add(Argument("project"))
+        .add(Argument("count", prefix="count:"))
+    )
+
+    @override
+    def register_summary(
+        self, summary: Summary, ratio: float = 1.0, *, is_main: bool = True
+    ) -> None:
+        if is_main and self.project:
+            summary.register_commits(self.project, int(self.count * ratio))
+
+
+@dataclass
 class PostEvent(Event):
     """Event representing posting in social media."""
 
