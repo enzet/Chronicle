@@ -52,6 +52,11 @@ def main() -> None:
         "--cache-only", action="store_true", help="use cache only"
     )
     argument_parser.add_argument("-i", "--input", nargs="+", help="input files")
+    argument_parser.add_argument(
+        "--settings",
+        metavar="FILE",
+        help="path to settings JSON file",
+    )
 
     import_parsers = argument_parser.add_argument_group("import")
 
@@ -328,10 +333,19 @@ def main() -> None:
     command = arguments.command
 
     if command == "dashboard":
+        from chronicle.settings import Settings
+
+        settings_path = (
+            Path(arguments.settings)
+            if arguments.settings
+            else Path.home() / "program" / "personal" / "settings.json"
+        )
+        settings = Settings(settings_path)
+
         if arguments.terminal:
             from chronicle.view.dashboard import print_dashboard_cli
 
-            print_dashboard_cli(timeline)
+            print_dashboard_cli(timeline, settings)
             return
 
         import shutil
@@ -344,9 +358,9 @@ def main() -> None:
 
         output_path = arguments.output
         if output_path and output_path.endswith(".html"):
-            content = generate_dashboard_html(timeline)
+            content = generate_dashboard_html(timeline, settings)
         else:
-            content = generate_dashboard_svg(timeline)
+            content = generate_dashboard_svg(timeline, settings)
         if output_path:
             Path(output_path).write_text(content, encoding="utf-8")
             if output_path.endswith(".html"):

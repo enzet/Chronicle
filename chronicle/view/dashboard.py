@@ -16,7 +16,6 @@ from chronicle.view.sport import SportViewer
 DASHBOARD_CSS_PATH: Path = Path(__file__).parent / "dashboard.css"
 
 local_timezone = datetime.now().astimezone().tzinfo
-_settings: Settings = Settings(Path.home() / ".chronicle" / "settings.json")
 _TABLE_DAYS: int = int(
     (
         datetime.now(tz=local_timezone)
@@ -168,6 +167,7 @@ _EXTRACTORS: dict[str, Callable[[Summary], float]] = {
     "muscle_core": lambda s: float(s.muscle_groups.get("core", 0)),
     "muscle_legs": lambda s: float(s.muscle_groups.get("legs", 0)),
     "muscle_calves": lambda s: float(s.muscle_groups.get("calves", 0)),
+    "commits": lambda s: float(sum(s.commits.values())),
 }
 
 # Layout constants
@@ -405,7 +405,7 @@ def _mifflin_bmr(
     return base + 5.0 if sex == "male" else base - 161.0
 
 
-def get_dashboard_data(timeline: Timeline) -> DashboardData:
+def get_dashboard_data(timeline: Timeline, settings: Settings) -> DashboardData:
     """Extract dashboard data from the timeline."""
 
     now: datetime = datetime.now().astimezone()
@@ -417,7 +417,7 @@ def get_dashboard_data(timeline: Timeline) -> DashboardData:
     history_filter = Timeline.get_filter(history_start, None)
     days = list(timeline.get_events_by_day(history_filter))
 
-    sections_config: list[dict] = _settings.get("dashboard", {}).get(
+    sections_config: list[dict] = settings.get("dashboard", {}).get(
         "sections", []
     )
     all_metric_ids: set[str] = {
@@ -511,9 +511,9 @@ def get_dashboard_data(timeline: Timeline) -> DashboardData:
             # Mifflin-St Jeor BMR adjusted by daily energy expenditure.
             series: list[Thresholds] | None = None
             if metric_id == "energy" and today_index is not None:
-                height_cm = float(_settings.get("height", 170))
-                age = int(_settings.get("age", 30))
-                sex_raw = str(_settings.get("sex", "male"))
+                height_cm = float(settings.get("height", 170))
+                age = int(settings.get("age", 30))
+                sex_raw = str(settings.get("sex", "male"))
                 if sex_raw not in ("male", "female"):
                     raise ValueError
                 sex: Literal["male", "female"] = cast(
@@ -657,10 +657,10 @@ def _render_cards(
     return content_y + row_count * _CARD_HEIGHT + max(0, row_count - 1) * _GAP
 
 
-def generate_dashboard_svg(timeline: Timeline) -> str:
+def generate_dashboard_svg(timeline: Timeline, settings: Settings) -> str:
     """Generate a static SVG dashboard from timeline data."""
 
-    data = get_dashboard_data(timeline)
+    data = get_dashboard_data(timeline, settings)
     metrics: list[MetricData] = data.metrics
 
     row_count = (len(metrics) + _COLUMNS - 1) // _COLUMNS
@@ -789,9 +789,9 @@ def _table_row(metric: MetricData) -> str:
     )
 
 
-def print_dashboard_cli(timeline: Timeline) -> None:
+def print_dashboard_cli(timeline: Timeline, settings: Settings) -> None:
     """Print dashboard metrics in 3 columns of 26 chars (80 total)."""
-    data = get_dashboard_data(timeline)
+    data = get_dashboard_data(timeline, settings)
     column_width = 24
     content_w = column_width - 3
 
@@ -864,10 +864,10 @@ def print_dashboard_cli(timeline: Timeline) -> None:
         print(" ".join(row))
 
 
-def generate_dashboard_html(timeline: Timeline) -> str:
+def generate_dashboard_html(timeline: Timeline, settings: Settings) -> str:
     """Generate a static HTML page with inline SVG and 14-day metrics table."""
-    svg = generate_dashboard_svg(timeline)
-    data = get_dashboard_data(timeline)
+    svg = generate_dashboard_svg(timeline, settings)
+    data = get_dashboard_data(timeline, settings)
 
     rows = "".join(_table_row(m) for m in data.metrics)
 
