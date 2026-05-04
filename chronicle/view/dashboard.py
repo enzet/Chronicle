@@ -218,15 +218,15 @@ _SPARKLINE_WIDTH = _CARD_WIDTH - 16
 _SPARKLINE_HEIGHT = 88
 
 # Colours
-_BACKGROUND = "#f5f5f5"
-_SURFACE = "#ffffff"
-_BORDER = "#e4e4e4"
-_TEXT = "#1a1a1a"
+_BACKGROUND = "#F5F5F5"
+_SURFACE = "#FFFFFF"
+_BORDER = "#E4E4E4"
+_TEXT = "#1A1A1A"
 _MUTED = "#999999"
-_GREEN = "#00C000"  # "#2a9d5c"
-_ORANGE = "#ff8800"  # "#f08b00"
-_RED = "#FF0000"  # "#d63030"
-_NEUTRAL = "#aaaaaa"
+_GREEN = "#00C000"  # "#2A9D5C"
+_ORANGE = "#FF8800"  # "#F08B00"
+_RED = "#FF0000"  # "#D63030"
+_NEUTRAL = "#AAAAAA"
 
 # ANSI terminal colours
 _ANSI_GREEN = "\033[32m"
@@ -777,14 +777,15 @@ def _r_to_hex_color(r: float) -> str:
     return f"#{red:02x}{grn:02x}{blu:02x}"
 
 
-def _cell_style(value: float, thresholds: Thresholds) -> str:
-    r = _compute_r(value, thresholds)
+def _cell_style(r: float | None) -> str:
     if r is None:
         return "background:#00000011"
     return f"background:{_r_to_hex_color(r)}88"
 
 
-def _table_row(metric: MetricData) -> str:
+def _table_row(metric: MetricData) -> tuple[str, float | None]:
+    last_r: float | None = None
+
     all_vals = [*metric.values, metric.today]
 
     cells: list[str] = []
@@ -801,11 +802,18 @@ def _table_row(metric: MetricData) -> str:
                 cells.append(
                     f'<td style="background:{_GREEN}88" class="cell"></td>'
                 )
+                last_r = 3
             else:
                 day_color = _discrete_color(all_vals[: idx + 1], dt)
                 cells.append(
                     f'<td style="background:{day_color}88" class="cell"></td>'
                 )
+                if day_color == _GREEN:
+                    last_r = 3
+                if day_color == _ORANGE:
+                    last_r = 1.5
+                if day_color == _RED:
+                    last_r = 0
     else:
         smoothed = _make_ema(all_vals, metric.alpha)
         last_14 = smoothed[-_TABLE_DAYS:]
@@ -821,13 +829,15 @@ def _table_row(metric: MetricData) -> str:
             if v == 0.0:
                 cells.append(f'<td class="cell" style="color:{_BORDER}"></td>')
             else:
-                style = _cell_style(v, ts)
+                r: float | None = _compute_r(v, ts)
+                last_r = r
+                style = _cell_style(r)
                 attr = f' style="{style}"' if style else ""
                 cells.append(f'<td{attr} class="cell"></td>')
 
     return (
         f'<tr><td class="label">{metric.label}</td>' + "".join(cells) + "</tr>"
-    )
+    ), last_r
 
 
 def print_dashboard_cli(timeline: Timeline, settings: Settings) -> None:
@@ -910,7 +920,8 @@ def generate_dashboard_html(timeline: Timeline, settings: Settings) -> str:
     svg = generate_dashboard_svg(timeline, settings)
     data = get_dashboard_data(timeline, settings)
 
-    rows = "".join(_table_row(m) for m in data.metrics)
+    rows: list[tuple[str, float | None]] = [_table_row(m) for m in data.metrics]
+    table_body = "".join(x for x, y in sorted(rows, key=lambda z: z[1] or 0.0))
 
     return (
         (
@@ -920,7 +931,7 @@ def generate_dashboard_html(timeline: Timeline, settings: Settings) -> str:
             "<body>\n"
             f"{svg}\n"
             f'<table class="hystogram">\n'
-            f"  <tbody>{rows}</tbody>\n"
+            f"  <tbody>{table_body}</tbody>\n"
             "</table>\n"
         )
         + SportViewer.get_html_exercises()
