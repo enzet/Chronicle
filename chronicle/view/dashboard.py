@@ -10,6 +10,7 @@ from chronicle.settings import Settings
 from chronicle.summary.core import Summary
 from chronicle.timeline import Timeline
 from chronicle.value import Language
+from chronicle.view.food import FoodViewer
 from chronicle.view.sport import SportViewer
 
 DASHBOARD_CSS_PATH: Path = Path(__file__).parent / "dashboard.css"
@@ -85,6 +86,8 @@ class DashboardData:
 local_timezone = datetime.now().astimezone().tzinfo
 
 _RUSSIAN = Language.from_json("ru")
+_ENGLISH = Language.from_json("en")
+_KNOWN_LANGUAGES = {_RUSSIAN, _ENGLISH}
 
 
 def _post_extractor(service_id: str) -> Callable[[Summary], float]:
@@ -119,17 +122,22 @@ _EXTRACTORS: dict[str, Callable[[Summary], float]] = {
     "learning_languages": lambda s: (
         (
             sum(sum(v.values()) for v in s.learn_language.values())
-            + sum(v for k, v in s.read.items() if k != _RUSSIAN)
-            + sum(v for k, v in s.speak.items() if k != _RUSSIAN)
+            + sum(v for k, v in s.read.items() if k not in _KNOWN_LANGUAGES)
+            + sum(v for k, v in s.speak.items() if k not in _KNOWN_LANGUAGES)
+            + sum(
+                sum(value.values())
+                for language, value in s.watch.items()
+                if language not in _KNOWN_LANGUAGES
+            )
             + sum(
                 sum(value.values())
                 for language, value in s.listen.items()
-                if language != _RUSSIAN
+                if language not in _KNOWN_LANGUAGES
             )
             + sum(
                 sum(value.values())
                 for language, value in s.write.items()
-                if language != _RUSSIAN
+                if language not in _KNOWN_LANGUAGES
             )
         )
         / 60.0
@@ -178,10 +186,24 @@ _SURFACE = "#ffffff"
 _BORDER = "#e4e4e4"
 _TEXT = "#1a1a1a"
 _MUTED = "#999999"
-_GREEN = "#008800"  # "#2a9d5c"
+_GREEN = "#00C000"  # "#2a9d5c"
 _ORANGE = "#ff8800"  # "#f08b00"
 _RED = "#FF0000"  # "#d63030"
 _NEUTRAL = "#aaaaaa"
+
+# ANSI terminal colours
+_ANSI_GREEN = "\033[32m"
+_ANSI_ORANGE = "\033[33m"
+_ANSI_RED = "\033[31m"
+_ANSI_NEUTRAL = "\033[37m"
+_ANSI_RESET = "\033[0m"
+_ANSI_BY_SVG: dict[str, str] = {
+    _GREEN: _ANSI_GREEN,
+    _ORANGE: _ANSI_ORANGE,
+    _RED: _ANSI_RED,
+    _NEUTRAL: _ANSI_NEUTRAL,
+}
+_CLI_COLS = 3
 
 
 def _make_ema(values: list[float], alpha: float) -> list[float]:
@@ -263,19 +285,38 @@ def _sparkline_svg(
         max_threshold = max(
             (ts.goal or ts.soft_min or 0.0) for ts in visible_thresholds
         )
-        if max_threshold > 0:
-            max_val = max(max_val, max_threshold * 1.12)
+        max_val = max(max_val, max_threshold * 1.12)
+
+    if thresholds:
+        max_val = max(
+            max_val, (thresholds.goal or thresholds.soft_min or 0.0) * 1.12
+        )
 
     if discrete_thresholds is not None:
         color = _discrete_color(all_values, discrete_thresholds)
     else:
         color = _metric_color(smoothed[-1], thresholds)
     bar_count = len(visible_values)
+    wide = 6
     gap = 0.6
-    bar_width = max(1.5, _SPARKLINE_WIDTH / bar_count - gap)
+    # Last two bars are `wide`× wider; solve for unit bar_width so all fits.
+    total_units = bar_count - 2 + 2 * wide
+    bar_width = max(
+        1.0, (_SPARKLINE_WIDTH - (bar_count - 1) * gap) / total_units
+    )
+
+    # Pre-compute left edge and centre x for each bar.
+    _bar_left: list[float] = []
+    _bar_center: list[float] = []
+    _pos = float(origin_x)
+    for _i in range(bar_count):
+        _w = bar_width * wide if _i >= bar_count - 2 else bar_width
+        _bar_left.append(_pos)
+        _bar_center.append(_pos + _w / 2)
+        _pos += _w + gap
 
     def bar_center_x(i: int) -> float:
-        return origin_x + (i + 0.5) * _SPARKLINE_WIDTH / bar_count
+        return _bar_center[i]
 
     def value_y(v: float) -> float:
         return origin_y + _SPARKLINE_HEIGHT - (v / max_val) * _SPARKLINE_HEIGHT
@@ -284,86 +325,64 @@ def _sparkline_svg(
 
     if discrete_thresholds is None:
         if thresholds_series:
-            visible_thresholds = thresholds_series[-(show + 1) :]
-            health_points = [
-                f"{bar_center_x(i):.1f},{value_y(ts.goal):.1f}"
-                for i, ts in enumerate(visible_thresholds)
-                if ts.goal is not None
+            visible_thresholds: list[Thresholds] = thresholds_series[
+                -(show + 1) :
             ]
-            if health_points:
-                parts.append(
-                    f'<polyline points="{" ".join(health_points)}"'
-                    f' fill="none" stroke="{_TEXT}" stroke-width="0.8"'
-                    f' stroke-linejoin="round"/>'
-                )
+            for function, width in (
+                (lambda x: x.hard_min, 0.5),
+                (lambda x: x.soft_min, 0.5),
+                (lambda x: x.goal, 1),
+                (lambda x: x.soft_max, 0.5),
+                (lambda x: x.hard_max, 0.5),
+            ):
+                goals: list[float] = [
+                    function(threshold) or 0.0
+                    for threshold in visible_thresholds
+                ]
+                goals = _make_ema(goals, alpha)
+                goal_points: list[str] = [
+                    f"{bar_center_x(i):.1f},{value_y(ts):.1f}"
+                    for i, ts in enumerate(goals)
+                ]
+                if goal_points:
+                    parts.append(
+                        f'<polyline points="{" ".join(goal_points)}"'
+                        f' fill="none" stroke="{_TEXT}" stroke-width="{width}"'
+                        f' stroke-linejoin="round"/>'
+                    )
         elif thresholds.goal is not None:
-            health_line_y = value_y(thresholds.goal)
-            parts.append(
-                f'<line x1="{origin_x}" y1="{health_line_y:.1f}"'
-                f' x2="{origin_x + _SPARKLINE_WIDTH}"'
-                f' y2="{health_line_y:.1f}"'
-                f' stroke="{_TEXT}" stroke-width="1"/>'
-            )
+            for threshold, width in (
+                (thresholds.hard_min, 0.5),
+                (thresholds.soft_min, 0.5),
+                (thresholds.goal, 1),
+                (thresholds.soft_max, 0.5),
+                (thresholds.hard_max, 0.5),
+            ):
+                if threshold:
+                    line_y = value_y(threshold)
+                    parts.append(
+                        f'<line x1="{origin_x}" y1="{line_y:.1f}"'
+                        f' x2="{origin_x + _SPARKLINE_WIDTH}"'
+                        f' y2="{line_y:.1f}"'
+                        f' stroke="{_TEXT}" stroke-width="{width}"/>'
+                    )
 
-    # bars
+    # Bars.
     for i, v in enumerate(visible_values):
         if not v:
             continue
-        bar_x = origin_x + i * _SPARKLINE_WIDTH / bar_count
+        bar_x = _bar_left[i]
         bar_height = (v / max_val) * _SPARKLINE_HEIGHT
         bar_y = origin_y + _SPARKLINE_HEIGHT - bar_height
-        opacity = "0.55" if i == bar_count - 1 else "0.18"
+        is_highlighted = i >= bar_count - 2
+        opacity = "0.55" if is_highlighted else "0.18"
+        w = bar_width * wide if is_highlighted else bar_width
         parts.append(
-            f'<rect x="{bar_x:.1f}" y="{bar_y:.1f}" width="{bar_width:.1f}"'
+            f'<rect x="{bar_x:.1f}" y="{bar_y:.1f}" width="{w:.1f}"'
             f' height="{bar_height:.1f}" fill="{color}" opacity="{opacity}"/>'
         )
 
     if discrete_thresholds is None:
-        # threshold bands — white overlays dim bars in orange/red zones
-        def _band(
-            x: float, y_top: float, y_bot: float, w: float, opacity: str
-        ) -> None:
-            h = y_bot - y_top
-            if h > 0:
-                parts.append(
-                    f'<rect x="{x:.1f}" y="{y_top:.1f}" width="{w:.1f}"'
-                    f' height="{h:.1f}" fill="#ffffff" opacity="{opacity}"/>'
-                )
-
-        chart_top = float(origin_y)
-        chart_bot = float(origin_y + _SPARKLINE_HEIGHT)
-
-        if thresholds_series:
-            visible_thresholds = thresholds_series[-(show + 1) :]
-            column_width = _SPARKLINE_WIDTH / bar_count
-            for i, ts in enumerate(visible_thresholds):
-                bx = origin_x + i * column_width
-                if ts.soft_min and max_val > 0:
-                    l2_y = value_y(ts.soft_min)
-                    _band(bx, l2_y, chart_bot, column_width, "0.4")
-        else:
-            hard_min = thresholds.hard_min
-            soft_min = thresholds.soft_min
-            soft_max = thresholds.soft_max
-            hard_max = thresholds.hard_max
-
-            width = float(_SPARKLINE_WIDTH)
-            ox = float(origin_x)
-            if hard_min and max_val > 0:
-                _band(ox, value_y(hard_min), chart_bot, width, "0.5")
-            if hard_min and soft_min and max_val > 0:
-                _band(ox, value_y(soft_min), value_y(hard_min), width, "0.25")
-            if soft_max and hard_max and soft_max < max_val:
-                _band(
-                    ox,
-                    value_y(min(hard_max, max_val)),
-                    value_y(soft_max),
-                    width,
-                    "0.25",
-                )
-            if hard_max and hard_max < max_val:
-                _band(ox, chart_top, value_y(hard_max), width, "0.5")
-
         # EMA polyline.
         points = " ".join(
             f"{bar_center_x(i):.1f},{value_y(v):.1f}"
@@ -520,8 +539,9 @@ def get_dashboard_data(timeline: Timeline) -> DashboardData:
                     )
                     series.append(
                         Thresholds(
-                            soft_min=bmr + expenditure,
-                            goal=bmr + expenditure + 200.0,
+                            hard_min=bmr + expenditure,
+                            soft_min=bmr + expenditure + 200.0,
+                            goal=bmr + expenditure + 500.0,
                         )
                     )
                 today_weight = (
@@ -642,7 +662,6 @@ def generate_dashboard_svg(timeline: Timeline) -> str:
 
     data = get_dashboard_data(timeline)
     metrics: list[MetricData] = data.metrics
-    timestamp_str = datetime.now().strftime("%Y-%m-%d %H:%M")
 
     row_count = (len(metrics) + _COLUMNS - 1) // _COLUMNS
     total_width = _COLUMNS * _CARD_WIDTH + (_COLUMNS - 1) * _GAP + 2 * _PADDING
@@ -661,10 +680,6 @@ def generate_dashboard_svg(timeline: Timeline) -> str:
         f'<rect width="{total_width}" height="{total_height}"'
         f' fill="{_BACKGROUND}"/>'
     )
-    parts.append(
-        f'<text x="{_PADDING}" y="20" font-size="11" fill="{_MUTED}">'
-        f"{timestamp_str}</text>"
-    )
 
     _render_cards(metrics, header_height + _PADDING, parts, "c")
 
@@ -672,11 +687,60 @@ def generate_dashboard_svg(timeline: Timeline) -> str:
     return "\n".join(parts)
 
 
+def _compute_r(value: float, thresholds: Thresholds) -> float | None:
+    """Compute a normalized health score from 0 to 3.
+
+    :return: `None` when the required thresholds are absent.
+    """
+    hard_min = thresholds.hard_min
+    soft_min = thresholds.soft_min
+    goal = thresholds.goal
+    soft_max = thresholds.soft_max
+    hard_max = thresholds.hard_max
+
+    if hard_min is not None and value < hard_min:
+        return value / hard_min if hard_min != 0 else 0.0
+    if hard_min is not None and soft_min is not None and value < soft_min:
+        denom = soft_min - hard_min
+        return 1 + (value - hard_min) / denom if denom else 1
+    if soft_min is not None and goal is not None and value < goal:
+        denom = goal - soft_min
+        return 2 + (value - soft_min) / denom if denom else 2
+    if goal is not None and soft_max is not None and value < soft_max:
+        denom = soft_max - goal
+        return 2 + (soft_max - value) / denom if denom else 2
+    if hard_max is not None and soft_max is not None and value < hard_max:
+        denom = hard_max - soft_max
+        return 1 + (hard_max - value) / denom if denom else 1
+    return 3
+
+
+_R_COLOR_STOPS: list[tuple[int, int, int]] = [
+    (255, 0, 0),
+    (255, 128, 0),
+    (255, 255, 0),
+    (0, 0xC0, 0),
+]
+
+
+def _r_to_hex_color(r: float) -> str:
+    r = max(0.0, min(3.0, r))
+    lo = int(r)
+    hi = min(lo + 1, len(_R_COLOR_STOPS) - 1)
+    frac = r - lo
+    r1, g1, b1 = _R_COLOR_STOPS[lo]
+    r2, g2, b2 = _R_COLOR_STOPS[hi]
+    red = int(r1 + frac * (r2 - r1))
+    grn = int(g1 + frac * (g2 - g1))
+    blu = int(b1 + frac * (b2 - b1))
+    return f"#{red:02x}{grn:02x}{blu:02x}"
+
+
 def _cell_style(value: float, thresholds: Thresholds) -> str:
-    color = _metric_color(value, thresholds)
-    if color == _NEUTRAL:
-        return ""
-    return f"background:{color}88"
+    r = _compute_r(value, thresholds)
+    if r is None:
+        return "background:#00000011"
+    return f"background:{_r_to_hex_color(r)}88"
 
 
 def _table_row(metric: MetricData) -> str:
@@ -720,14 +784,84 @@ def _table_row(metric: MetricData) -> str:
                 attr = f' style="{style}"' if style else ""
                 cells.append(f'<td{attr} class="cell"></td>')
 
-    unit_span = (
-        f' <span class="unit">{metric.unit}</span>' if metric.unit else ""
-    )
     return (
-        f'<tr><td class="label">{metric.label}{unit_span}</td>'
-        + "".join(cells)
-        + "</tr>"
+        f'<tr><td class="label">{metric.label}</td>' + "".join(cells) + "</tr>"
     )
+
+
+def print_dashboard_cli(timeline: Timeline) -> None:
+    """Print dashboard metrics in 3 columns of 26 chars (80 total)."""
+    data = get_dashboard_data(timeline)
+    column_width = 24
+    content_w = column_width - 3
+
+    def _fmt_value(metric: MetricData, smoothed_last: float) -> str:
+        if metric.discrete_thresholds is not None:
+            v = metric.today
+            return f"{int(v)} {metric.unit}".strip() if v else ""
+        if smoothed_last <= 0:
+            return ""
+        v = smoothed_last
+        num = str(int(v)) if v % 1 == 0 else f"{v:.1f}"
+        return f"{num} {metric.unit}".strip()
+
+    def _cell(metric: MetricData, yc: str, tc: str, val: str) -> str:
+        def get_marker(color: str) -> str:
+            if color == _RED:
+                return "█"
+            if color == _ORANGE:
+                return "▒"
+            return " "
+
+        blocks = get_marker(yc) + get_marker(tc)
+        label = metric.label
+        if val:
+            spare = content_w - len(val) - 1
+            if len(label) > spare:
+                label = label[:spare]
+            content = (
+                label
+                + " "
+                + "." * (content_w - len(label) - len(val) - 2)
+                + " "
+                + val
+            )
+        else:
+            content = label[:content_w].ljust(content_w)
+        return f"{blocks} {content}"
+
+    cells: list[str] = []
+    for metric in data.metrics:
+        all_values = [*metric.values, metric.today]
+
+        if metric.discrete_thresholds is not None:
+            dt = metric.discrete_thresholds
+            has_history = bool(metric.values)
+            yc = _discrete_color(metric.values, dt) if has_history else _NEUTRAL
+            tc = _discrete_color(all_values, dt)
+            smoothed_last = 0.0
+        else:
+            smoothed = _make_ema(all_values, metric.alpha)
+            ts = metric.thresholds_series
+            if ts:
+                today_idx = len(metric.values)
+                yt = ts[today_idx - 1] if today_idx > 0 else metric.thresholds
+                tt = ts[today_idx] if today_idx < len(ts) else metric.thresholds
+            else:
+                yt = tt = metric.thresholds
+            prev = smoothed[-2] if len(smoothed) > 1 else 0.0
+            yc = _metric_color(prev, yt)
+            tc = _metric_color(smoothed[-1], tt)
+            smoothed_last = smoothed[-1]
+
+        val = _fmt_value(metric, smoothed_last)
+        cells.append(_cell(metric, yc, tc, val))
+
+    pad = " " * column_width
+    for i in range(0, len(cells), _CLI_COLS):
+        row = cells[i : i + _CLI_COLS]
+        row += [pad] * (_CLI_COLS - len(row))
+        print(" ".join(row))
 
 
 def generate_dashboard_html(timeline: Timeline) -> str:
@@ -735,12 +869,6 @@ def generate_dashboard_html(timeline: Timeline) -> str:
     svg = generate_dashboard_svg(timeline)
     data = get_dashboard_data(timeline)
 
-    now = datetime.now().astimezone()
-    col_dates = [
-        (now - timedelta(days=_TABLE_DAYS - 1 - i)).date()
-        for i in range(_TABLE_DAYS)
-    ]
-    header_cells = "".join("<th></th>" for d in col_dates)
     rows = "".join(_table_row(m) for m in data.metrics)
 
     return (
@@ -750,11 +878,11 @@ def generate_dashboard_html(timeline: Timeline) -> str:
             '<link rel="stylesheet" href="dashboard.css">\n</head>\n'
             "<body>\n"
             f"{svg}\n"
-            f"<table>\n"
-            f"  <thead><tr><th>Metric</th>{header_cells}</tr></thead>\n"
+            f'<table class="hystogram">\n'
             f"  <tbody>{rows}</tbody>\n"
             "</table>\n"
         )
         + SportViewer.get_html_exercises()
+        + FoodViewer(timeline).get_html_food()
         + "</body>\n</html>"
     )
