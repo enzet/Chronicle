@@ -4,5 +4,5 @@ table {border-collapse: collapse; margin-top: 16px;}
 th, td {border: 1px inset; padding: 3px 7px;}
 td.cell, th.cell {border: none; padding: 0 1px;}
 th {font-weight: bold;}
-table.hystogram tr td {font-size: 11px;}
+table.hystogram tr td {font-size: 11px; padding: 0 3px;}
 .unit {color: #999999; font-weight: 400; font-size: 9px;}
