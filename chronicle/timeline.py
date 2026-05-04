@@ -109,13 +109,15 @@ class Timeline:
         line_number: int | None = None,
         *,
         is_task: bool = False,
+        is_planned: bool = False,
     ) -> None:
         """Parse string command describing an event.
 
         :param command: the initial command
         :param tokens: tokens from the command
         :param context: parsing context (current date, etc.)
-        :param is_task: whether the event is a task (planned event)
+        :param is_task: whether the event is a task
+        :param is_task: whether the event didn't happen (planned event)
         """
         if not command.strip():
             return
@@ -164,6 +166,7 @@ class Timeline:
                 time, command, parameters, self.objects, path, line_number
             )
             event.is_task = is_task
+            event.is_planned = is_planned
             self.events.append(event)
         else:
             message = (
@@ -280,6 +283,8 @@ class Timeline:
         assert points[-1][1] == end_point
 
         for event in filtered_events:
+            if event.is_planned:
+                continue
             event_start: datetime = event.time.get_lower()
             left_index: int = int(
                 (event_start - start_point).total_seconds()
@@ -677,6 +682,7 @@ class CommandParser:
             return
 
         is_task: bool = False
+        is_planned: bool = False
         parameters: list[str] = tokens
         task_prefixes: list[str] = ["[x]", "[-]", "[/]"]
 
@@ -685,6 +691,8 @@ class CommandParser:
         ):
             # Parse task (planned event).
             is_task = True
+            if len(tokens) > 1 and tokens[0] == "[" and tokens[1] == "]":
+                is_planned = True
             if len(tokens) > 1:
                 if tokens[0] in task_prefixes:
                     parameters = tokens[1:]
@@ -699,6 +707,7 @@ class CommandParser:
             parameters,
             self.context,
             is_task=is_task,
+            is_planned=is_planned,
             path=self.path,
             line_number=line_number,
         )
