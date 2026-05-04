@@ -99,6 +99,14 @@ def _clean_day_extractor(object_id: str) -> Callable[[Summary], float]:
     return lambda s: 1.0 if object_id in s.cleaned else 0.0
 
 
+def _cut_day_extractor(object_id: str) -> Callable[[Summary], float]:
+    return lambda s: 1.0 if object_id in s.cut else 0.0
+
+
+def _shave_day_extractor(object_id: str) -> Callable[[Summary], float]:
+    return lambda s: 1.0 if object_id in s.shaved else 0.0
+
+
 _EXTRACTORS: dict[str, Callable[[Summary], float]] = {
     "sport_sessions": lambda s: float(s.sport_sessions),
     "body_weight_kg": lambda s: s.body_weight_kg or 0.0,
@@ -417,6 +425,10 @@ def get_dashboard_data(timeline: Timeline) -> DashboardData:
             return _post_day_extractor(metric_id[len("post_day_") :])
         if metric_id.startswith("clean_") and metric_id.endswith("_day"):
             return _clean_day_extractor(metric_id[len("clean_") : -len("_day")])
+        if metric_id.startswith("cut_") and metric_id.endswith("_day"):
+            return _cut_day_extractor(metric_id[len("cut_") : -len("_day")])
+        if metric_id.startswith("shave_") and metric_id.endswith("_day"):
+            return _shave_day_extractor(metric_id[len("shave_") : -len("_day")])
         return None
 
     for i, (day, _, summary) in enumerate(days):

@@ -177,6 +177,12 @@ class Summary:
     cleaned: set[str] = field(default_factory=set)
     """Object ids that were cleaned/washed this day."""
 
+    cut: set[str] = field(default_factory=set)
+    """Object ids that were cut this day."""
+
+    shaved: set[str] = field(default_factory=set)
+    """Object ids that were shaved this day."""
+
     def register_listen(
         self, duration: float, language: Language, service: Service | None
     ) -> None:
