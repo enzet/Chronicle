@@ -61,8 +61,10 @@ class DoEvent(Event):
     description: str | None = None
     """Description of what was done."""
 
-    arguments: ClassVar[Arguments] = Arguments(["do"], "do").add(
-        Argument("description")
+    arguments: ClassVar[Arguments] = (
+        Arguments(["do"], "do")
+        .add(Argument("description"))
+        .add_class_argument("tags", Tags)
     )
 
 
@@ -73,9 +75,11 @@ class MedicationEvent(Event):
     medication: str | None = None
     """Name of the medication taken."""
 
-    arguments: ClassVar[Arguments] = Arguments(
-        ["medication"], "medication"
-    ).add(Argument("medication"))
+    arguments: ClassVar[Arguments] = (
+        Arguments(["medication"], "medication")
+        .add(Argument("medication"))
+        .add_class_argument("tags", Tags)
+    )
 
 
 @dataclass
@@ -85,9 +89,11 @@ class AppointmentEvent(Event):
     description: str | None = None
     """Description of the appointment."""
 
-    arguments: ClassVar[Arguments] = Arguments(
-        ["appointment"], "appointment"
-    ).add(Argument("description"))
+    arguments: ClassVar[Arguments] = (
+        Arguments(["appointment"], "appointment")
+        .add(Argument("description"))
+        .add_class_argument("tags", Tags)
+    )
 
 
 @dataclass
@@ -97,9 +103,11 @@ class CookEvent(Event):
     dish: Dish | None = None
     """Dish that was cooked."""
 
-    arguments: ClassVar[Arguments] = Arguments(
-        ["cook"], "cook"
-    ).add_object_argument("dish", Dish, is_main=True)
+    arguments: ClassVar[Arguments] = (
+        Arguments(["cook"], "cook")
+        .add_object_argument("dish", Dish, is_main=True)
+        .add_class_argument("tags", Tags)
+    )
 
     @override
     def register_summary(
@@ -117,9 +125,11 @@ class CleanEvent(Event):
     object_: str | None = None
     """Object that was cleaned (raw string, may be comma-separated)."""
 
-    arguments: ClassVar[Arguments] = Event.arguments.replace(
-        ["clean", "wash"], "clean"
-    ).add(Argument("object_"), is_main=True)
+    arguments: ClassVar[Arguments] = (
+        Arguments(["clean", "wash"], "clean")
+        .add(Argument("object_"), is_main=True)
+        .add_class_argument("tags", Tags)
+    )
 
     @override
     def register_summary(
@@ -139,9 +149,21 @@ class CutEvent(Event):
     object_: str | None = None
     """Object that was cut."""
 
-    arguments: ClassVar[Arguments] = Arguments(["cut"], "cut").add(
-        Argument("object_")
+    arguments: ClassVar[Arguments] = (
+        Arguments(["cut"], "cut")
+        .add(Argument("object_"))
+        .add_class_argument("tags", Tags)
     )
+
+    @override
+    def register_summary(
+        self, summary: Summary, ratio: float = 1.0, *, is_main: bool = True
+    ) -> None:
+        if is_main and self.object_:
+            for part in self.object_.split(","):
+                stripped = part.strip().lstrip("@")
+                if stripped:
+                    summary.cut.add(stripped)
 
 
 @dataclass
@@ -563,9 +585,21 @@ class ShaveEvent(Event):
     object_: str | None = None
     """What was shaved."""
 
-    arguments: ClassVar[Arguments] = Arguments(["shave"], "shave").add(
-        Argument("object_")
+    arguments: ClassVar[Arguments] = (
+        Arguments(["shave"], "shave")
+        .add(Argument("object_"))
+        .add_class_argument("tags", Tags)
     )
+
+    @override
+    def register_summary(
+        self, summary: Summary, ratio: float = 1.0, *, is_main: bool = True
+    ) -> None:
+        if is_main and self.object_:
+            for part in self.object_.split(","):
+                stripped = part.strip().lstrip("@")
+                if stripped:
+                    summary.shaved.add(stripped)
 
 
 @dataclass
