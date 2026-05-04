@@ -637,6 +637,28 @@ KILO: int = 1000
 
 
 @dataclass
+class Weight(Value):
+    """Weight in grams."""
+
+    value: float
+    """Weight in grams."""
+
+    patterns: ClassVar[list[re.Pattern]] = [
+        re.compile(r"(\d+(?:\.\d+)?)kg"),
+        re.compile(r"(\d+(?:\.\d+)?)g"),
+    ]
+    extractors: ClassVar[list[Callable]] = [
+        lambda groups: Weight(float(groups(1)) * KILO),
+        lambda groups: Weight(float(groups(1))),
+    ]
+
+    def to_command(self) -> str:
+        if self.value >= KILO:
+            return f"{self.value / KILO:g}kg"
+        return f"{self.value:g}g"
+
+
+@dataclass
 class Liquid(Value):
     """Liquid volume in milliliters."""
 

@@ -516,7 +516,7 @@ class StandingCalfRaisesEvent(
 class RomanChairEvent(
     ExerciseEvent,
     command="roman_chair",
-    muscle_groups={"core"},
+    muscle_groups={"back", "core"},
     equipment={"roman_chair"},
 ):
     """Event representing roman chair exercise."""
