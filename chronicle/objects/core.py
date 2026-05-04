@@ -43,6 +43,7 @@ from chronicle.value import (
     VitaminB12,
     VitaminC,
     VitaminD,
+    Weight,
     WikidataId,
     Zinc,
 )
@@ -1131,6 +1132,9 @@ class Dish(Object):
     ingredients: list[str] = field(default_factory=list)
     """List of ingredients."""
 
+    weight: Weight | None = None
+    """Weight of a standard serving."""
+
     energy: float | None = None
     carbohydrates: Carbohydrates | None = None
     protein: Protein | None = None
@@ -1162,6 +1166,7 @@ class Dish(Object):
     arguments: ClassVar[Arguments] = (
         Arguments(["dish"], "dish")
         .add(Argument("title"))
+        .add_class_argument("weight", Weight)
         .add(
             Argument(
                 "ingredients",
