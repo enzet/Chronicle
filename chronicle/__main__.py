@@ -77,6 +77,12 @@ def main() -> None:
         metavar="FILE",
         help="write SVG to FILE (default: stdout)",
     )
+    dashboard_parser.add_argument(
+        "--terminal",
+        "-t",
+        action="store_true",
+        help="print metrics to terminal with colored status marks",
+    )
 
     view_parser = sub_parsers.add_parser("view")
     view_parser.add_argument("--style", default="normal")
@@ -320,6 +326,12 @@ def main() -> None:
     command = arguments.command
 
     if command == "dashboard":
+        if arguments.terminal:
+            from chronicle.view.dashboard import print_dashboard_cli
+
+            print_dashboard_cli(timeline)
+            return
+
         import shutil
 
         from chronicle.view.dashboard import (
