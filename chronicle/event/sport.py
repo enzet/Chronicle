@@ -326,7 +326,14 @@ class StumpRemovalEvent(HeavyLabourEvent):
     """Event representing tree stump removal or heavy digging."""
 
     muscle_groups: ClassVar[frozenset[str]] = frozenset(
-        {"back", "legs", "arms", "core", "shoulders"}
+        {
+            "back/horizontal",
+            "legs/quads",
+            "arms/biceps",
+            "arms/triceps",
+            "core/stabilizers",
+            "shoulders/side",
+        }
     )
 
     arguments: ClassVar[Arguments] = HeavyLabourEvent.arguments.replace(
@@ -335,7 +342,11 @@ class StumpRemovalEvent(HeavyLabourEvent):
 
 
 @dataclass
-class SquatsEvent(ExerciseEvent, command="squats", muscle_groups={"legs"}):
+class SquatsEvent(
+    ExerciseEvent,
+    command="squats",
+    muscle_groups={"legs/quads", "legs/glutes"},
+):
     """Event representing squats."""
 
     bodyweight_fraction: ClassVar[float | None] = 0.75
@@ -345,7 +356,7 @@ class SquatsEvent(ExerciseEvent, command="squats", muscle_groups={"legs"}):
 class ChinUpsEvent(
     ExerciseEvent,
     command="chin_ups",
-    muscle_groups={"arms"},
+    muscle_groups={"arms/biceps", "back/vertical"},
     equipment={"pull_up_bar"},
 ):
     """Event representing chin ups."""
@@ -354,13 +365,13 @@ class ChinUpsEvent(
 
 
 @dataclass
-class SitUpsEvent(ExerciseEvent, command="sit_ups", muscle_groups={"core"}):
+class SitUpsEvent(ExerciseEvent, command="sit_ups", muscle_groups={"core/abs"}):
     """Event representing sit ups."""
 
 
 @dataclass
 class SquatJumpsEvent(
-    ExerciseEvent, command="squat_jumps", muscle_groups={"legs"}
+    ExerciseEvent, command="squat_jumps", muscle_groups={"legs/quads"}
 ):
     """Event representing squat jumps."""
 
@@ -369,7 +380,7 @@ class SquatJumpsEvent(
 class DipsEvent(
     ExerciseEvent,
     command="dips",
-    muscle_groups={"arms", "chest"},
+    muscle_groups={"arms/triceps", "chest/mid"},
     equipment={"dip_bars"},
 ):
     """Event representing dips."""
@@ -378,7 +389,9 @@ class DipsEvent(
 
 
 @dataclass
-class PushUpsEvent(ExerciseEvent, command="push_ups", muscle_groups={"chest"}):
+class PushUpsEvent(
+    ExerciseEvent, command="push_ups", muscle_groups={"chest/mid"}
+):
     """Event representing push ups."""
 
     bodyweight_fraction: ClassVar[float | None] = 0.69
@@ -386,7 +399,7 @@ class PushUpsEvent(ExerciseEvent, command="push_ups", muscle_groups={"chest"}):
 
 @dataclass
 class JumpingJacksEvent(
-    ExerciseEvent, command="jumping_jacks", muscle_groups={"legs"}
+    ExerciseEvent, command="jumping_jacks", muscle_groups={"legs/quads"}
 ):
     """Event representing jumping jacks."""
 
@@ -395,7 +408,7 @@ class JumpingJacksEvent(
 class HandGripsEvent(
     ExerciseEvent,
     command="hand_grips",
-    muscle_groups={"arms"},
+    muscle_groups={"arms/biceps"},
     equipment={"hand_gripper"},
 ):
     """Event representing hand grips."""
@@ -403,14 +416,16 @@ class HandGripsEvent(
 
 @dataclass
 class BurpeeEvent(
-    ExerciseEvent, command="burpee", muscle_groups={"legs", "core"}
+    ExerciseEvent,
+    command="burpee",
+    muscle_groups={"legs/quads", "core/stabilizers"},
 ):
     """Event representing burpees."""
 
 
 @dataclass
 class RussianTwistsEvent(
-    ExerciseEvent, command="russian_twists", muscle_groups={"core"}
+    ExerciseEvent, command="russian_twists", muscle_groups={"core/obliques"}
 ):
     """Event representing russian twists."""
 
@@ -419,7 +434,7 @@ class RussianTwistsEvent(
 class PecDeckEvent(
     ExerciseEvent,
     command="pec_deck",
-    muscle_groups={"chest"},
+    muscle_groups={"chest/mid"},
     equipment={"pec_deck_machine"},
 ):
     """Event representing pec deck machine exercise."""
@@ -429,7 +444,7 @@ class PecDeckEvent(
 class LegExtensionEvent(
     ExerciseEvent,
     command="leg_extension",
-    muscle_groups={"legs"},
+    muscle_groups={"legs/quads"},
     equipment={"leg_extension_machine"},
 ):
     """Event representing leg extension machine exercise."""
@@ -439,7 +454,7 @@ class LegExtensionEvent(
 class BarbellCurlEvent(
     ExerciseEvent,
     command="barbell_curl",
-    muscle_groups={"arms"},
+    muscle_groups={"arms/biceps"},
     equipment={"barbell"},
 ):
     """Event representing barbell curl."""
@@ -449,7 +464,7 @@ class BarbellCurlEvent(
 class BarbellBenchPressEvent(
     ExerciseEvent,
     command="barbell_bench_press",
-    muscle_groups={"chest"},
+    muscle_groups={"chest/mid"},
     equipment={"barbell", "bench"},
 ):
     """Event representing barbell bench press."""
@@ -459,7 +474,7 @@ class BarbellBenchPressEvent(
 class DeclineSitUpsEvent(
     ExerciseEvent,
     command="decline_sit_ups",
-    muscle_groups={"core"},
+    muscle_groups={"core/abs"},
     equipment={"decline_bench"},
 ):
     """Event representing decline sit ups."""
@@ -469,14 +484,16 @@ class DeclineSitUpsEvent(
 class DumbbellLateralRaiseEvent(
     ExerciseEvent,
     command="dumbbell_lateral_raise",
-    muscle_groups={"shoulders"},
+    muscle_groups={"shoulders/side"},
     equipment={"dumbbell"},
 ):
     """Event representing dumbbell lateral raises."""
 
 
 @dataclass
-class SupermanEvent(ExerciseEvent, command="superman", muscle_groups={"core"}):
+class SupermanEvent(
+    ExerciseEvent, command="superman", muscle_groups={"core/extension"}
+):
     """Event representing superman exercise."""
 
 
@@ -484,7 +501,7 @@ class SupermanEvent(ExerciseEvent, command="superman", muscle_groups={"core"}):
 class SeatedLegCurlEvent(
     ExerciseEvent,
     command="seated_leg_curl",
-    muscle_groups={"legs"},
+    muscle_groups={"legs/hamstrings"},
     equipment={"seated_leg_curl_machine"},
 ):
     """Event representing seated leg curl machine exercise."""
@@ -494,14 +511,16 @@ class SeatedLegCurlEvent(
 class LatPulldownsEvent(
     ExerciseEvent,
     command="lat_pulldowns",
-    muscle_groups={"back"},
+    muscle_groups={"back/vertical"},
     equipment={"lat_machine"},
 ):
     """Event representing lat pulldown exercise."""
 
 
 @dataclass
-class CrunchesEvent(ExerciseEvent, command="crunches", muscle_groups={"core"}):
+class CrunchesEvent(
+    ExerciseEvent, command="crunches", muscle_groups={"core/abs"}
+):
     """Event representing crunches."""
 
 
@@ -516,7 +535,7 @@ class StandingCalfRaisesEvent(
 class RomanChairEvent(
     ExerciseEvent,
     command="roman_chair",
-    muscle_groups={"back", "core"},
+    muscle_groups={"back/vertical", "core/extension"},
     equipment={"roman_chair"},
 ):
     """Event representing roman chair exercise."""
@@ -526,7 +545,7 @@ class RomanChairEvent(
 class RearDeltPecFlyEvent(
     ExerciseEvent,
     command="rear_delt_pec_fly",
-    muscle_groups={"shoulders"},
+    muscle_groups={"shoulders/rear"},
     equipment={"rear_delt_pec_fly_machine"},
 ):
     """Event representing rear delt pec fly exercise."""
@@ -536,7 +555,7 @@ class RearDeltPecFlyEvent(
 class DumbbellCurlEvent(
     ExerciseEvent,
     command="dumbbell_curl",
-    muscle_groups={"arms"},
+    muscle_groups={"arms/biceps"},
     equipment={"dumbbell"},
 ):
     """Event representing dumbbell curl."""
@@ -546,7 +565,7 @@ class DumbbellCurlEvent(
 class LegPressEvent(
     ExerciseEvent,
     command="leg_press",
-    muscle_groups={"legs"},
+    muscle_groups={"legs/quads", "legs/glutes"},
     equipment={"leg_press_machine"},
 ):
     """Event representing leg press machine exercise."""
@@ -556,7 +575,7 @@ class LegPressEvent(
 class ProneLegCurlEvent(
     ExerciseEvent,
     command="prone_leg_curl",
-    muscle_groups={"legs"},
+    muscle_groups={"legs/hamstrings"},
     equipment={"prone_leg_curl_machine"},
 ):
     """Event representing prone leg curl machine exercise."""
@@ -566,7 +585,7 @@ class ProneLegCurlEvent(
 class SteeringWheelEvent(
     ExerciseEvent,
     command="steering_wheel",
-    muscle_groups={"shoulders"},
+    muscle_groups={"shoulders/side"},
     equipment={"plate"},
 ):
     """Event representing steering wheel exercise."""
@@ -576,14 +595,16 @@ class SteeringWheelEvent(
 class DumbbellOverheadTricepExtensionEvent(
     ExerciseEvent,
     command="dumbbell_overhead_tricep_extension",
-    muscle_groups={"arms"},
+    muscle_groups={"arms/triceps"},
     equipment={"dumbbell"},
 ):
     """Event representing dumbbell overhead tricep extension."""
 
 
 @dataclass
-class DeadBugEvent(ExerciseEvent, command="dead_bug", muscle_groups={"core"}):
+class DeadBugEvent(
+    ExerciseEvent, command="dead_bug", muscle_groups={"core/stabilizers"}
+):
     """Event representing dead bug exercise."""
 
 
@@ -591,7 +612,7 @@ class DeadBugEvent(ExerciseEvent, command="dead_bug", muscle_groups={"core"}):
 class DumbbellOverheadPressEvent(
     ExerciseEvent,
     command="dumbbell_overhead_press",
-    muscle_groups={"shoulders"},
+    muscle_groups={"shoulders/side"},
     equipment={"dumbbell"},
 ):
     """Event representing dumbbell overhead press exercise."""
@@ -601,7 +622,7 @@ class DumbbellOverheadPressEvent(
 class LowRowEvent(
     ExerciseEvent,
     command="low_row",
-    muscle_groups={"back"},
+    muscle_groups={"back/horizontal"},
     equipment={"low_row_machine"},
 ):
     """Event representing low row machine exercise."""
@@ -611,7 +632,7 @@ class LowRowEvent(
 class PecFlyEvent(
     ExerciseEvent,
     command="pec_fly",
-    muscle_groups={"chest"},
+    muscle_groups={"chest/mid"},
     equipment={"pec_fly_machine"},
 ):
     """Event representing pec fly machine exercise."""
