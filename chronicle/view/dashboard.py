@@ -783,7 +783,9 @@ def _cell_style(r: float | None) -> str:
     return f"background:{_r_to_hex_color(r)}88"
 
 
-def _table_row(metric: MetricData) -> tuple[str, float | None]:
+def _table_row(
+    metric: MetricData, sport_viewer: SportViewer
+) -> tuple[str, float | None]:
     last_r: float | None = None
 
     all_vals = [*metric.values, metric.today]
@@ -835,9 +837,13 @@ def _table_row(metric: MetricData) -> tuple[str, float | None]:
                 attr = f' style="{style}"' if style else ""
                 cells.append(f'<td{attr} class="cell"></td>')
 
-    return (
-        f'<tr><td class="label">{metric.label}</td>' + "".join(cells) + "</tr>"
-    ), last_r
+    row = f'<tr><td class="label">{metric.label}</td>' + "".join(cells)
+    if metric.key.startswith("muscle_") and metric.key.endswith("_day"):
+        muscle_group = metric.key.removeprefix("muscle_").removesuffix("_day")
+        row += sport_viewer.get_subgroup_row(muscle_group)
+    row += "</tr>"
+
+    return row, last_r
 
 
 def print_dashboard_cli(timeline: Timeline, settings: Settings) -> None:
@@ -917,10 +923,16 @@ def print_dashboard_cli(timeline: Timeline, settings: Settings) -> None:
 
 def generate_dashboard_html(timeline: Timeline, settings: Settings) -> str:
     """Generate a static HTML page with inline SVG and 14-day metrics table."""
+
     svg = generate_dashboard_svg(timeline, settings)
     data = get_dashboard_data(timeline, settings)
 
-    rows: list[tuple[str, float | None]] = [_table_row(m) for m in data.metrics]
+    sport_viewer: SportViewer = SportViewer(timeline)
+    food_viewer: FoodViewer = FoodViewer(timeline)
+
+    rows: list[tuple[str, float | None]] = [
+        _table_row(m, sport_viewer) for m in data.metrics
+    ]
     table_body = "".join(x for x, y in sorted(rows, key=lambda z: z[1] or 0.0))
 
     return (
@@ -934,7 +946,8 @@ def generate_dashboard_html(timeline: Timeline, settings: Settings) -> str:
             f"  <tbody>{table_body}</tbody>\n"
             "</table>\n"
         )
-        + SportViewer.get_html_exercises()
-        + FoodViewer(timeline).get_html_food()
+        + sport_viewer.get_html_exercises()
+        + sport_viewer.get_html_exercises_by_subgroup()
+        + food_viewer.get_html_food()
         + "</body>\n</html>"
     )
