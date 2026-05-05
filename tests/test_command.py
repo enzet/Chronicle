@@ -3,21 +3,37 @@
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
+import pytest
+
 from chronicle.event.art import (
     ListenAudiobookEvent,
     ListenMusicEvent,
     ListenPodcastEvent,
     WatchEvent,
 )
-from chronicle.event.common import LearnEvent, ProgramEvent, SleepEvent
+from chronicle.event.common import (
+    BackupEvent,
+    LearnEvent,
+    ProgramEvent,
+    SleepEvent,
+)
 from chronicle.event.core import Event, Objects
 from chronicle.event.sport import (
+    BarbellCurlEvent,
     ChinUpsEvent,
     PecDeckEvent,
+    ProneLegCurlEvent,
     RunEvent,
     WalkEvent,
 )
-from chronicle.objects.core import Audiobook, Book, Glasses, Object, Project
+from chronicle.objects.core import (
+    Audiobook,
+    Book,
+    Glasses,
+    Object,
+    Phone,
+    Project,
+)
 from chronicle.time import Context, Timedelta
 from chronicle.timeline import CommandParser, Timeline
 from chronicle.value import Interval, Language, ProgrammingLanguage
@@ -465,6 +481,19 @@ def test_exercise_shorthand_sets() -> None:
     assert event.sets == [5, 5, 5]
 
 
+def test_exercise_shorthand_sets_with_energy() -> None:
+    """Test exercise event with NxM shorthand and kilocalories."""
+
+    timeline: Timeline = parse("2000-01-01\n10:00 chin_ups 3x5 25kcal")
+    events: list[Event] = timeline.events
+
+    assert len(events) == 1
+    event: Event = events[0]
+    assert isinstance(event, ChinUpsEvent)
+    assert event.sets == [5, 5, 5]
+    assert event.energy == 25.0  # noqa: PLR2004
+
+
 def test_exercise_with_weight() -> None:
     """Test exercise event with uniform weight across sets."""
 
@@ -491,6 +520,68 @@ def test_exercise_with_multiple_weights() -> None:
     assert event.weights == [30.0, 35.0, 35.0]
 
 
+def test_exercise_weight_shorthand() -> None:
+    """Test exercise event with NxMkg weight shorthand."""
+
+    timeline: Timeline = parse("2000-01-01\nbarbell_curl 10,10,6 3x10kg 20kcal")
+    events: list[Event] = timeline.events
+
+    assert len(events) == 1
+    event: Event = events[0]
+    assert isinstance(event, BarbellCurlEvent)
+    assert event.sets == [10, 10, 6]
+    assert event.weights == [10.0, 10.0, 10.0]
+    assert event.energy == 20.0  # noqa: PLR2004
+
+
+def test_exercise_weight_lbs() -> None:
+    """Test exercise event with weights in pounds (converted to kg)."""
+
+    timeline: Timeline = parse("2000-01-01\nbarbell_curl 3x10 45lbs")
+    events: list[Event] = timeline.events
+
+    assert len(events) == 1
+    event: Event = events[0]
+    assert isinstance(event, BarbellCurlEvent)
+    assert event.sets == [10, 10, 10]
+    assert event.weights == pytest.approx([45 * 0.453592] * 3)
+
+
+def test_exercise_weight_lbs_shorthand() -> None:
+    """Test exercise event with NxMlbs weight shorthand."""
+
+    timeline: Timeline = parse("2000-01-01\nbarbell_curl 3x10 3x45lbs")
+    events: list[Event] = timeline.events
+
+    assert len(events) == 1
+    event: Event = events[0]
+    assert isinstance(event, BarbellCurlEvent)
+    assert event.sets == [10, 10, 10]
+    assert event.weights == pytest.approx([45 * 0.453592] * 3)
+
+
+def test_prone_leg_curl() -> None:
+    """Test prone leg curl event with sets and weight."""
+
+    timeline: Timeline = parse("2000-01-01\nprone_leg_curl 3x10 40kg")
+    events: list[Event] = timeline.events
+
+    assert len(events) == 1
+    event: Event = events[0]
+    assert isinstance(event, ProneLegCurlEvent)
+    assert event.sets == [10, 10, 10]
+    assert event.weights == [40.0, 40.0, 40.0]
+
+
+def test_exercise_energy_expenditure() -> None:
+    """Test that sport event energy is accumulated in energy_expenditure."""
+
+    timeline: Timeline = parse("2000-01-01\nchin_ups 3x5 25kcal")
+    summary: Summary = timeline.get_summary()
+
+    assert summary.energy_expenditure == 25.0  # noqa: PLR2004
+
+
 def test_exercise_summary() -> None:
     """Test that exercise repetitions are counted in the summary."""
 
@@ -515,3 +606,26 @@ def test_exercise_summary_multiple() -> None:
 
     assert summary.exercises["chin_ups"] == 17  # noqa: PLR2004
     assert summary.exercises["pec_deck"] == 30  # noqa: PLR2004
+
+
+def test_backup_event() -> None:
+    """Test backup event with a phone object reference."""
+
+    timeline: Timeline = parse(
+        """
+        phone @iphone = iPhone 14
+        2000-01-01
+        [ ] backup @iphone !every_30_days
+        """
+    )
+    events: list[Event] = timeline.events
+    objects: dict[str, Object] = timeline.objects.objects
+
+    assert len(events) == 1
+    event: Event = events[0]
+    assert isinstance(event, BackupEvent)
+    assert event.is_task
+    assert event.tags == {"every_30_days"}
+    assert isinstance(objects["iphone"], Phone)
+    assert objects["iphone"].name == "iPhone 14"
+    assert event.device == objects["iphone"]
