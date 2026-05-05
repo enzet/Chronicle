@@ -1,9 +1,7 @@
 """Tests for Vim syntax generation."""
 
-import pytest
-
 from chronicle.event.sport import RunEvent
-from chronicle.objects.core import Book, Mountain, Place, Project
+from chronicle.objects.core import Book, Mountain, Place, Project, Thing
 
 __author__ = "Sergey Vartanov"
 __email__ = "me@enzet.ru"
@@ -64,11 +62,6 @@ def test_object_vim_syntax_single_named_group_stripped() -> None:
     assert "?P<" not in syntax
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Greedy `.*` in re.sub strips too much when multiple named groups "
-    "are present; should use non-greedy `.*?`.",
-)
 def test_object_vim_syntax_multiple_named_groups_all_stripped() -> None:
     r"""All named groups in a multi-group pattern are independently stripped.
 
@@ -92,8 +85,27 @@ def test_object_vim_syntax_multiple_named_groups_all_stripped() -> None:
 
 
 def test_object_vim_syntax_prefix_highlight_link() -> None:
-    """`get_vim_syntax` emits a `highlight link` for prefix arguments."""
-    assert "highlight link BookPrefix" in Book.get_vim_syntax()
+    """`get_vim_syntax` emits `highlight link` for prefix arguments."""
+    syntax = Thing.get_vim_syntax()
+    assert "highlight link ThingPrefix Prefix" in syntax
+    assert "highlight link ThingPrefixValue chronicleEventValue" in syntax
+
+
+def test_object_vim_syntax_no_prefix_highlight_link_when_no_prefix_args() -> (
+    None
+):
+    """`get_vim_syntax` does not emit prefix highlights if no prefix args."""
+    assert "highlight link BookPrefix" not in Book.get_vim_syntax()
+
+
+def test_object_vim_syntax_prefix_nextgroup() -> None:
+    """`get_vim_syntax` emits `nextgroup` on prefix matches."""
+    assert "nextgroup=ThingPrefixValue" in Thing.get_vim_syntax()
+
+
+def test_object_vim_syntax_prefix_value_match() -> None:
+    """`get_vim_syntax` emits a `PrefixValue` match for prefix arguments."""
+    assert "syntax match ThingPrefixValue" in Thing.get_vim_syntax()
 
 
 # Event.get_vim_syntax — structure.
@@ -123,12 +135,6 @@ def test_event_vim_syntax_region_end() -> None:
 # Event.get_vim_syntax — known bugs.
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Event.get_vim_syntax does not prepend `\\v` to pattern text, "
-    "so Vim interprets `(`, `)`, `+`, `?` as literal characters "
-    "instead of regex operators.",
-)
 def test_event_vim_syntax_pattern_very_magic() -> None:
     r"""Event pattern arguments should use Vim's \v (very magic) flag.
 
@@ -139,11 +145,6 @@ def test_event_vim_syntax_pattern_very_magic() -> None:
     assert r"/\v" in RunEvent.get_vim_syntax()
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Event.get_vim_syntax does not strip Python named groups "
-    "(?P<name>...) before emitting patterns, producing invalid Vim regex.",
-)
 def test_event_vim_syntax_named_groups_stripped() -> None:
     """Named groups must be stripped from event patterns.
 
